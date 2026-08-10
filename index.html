@@ -299,6 +299,7 @@
   <div class="sets" role="group" aria-label="出題範囲">
     <button class="set" data-set="white" aria-pressed="true">白書・統計 44問</button>
     <button class="set" data-set="past" aria-pressed="false">過去問論点 28問</button>
+    <button class="set" data-set="measure" aria-pressed="false">測定・分析 30問</button>
     <button class="set" data-set="all" aria-pressed="false">まとめて 全問</button>
     <button class="set weak" data-set="weak" aria-pressed="false" id="weakBtn">苦手 0問</button>
   </div>
@@ -319,6 +320,7 @@
 
 <script src="data.js"></script>
 <script src="pastq.js"></script>
+<script src="measure.js"></script>
 <script src="topics.js"></script>
 <script>
 const Q = QUIZ_DATA.slice();
@@ -587,9 +589,10 @@ function lifetimeStats() {
 /* ---------- 出題範囲の切替 ---------- */
 
 const SETS = {
-  white: QUIZ_DATA,
-  past:  PASTQ_DATA,
-  all:   QUIZ_DATA.concat(PASTQ_DATA)
+  white:   QUIZ_DATA,
+  past:    PASTQ_DATA,
+  measure: MEASURE_DATA,
+  all:     QUIZ_DATA.concat(PASTQ_DATA, MEASURE_DATA)
 };
 document.querySelectorAll(".set").forEach(function (b) {
   b.addEventListener("click", function () {
