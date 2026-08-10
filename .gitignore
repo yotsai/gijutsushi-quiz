@@ -1,5 +1,6 @@
 _*.html
 *.png
+!kankyo-anki-sheet.pdf
 questions/
 parsed/
 .DS_Store

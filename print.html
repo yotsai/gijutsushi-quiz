@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>技術士第一次試験 環境部門 数値暗記シート（印刷用）</title>
+<style>
+  @page { size: A4; margin: 15mm 14mm 12mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #6E7370; color: #000;
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    font-size: 8.4pt; line-height: 1.45;
+  }
+  .page {
+    width: 210mm; min-height: 297mm; padding: 15mm 14mm 12mm;
+    margin: 0 auto 8mm; background: #fff; page-break-after: always;
+  }
+  .page:last-child { page-break-after: auto; }
+  h1 { font-family: "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif;
+       font-size: 14pt; font-weight: 600; margin: 0 0 1.5mm; line-height: 1.35; }
+  .sub { font-size: 8.2pt; color: #444; margin: 0 0 3mm; }
+  .rule-top { border-top: 1.6pt solid #000; padding-top: 2mm; margin-bottom: 4mm;
+              display: flex; gap: 6mm; flex-wrap: wrap; font-size: 8pt; color: #333; }
+  .rule-top b { color: #000; }
+  h2 { font-family: "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif;
+       font-size: 10.5pt; font-weight: 600; margin: 0 0 2mm; padding-bottom: 1mm;
+       border-bottom: 1.2pt solid #000; display: flex; justify-content: space-between;
+       align-items: baseline; gap: 4mm; break-after: avoid; page-break-after: avoid; }
+  h2 span { font-size: 7.6pt; font-weight: 400; color: #444; white-space: nowrap; }
+  .lead { font-size: 8pt; color: #333; margin: 0 0 2mm; }
+  section { margin-bottom: 3.2mm; break-inside: avoid; page-break-inside: avoid; }
+  table { border-collapse: collapse; width: 100%; font-size: 8.2pt; font-variant-numeric: tabular-nums; }
+  th, td { padding: .85mm 1.4mm; border-bottom: .4pt solid #999; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { border-bottom: .9pt solid #000; font-size: 8pt; }
+  .em td { font-weight: 700; background: #EDEDED; }
+  tfoot td { border-bottom: 0; border-top: .9pt solid #000; font-size: 8pt; text-align: left; color: #333; }
+  .q { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
+  .q td { border-bottom: .4pt solid #BBB; padding: 1.45mm 1.4mm; vertical-align: bottom; text-align: left; }
+  .q td.n { width: 6.5mm; text-align: right !important; color: #666; font-size: 7.6pt; padding-right: 1.8mm; }
+  .q td.a { width: 42mm; border-bottom: 1pt solid #000; }
+  .q small { display: block; color: #555; font-size: 7pt; line-height: 1.4; }
+  .box { border: .8pt solid #000; padding: 2.4mm 3mm; font-size: 8.2pt; }
+  .box p { margin: 0; }
+  .box p + p { margin-top: 1.8mm; }
+  .box .h { font-weight: 700; }
+  ul { margin: 1.5mm 0 0; padding-left: 4.5mm; }
+  li { margin-bottom: .8mm; }
+  .ans { column-count: 2; column-gap: 8mm; font-size: 8.6pt; }
+  .ans h3 { font-family: "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif;
+            font-size: 9.5pt; margin: 0 0 1.2mm; padding-bottom: .8mm;
+            border-bottom: .8pt solid #000; break-after: avoid; }
+  .ans .grp { break-inside: avoid; margin-bottom: 4mm; }
+  .ans dl { margin: 0; display: grid; grid-template-columns: 6mm 1fr auto; gap: .6mm 1.5mm; }
+  .ans dt { color: #666; font-size: 7.8pt; text-align: right; }
+  .ans dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ans .lbl { font-weight: 400; color: #333; font-size: 8.2pt; }
+  .foot { margin-top: 4mm; padding-top: 2mm; border-top: .4pt solid #999;
+          font-size: 7.4pt; color: #555; line-height: 1.6; }
+  .toolbar { position: sticky; top: 0; z-index: 9; background: #2F3431; color: #fff;
+             padding: 10px 14px; display: flex; align-items: center; gap: 14px;
+             flex-wrap: wrap; font-size: 13px; line-height: 1.6; }
+  .toolbar button { font: inherit; font-weight: 700; cursor: pointer; background: #fff;
+                    color: #2F3431; border: 0; padding: 7px 18px; border-radius: 2px; }
+  .toolbar a { color: #8FD3C4; }
+  .toolbar span { color: #C4C9C5; }
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none; }
+    .page { width: auto; min-height: 0; padding: 0; margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button onclick="window.print()">このページを印刷</button>
+  <span>A4・4ページ／余白「デフォルト」でそのまま出ます。</span>
+  <a href="./">クイズに戻る</a>
+</div>
+
+<div class="page">
+  <h1>技術士第一次試験【19】環境部門<br>専門科目 数値暗記シート</h1>
+  <p class="sub">令和4〜7年度の専門科目140問を全問分類して作成。書き込み式・解答は最終ページ。</p>
+  <div class="rule-top">
+    <span>試験日 <b>2026年11月22日（日）</b></span>
+    <span>35問中 <b>25問選択</b></span>
+    <span>合格ライン <b>13問正解（50%）</b></span>
+  </div>
+
+  <section>
+    <h2>1. 出題分野の内訳（過去4年・実測）<span>環境部門 専門科目 35問×4年＝140問</span></h2>
+    <table>
+      <thead><tr><th>出典・分野</th><th>R4</th><th>R5</th><th>R6</th><th>R7</th><th>4年計</th><th>比率</th></tr></thead>
+      <tbody>
+        <tr class="em"><td>環境測定・分析（JIS・公定法・機器分析）</td><td>11</td><td>11</td><td>12</td><td>12</td><td>46</td><td>33%</td></tr>
+        <tr><td>自然環境・生態系</td><td>6</td><td>6</td><td>7</td><td>9</td><td>28</td><td>20%</td></tr>
+        <tr><td>法令・制度</td><td>7</td><td>7</td><td>4</td><td>6</td><td>24</td><td>17%</td></tr>
+        <tr><td>地球環境・政策</td><td>4</td><td>4</td><td>6</td><td>2</td><td>16</td><td>11%</td></tr>
+        <tr class="em"><td>白書・環境省統計（本シートの範囲）</td><td>2</td><td>4</td><td>5</td><td>5</td><td>16</td><td>11%</td></tr>
+        <tr><td>国際条約・国際報告書</td><td>3</td><td>3</td><td>0</td><td>1</td><td>7</td><td>5%</td></tr>
+        <tr><td>計算問題</td><td>2</td><td>0</td><td>1</td><td>1</td><td>3</td><td>2%</td></tr>
+      </tbody>
+      <tfoot><tr><td colspan="7">出典：日本技術士会 公開過去問題（環境部門・令和4〜7年度）を1問ずつ分類。</td></tr></tfoot>
+    </table>
+  </section>
+
+  <section>
+    <h2>2. このシートの守備範囲と、時間の使い方</h2>
+    <div class="box">
+      <p class="h">白書・統計から出るのは年4問（全体の11%）。合格に必要な13問の3割弱です。</p>
+      <p>25問しか選択しないので、捨てられるのは10問だけ。最大ブロックの<b>環境測定・分析（年11〜12問）を丸ごと捨てると、残り23問から13問＝56.5%</b>を取る必要が生じ、一気に苦しくなります。本シートは2時間で仕上げ、残りの時間は測定・分析に回してください。</p>
+      <p>一方で、下の「鉄板2問」は4年連続で出題され、選択肢の論点もほぼ固定です。<b>ここは確実に2問取れます。</b></p>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. 鉄板2問 ― 4年連続で出題</h2>
+    <table>
+      <thead><tr><th>出題テーマ</th><th>R4</th><th>R5</th><th>R6</th><th>R7</th><th>問われるデータ年度</th></tr></thead>
+      <tbody>
+        <tr><td>一般廃棄物の排出及び処理状況等</td><td>○</td><td>○</td><td>○</td><td>○</td><td>試験の2〜3年前</td></tr>
+        <tr><td>産業廃棄物の排出及び処理状況等</td><td>○</td><td>○</td><td>○</td><td>○</td><td>試験の2〜3年前</td></tr>
+      </tbody>
+    </table>
+    <div class="box" style="margin-top:3mm">
+      <p class="h">繰り返し出る正誤の論点</p>
+      <ul>
+        <li><b>★4年連続</b>：ブロック内で十分な処分先を確保できず県外搬出が多いのは<b>関東ブロック（18.3%）</b>、次いで中部（6.7%）。「<b>近畿ブロック</b>において確保できない」とする選択肢が<b>4年とも誤り</b>として出題（R4-Ⅲ-9④／R5-Ⅲ-9①／R6-Ⅲ-9③／R7-Ⅲ-12①）。</li>
+        <li>一般廃棄物最終処分場の残余年数（全国平均）は<b>微増傾向</b>。「減少している」は誤り。</li>
+        <li>ごみ総排出量は微減傾向／ごみ焼却施設の総数は減少／直接焼却量は概ね減少傾向。</li>
+        <li>産廃の<b>業種別</b>1位は<b>電気・ガス・熱供給・水道業</b>（建設業は3位）。<b>種類別</b>1位は<b>汚泥</b>、<b>地域別</b>1位は<b>関東地方</b>。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. 読む白書の版に注意</h2>
+    <div class="box">
+      <p>令和6年度試験（2024年11月）には「<b>令和5年版</b>の白書に記載された」と明記した設問が2問出ました。実施の<b>約1年5か月前の版</b>です。同じ間隔なら令和8年度試験で参照されるのは<b>令和7年版（2025年6月公表）</b>で、令和8年版ではない可能性が高い。ただし誤答選択肢は<b>桁と傾向</b>で作られるため、1年の年度差では失点しません。本シートの数値は最新版で覚えて構いません。</p>
+    </div>
+  </section>
+</div>
+
+<div class="page">
+  <section>
+    <h2>Ⅰ. 一般廃棄物の排出及び処理状況等<span>令和8年版白書＝2024年度／出題実績 4年連続</span></h2>
+    <table class="q">
+      <tr><td class="n">1</td><td>ごみ総排出量（2024年度）</td><td class="a"></td></tr>
+      <tr><td class="n">2</td><td>1人1日当たりのごみ排出量</td><td class="a"></td></tr>
+      <tr><td class="n">3</td><td>総資源化量<small>これを総排出量で割るとリサイクル率になる</small></td><td class="a"></td></tr>
+      <tr><td class="n">4</td><td>最終処分量</td><td class="a"></td></tr>
+      <tr><td class="n">5</td><td>最終処分場の残余年数（全国平均）</td><td class="a"></td></tr>
+      <tr><td class="n">6</td><td>県外搬出が多く処分先の確保が難しいブロック<small>★4年連続で「近畿」が誤答として出題</small></td><td class="a"></td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>Ⅱ. 産業廃棄物の排出及び処理状況等<span>2023年度実績／出題実績 4年連続</span></h2>
+    <table class="q">
+      <tr><td class="n">7</td><td>産業廃棄物の総排出量（2023年度）<small>近年は約4億トン前後で推移</small></td><td class="a"></td></tr>
+      <tr><td class="n">8</td><td>業種別排出量の第1位</td><td class="a"></td></tr>
+      <tr><td class="n">9</td><td>種類別排出量の第1位<small>上位3品目で約8割</small></td><td class="a"></td></tr>
+      <tr><td class="n">10</td><td>地域別排出量の第1位</td><td class="a"></td></tr>
+      <tr><td class="n">11</td><td>上位3業種が総排出量に占める割合</td><td class="a"></td></tr>
+      <tr><td class="n">12</td><td>再生利用量</td><td class="a"></td></tr>
+      <tr><td class="n">13</td><td>最終処分量</td><td class="a"></td></tr>
+      <tr><td class="n">14</td><td>最終処分場の残余容量／残余年数</td><td class="a"></td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>Ⅲ. 循環経済の物質フロー指標<span>第五次循環型社会形成推進基本計画（2024年8月閣議決定）</span></h2>
+    <p class="lead">2030年度の目標値を答える。カッコ内は直近実績。<b>入口側と出口側の分母の違い</b>が最頻出の論点。</p>
+    <table class="q">
+      <tr><td class="n">15</td><td>資源生産性（46万円/t）<small>＝GDP ÷ 天然資源等投入量</small></td><td class="a"></td></tr>
+      <tr><td class="n">16</td><td>一人あたり天然資源消費量（11.5 t/人）<small>マテリアルフットプリント</small></td><td class="a"></td></tr>
+      <tr><td class="n">17</td><td>再生可能資源・循環資源の投入割合（28%）</td><td class="a"></td></tr>
+      <tr><td class="n">18</td><td>入口側の循環利用率（16%）<small>＝循環利用量 ÷（天然資源等投入量＋循環利用量）</small></td><td class="a"></td></tr>
+      <tr><td class="n">19</td><td>出口側の循環利用率（42%）<small>＝循環利用量 ÷ 廃棄物等発生量</small></td><td class="a"></td></tr>
+      <tr><td class="n">20</td><td>最終処分量（13百万t）</td><td class="a"></td></tr>
+      <tr><td class="n">21</td><td>循環型社会ビジネスの市場規模（約50兆円）</td><td class="a"></td></tr>
+      <tr><td class="n">22</td><td>食品ロス量の削減目標<small>2023年度の発生量は約464万t</small></td><td class="a"></td></tr>
+    </table>
+  </section>
+</div>
+
+<div class="page">
+  <section>
+    <h2>Ⅳ. 地球環境<span>2024年度実績／2026年4月公表</span></h2>
+    <table class="q">
+      <tr><td class="n">23</td><td>日本の温室効果ガス純排出量（排出−吸収）<small>初の10億トン割れ</small></td><td class="a"></td></tr>
+      <tr><td class="n">24</td><td>その2013年度比の削減率</td><td class="a"></td></tr>
+      <tr><td class="n">25</td><td>森林・農地土壌・ブルーカーボン等による吸収量</td><td class="a"></td></tr>
+      <tr><td class="n">26</td><td>部門別排出量の多い順（電気・熱配分後）</td><td class="a"></td></tr>
+      <tr><td class="n">27</td><td>唯一、排出量が増加しているガス<small>2013年度比 +11.9%。他は全て減少</small></td><td class="a"></td></tr>
+      <tr><td class="n">28</td><td>NDC 2035年度／2040年度の削減目標（2013年度比）</td><td class="a"></td></tr>
+      <tr><td class="n">29</td><td>世界の温室効果ガス総排出量<small>2024年・UNEP。前年比+2.3%で過去最高</small></td><td class="a"></td></tr>
+      <tr><td class="n">30</td><td>排出量取引制度（GX-ETS）の本格稼働時期</td><td class="a"></td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>Ⅴ. 大気・水質の環境基準達成率<span>2024年度</span></h2>
+    <p class="lead">「PM2.5は極めて高く、光化学オキシダントは極めて低い」がセットで問われる形が定番。</p>
+    <table class="q">
+      <tr><td class="n">31</td><td>光化学オキシダント<small>一般局1,129局・自排局31局とも同値</small></td><td class="a"></td></tr>
+      <tr><td class="n">32</td><td>PM2.5（一般局・有効測定局874局）</td><td class="a"></td></tr>
+      <tr><td class="n">33</td><td>NO₂・SPM（一般局・自排局とも）</td><td class="a"></td></tr>
+      <tr><td class="n">34</td><td>公共用水域の健康項目</td><td class="a"></td></tr>
+      <tr><td class="n">35</td><td>BOD・COD（生活環境項目）<small>河川が高く湖沼が低い</small></td><td class="a"></td></tr>
+      <tr><td class="n">36</td><td>湖沼の全窒素・全りん</td><td class="a"></td></tr>
+      <tr><td class="n">37</td><td>地下水の基準超過井戸の割合<small>調査対象2,721本のうち153本</small></td><td class="a"></td></tr>
+      <tr><td class="n">38</td><td>地下水で最も超過率が高い項目</td><td class="a"></td></tr>
+      <tr><td class="n">39</td><td>PFOS・PFOAの水質基準化の施行日</td><td class="a"></td></tr>
+      <tr><td class="n">40</td><td>令和7年4月改正で「大腸菌群数」は何に変わったか</td><td class="a"></td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>Ⅵ. 生物多様性</h2>
+    <table class="q">
+      <tr><td class="n">41</td><td>自然共生サイトの認定数／面積<small>2026年3月末時点</small></td><td class="a"></td></tr>
+      <tr><td class="n">42</td><td>保護地域と重複しない区域の国際登録上の呼称</td><td class="a"></td></tr>
+      <tr><td class="n">43</td><td>30by30目標の年と割合</td><td class="a"></td></tr>
+      <tr><td class="n">44</td><td>生物多様性国家戦略2023-2030の2030年ミッション</td><td class="a"></td></tr>
+      <tr><td class="n">45</td><td>自然共生サイトを法定化した法律<small>令和6年法律第18号</small></td><td class="a"></td></tr>
+      <tr><td class="n">46</td><td>法施行前に認定されたサイトの扱い<small>自動移行するか、申請が要るか</small></td><td class="a"></td></tr>
+    </table>
+  </section>
+</div>
+
+<div class="page">
+  <h1 style="font-size:13pt">解 答</h1>
+  <p class="sub">切り離して使う場合はこのページのみ別保管。</p>
+  <div class="ans">
+    <div class="grp">
+      <h3>Ⅰ. 一般廃棄物（2024年度）</h3>
+      <dl>
+        <dt>1</dt><dd class="lbl">ごみ総排出量</dd><dd>3,811万t</dd>
+        <dt>2</dt><dd class="lbl">1人1日当たり</dd><dd>839g</dd>
+        <dt>3</dt><dd class="lbl">総資源化量</dd><dd>738万t</dd>
+        <dt>4</dt><dd class="lbl">最終処分量</dd><dd>306万t</dd>
+        <dt>5</dt><dd class="lbl">残余年数</dd><dd>24.9年（微増傾向）</dd>
+        <dt>6</dt><dd class="lbl">県外搬出が多い</dd><dd>関東ブロック 18.3%</dd>
+      </dl>
+    </div>
+    <div class="grp">
+      <h3>Ⅱ. 産業廃棄物（2023年度）</h3>
+      <dl>
+        <dt>7</dt><dd class="lbl">総排出量</dd><dd>3億6,725万t</dd>
+        <dt>8</dt><dd class="lbl">業種別1位</dd><dd>電気・ガス・熱供給・水道業</dd>
+        <dt>9</dt><dd class="lbl">種類別1位</dd><dd>汚泥</dd>
+        <dt>10</dt><dd class="lbl">地域別1位</dd><dd>関東地方</dd>
+        <dt>11</dt><dd class="lbl">上位3業種</dd><dd>約7割</dd>
+        <dt>12</dt><dd class="lbl">再生利用量</dd><dd>2億79万t</dd>
+        <dt>13</dt><dd class="lbl">最終処分量</dd><dd>875万t</dd>
+        <dt>14</dt><dd class="lbl">残余容量／年数</dd><dd>1.77億m³／20.3年</dd>
+      </dl>
+    </div>
+    <div class="grp">
+      <h3>Ⅲ. 循環経済（2030年度目標）</h3>
+      <dl>
+        <dt>15</dt><dd class="lbl">資源生産性</dd><dd>約60万円/t</dd>
+        <dt>16</dt><dd class="lbl">一人あたり資源消費</dd><dd>約11 t/人</dd>
+        <dt>17</dt><dd class="lbl">再生可能・循環資源</dd><dd>約34%</dd>
+        <dt>18</dt><dd class="lbl">入口側循環利用率</dd><dd>約19%</dd>
+        <dt>19</dt><dd class="lbl">出口側循環利用率</dd><dd>約44%</dd>
+        <dt>20</dt><dd class="lbl">最終処分量</dd><dd>約11百万t</dd>
+        <dt>21</dt><dd class="lbl">市場規模</dd><dd>80兆円以上</dd>
+        <dt>22</dt><dd class="lbl">食品ロス</dd><dd>2000年度比60%減</dd>
+      </dl>
+    </div>
+    <div class="grp">
+      <h3>Ⅳ. 地球環境（2024年度）</h3>
+      <dl>
+        <dt>23</dt><dd class="lbl">純排出量</dd><dd>9億9,400万t</dd>
+        <dt>24</dt><dd class="lbl">2013年度比</dd><dd>28.7%減</dd>
+        <dt>25</dt><dd class="lbl">吸収量</dd><dd>5,230万t</dd>
+        <dt>26</dt><dd class="lbl">部門別順位</dd><dd>産業＞運輸＞業務その他＞家庭</dd>
+        <dt>27</dt><dd class="lbl">増加ガス</dd><dd>代替フロン等4ガス</dd>
+        <dt>28</dt><dd class="lbl">NDC</dd><dd>2035年度60%減／2040年度73%減</dd>
+        <dt>29</dt><dd class="lbl">世界の総排出量</dd><dd>約577億t</dd>
+        <dt>30</dt><dd class="lbl">GX-ETS</dd><dd>2026年度から</dd>
+      </dl>
+    </div>
+    <div class="grp">
+      <h3>Ⅴ. 環境基準達成率（2024年度）</h3>
+      <dl>
+        <dt>31</dt><dd class="lbl">光化学オキシダント</dd><dd>0%</dd>
+        <dt>32</dt><dd class="lbl">PM2.5</dd><dd>99.5%</dd>
+        <dt>33</dt><dd class="lbl">NO₂・SPM</dd><dd>100%</dd>
+        <dt>34</dt><dd class="lbl">健康項目</dd><dd>99.1%</dd>
+        <dt>35</dt><dd class="lbl">BOD・COD</dd><dd>88.6%</dd>
+        <dt>36</dt><dd class="lbl">湖沼の全窒素・全りん</dd><dd>51.6%</dd>
+        <dt>37</dt><dd class="lbl">地下水超過井戸</dd><dd>5.6%</dd>
+        <dt>38</dt><dd class="lbl">最多超過項目</dd><dd>硝酸性窒素・亜硝酸性窒素</dd>
+        <dt>39</dt><dd class="lbl">PFOS・PFOA</dd><dd>2026年4月1日施行</dd>
+        <dt>40</dt><dd class="lbl">排水基準の改正</dd><dd>大腸菌数 800 CFU/mL</dd>
+      </dl>
+    </div>
+    <div class="grp">
+      <h3>Ⅵ. 生物多様性</h3>
+      <dl>
+        <dt>41</dt><dd class="lbl">自然共生サイト</dd><dd>569か所／約11.6万ha</dd>
+        <dt>42</dt><dd class="lbl">国際登録名</dd><dd>OECM</dd>
+        <dt>43</dt><dd class="lbl">30by30</dd><dd>2030年までに30%</dd>
+        <dt>44</dt><dd class="lbl">2030年ミッション</dd><dd>ネイチャーポジティブ</dd>
+        <dt>45</dt><dd class="lbl">法律名</dd><dd>地域生物多様性増進法</dd>
+        <dt>46</dt><dd class="lbl">施行前サイトの扱い</dd><dd>自動移行せず、要申請</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="foot">
+    出典：令和8年版 環境・循環型社会・生物多様性白書（環境省、2026年6月5日公表）／第五次循環型社会形成推進基本計画（2024年8月閣議決定）／2024年度の我が国の温室効果ガス排出量及び吸収量（環境省、2026年4月公表）／産業廃棄物の排出及び処理状況等・一般廃棄物処理実態調査（環境省）／技術士第一次試験 過去問題・正答 令和4〜7年度（公益社団法人 日本技術士会）<br>
+    最新版：https://yotsai.github.io/gijutsushi-quiz/print.html
+  </div>
+</div>
+
+</body>
+</html>

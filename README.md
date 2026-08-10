@@ -24,7 +24,12 @@
 - 大小関係の逆転（一般廃棄物の残余年数24.9年 ↔ 産業廃棄物の20.3年）
 - 入口側19% ↔ 出口側44%（分母が違う最頻出論点）
 
-### 2. 過去問の頻出テーマ
+### 2. 印刷用シート（A4・4ページ）
+
+**[print.html](https://yotsai.github.io/gijutsushi-quiz/print.html)** — ブラウザから直接印刷できる書き込み式シート。
+PDF版も同梱：**[kankyo-anki-sheet.pdf](https://yotsai.github.io/gijutsushi-quiz/kankyo-anki-sheet.pdf)**
+
+### 3. 過去問の頻出テーマ
 令和4〜7年度の専門科目 140問（35問×4年）を1問ずつ分類した結果。
 
 | 分野 | 4年計 | 比率 |
@@ -52,6 +57,8 @@
 
 ```
 index.html    アプリ本体（UI・クイズロジック）
+print.html    印刷用シート（A4・4ページ）
+kankyo-anki-sheet.pdf  同PDF版
 data.js       白書・統計クイズ44問
 pastq.js      過去問論点クイズ28問
 topics.js     分野別集計と頻出テーマ
