@@ -146,6 +146,23 @@
   .missed ol { margin: 0; padding-left: 1.2rem; font-size: .87rem; color: var(--ink-2); line-height: 1.75; }
   .missed b { color: var(--ink); }
 
+  /* 再開バナー・保存警告 */
+  .resume {
+    display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap;
+    background: var(--accent-soft); border-left: 3px solid var(--accent);
+    padding: .6rem .85rem; margin-top: 1rem; font-size: .84rem; color: var(--ink-2);
+  }
+  .resume b { color: var(--ink); }
+  .resume button {
+    font: inherit; font-size: .78rem; cursor: pointer; background: none; color: var(--accent);
+    border: 0; border-bottom: 1px solid var(--accent); padding: 0 0 1px; margin-left: auto;
+  }
+  .nostore {
+    background: var(--ng-soft); border-left: 3px solid var(--ng);
+    padding: .6rem .85rem; margin-top: 1rem; font-size: .82rem; color: var(--ink-2); line-height: 1.7;
+  }
+  .nostore b { color: var(--ink); }
+
   /* 学習診断 */
   .diag { margin-top: 1.6rem; }
   .diag h3 {
@@ -311,6 +328,7 @@
   </div>
   <div class="bar"><i id="bar"></i></div>
 
+  <div id="resumeHost"></div>
   <div id="stage"></div>
   </div>
 
@@ -416,8 +434,8 @@ function renderNav(card, afterVerdict) {
   const fb = nav.querySelector("#fwd");
   if (fb) fb.addEventListener("click", goNext);
 }
-function goPrev() { if (i > 0) { i--; render(); } }
-function goNext() { i++; render(); }
+function goPrev() { if (i > 0) { i--; saveSession(); render(); } }
+function goNext() { i++; saveSession(); render(); }
 
 function choose(card, btn, origIdx) {
   if (answered) return;
@@ -428,6 +446,7 @@ function choose(card, btn, origIdx) {
   recordAnswer(q, hit);
   log.push({ f: q.f, hit: hit, q: q.q, a: q.c[q.a] });
   answers[i] = { pick: origIdx, hit: hit };
+  saveSession();
   showVerdict(card, btn, hit, true);
 }
 
@@ -464,6 +483,7 @@ function showVerdict(card, btn, hit, focusNext) {
 }
 
 function renderResult() {
+  clearSession();
   elField.textContent = "結果";
   elCount.textContent = Q.length + " / " + Q.length;
   elBar.style.width = "100%";
@@ -586,6 +606,55 @@ function lifetimeStats() {
   return { answers: n, correct: ok, questions: q };
 }
 
+/* ---------- 進捗の保存と再開 ---------- */
+const SKEY = "gq_session_v1";
+let CURRENT_SET = "white";
+let STORAGE_OK = true;
+try {
+  localStorage.setItem("__gq_test", "1");
+  localStorage.removeItem("__gq_test");
+} catch (e) { STORAGE_OK = false; }
+
+function saveSession() {
+  if (!STORAGE_OK) return;
+  try {
+    localStorage.setItem(SKEY, JSON.stringify({
+      set: CURRENT_SET,
+      keys: Q.map(function (q) { return q.q; }),
+      i: i, correct: correct, answers: answers
+    }));
+  } catch (e) {}
+}
+function clearSession() { try { localStorage.removeItem(SKEY); } catch (e) {} }
+function loadSession() {
+  if (!STORAGE_OK) return null;
+  try {
+    const d = JSON.parse(localStorage.getItem(SKEY) || "null");
+    if (!d || !d.keys || !d.keys.length) return null;
+    if (typeof d.i !== "number" || d.i >= d.keys.length) return null;
+    if (!d.i) return null;                                   // 1問目なら再開扱いにしない
+    const byKey = {};
+    SETS.all.forEach(function (q) { byKey[q.q] = q; });
+    const list = d.keys.map(function (k) { return byKey[k]; });
+    if (list.some(function (q) { return !q; })) return null;  // 問題が入れ替わっていたら破棄
+    return { set: d.set, list: list, i: d.i, correct: d.correct || 0, answers: d.answers || [] };
+  } catch (e) { return null; }
+}
+function applySetButtons(key) {
+  document.querySelectorAll(".set").forEach(function (o) {
+    o.setAttribute("aria-pressed", String(o.dataset.set === key));
+  });
+}
+function showResume(n, total) {
+  const host = document.getElementById("resumeHost");
+  host.innerHTML = '<div class="resume">前回の続き（<b>' + (n + 1) + ' / ' + total +
+    '問目</b>）から再開しました<button id="restart">最初から解き直す</button></div>';
+  host.querySelector("#restart").addEventListener("click", function () {
+    i = 0; correct = 0; log.length = 0; answers.length = 0;
+    clearSession(); host.innerHTML = ""; render();
+  });
+}
+
 /* ---------- 出題範囲の切替 ---------- */
 
 const SETS = {
@@ -599,9 +668,11 @@ document.querySelectorAll(".set").forEach(function (b) {
     document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
     const d = b.dataset.set === "weak" ? weakList() : SETS[b.dataset.set];
     if (!d.length) return;
+    CURRENT_SET = b.dataset.set;
     Q.length = 0; d.forEach(function (q) { Q.push(q); });
     i = 0; correct = 0; log.length = 0; answers.length = 0;
-    render();
+    document.getElementById("resumeHost").innerHTML = "";
+    clearSession(); render();
   });
 });
 
@@ -751,7 +822,10 @@ function renderHistory() {
   const st = p.querySelector("#solveThese");
   if (st) st.addEventListener("click", function () {
     Q.length = 0; list.forEach(function (r) { Q.push(r.q); });
+    CURRENT_SET = "custom";
     i = 0; correct = 0; log.length = 0; answers.length = 0;
+    document.getElementById("resumeHost").innerHTML = "";
+    clearSession();
     document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
     selectTab("quiz"); render();
   });
@@ -836,7 +910,24 @@ Object.keys(TABS).forEach(function (k) {
 });
 
 refreshWeakBtn();
-render();
+(function boot() {
+  if (!STORAGE_OK) {
+    document.getElementById("resumeHost").innerHTML =
+      '<div class="nostore"><b>この端末では学習履歴を保存できません。</b>' +
+      'プライベートブラウズを使っている場合は通常のウィンドウで開いてください。' +
+      '履歴・進捗ともにページを閉じると消えます。</div>';
+  }
+  const sv = loadSession();
+  if (sv) {
+    CURRENT_SET = sv.set;
+    Q.length = 0; sv.list.forEach(function (q) { Q.push(q); });
+    i = sv.i; correct = sv.correct;
+    answers.length = 0; sv.answers.forEach(function (a, idx) { answers[idx] = a; });
+    if (SETS[sv.set]) applySetButtons(sv.set); else applySetButtons("__none__");
+    showResume(sv.i, Q.length);
+  }
+  render();
+})();
 </script>
 
 </body>
