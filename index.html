@@ -326,6 +326,7 @@ const Q = QUIZ_DATA.slice();
 const LETTERS = ["1","2","3","4"];
 let i = 0, correct = 0, answered = false;
 const log = [];
+const answers = [];
 
 const stage = document.getElementById("stage");
 const elField = document.getElementById("field");
@@ -348,7 +349,8 @@ function render() {
   if (i >= Q.length) return renderResult();
   const q = Q[i];
   const order = shuffle(q.c.length, i * 7919 + 13);
-  answered = false;
+  const prev = answers[i];
+  answered = !!prev;
 
   elField.textContent = q.f;
   elCount.textContent = (i + 1) + " / " + Q.length;
@@ -377,15 +379,45 @@ function render() {
     b.innerHTML = '<span class="key">' + LETTERS[pos] + '</span><span></span>';
     b.lastChild.textContent = q.c[origIdx];
     b.dataset.orig = origIdx;
-    b.addEventListener("click", () => choose(card, b, origIdx, order));
+    b.addEventListener("click", () => choose(card, b, origIdx));
     box.appendChild(b);
   });
 
   stage.replaceChildren(card);
+
+  if (prev) {
+    // 解答済みの問題に戻ってきた場合は、そのときの状態を復元する
+    const btn = Array.prototype.find.call(card.querySelectorAll(".ch"),
+      b => Number(b.dataset.orig) === prev.pick);
+    showVerdict(card, btn, prev.hit, false);
+  } else {
+    renderNav(card);
+  }
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
-function choose(card, btn, origIdx, order) {
+/* 前へ／次へのナビゲーション。解答前でも「前へ」で戻れる */
+function renderNav(card, afterVerdict) {
+  const old = card.querySelector(".nav");
+  if (old) old.remove();
+  if (i === 0 && afterVerdict) return;      // 1問目の解答後は「次へ」だけで足りる
+  const nav = document.createElement("div");
+  nav.className = "actions nav";
+  let html = '';
+  if (i > 0) html += '<button class="btn ghost" id="prev">← 前の問題</button>';
+  if (!afterVerdict && answers[i]) html += '<button class="btn" id="fwd">次の問題 →</button>';
+  if (!html) return;
+  nav.innerHTML = html;
+  card.appendChild(nav);
+  const pb = nav.querySelector("#prev");
+  if (pb) pb.addEventListener("click", goPrev);
+  const fb = nav.querySelector("#fwd");
+  if (fb) fb.addEventListener("click", goNext);
+}
+function goPrev() { if (i > 0) { i--; render(); } }
+function goNext() { i++; render(); }
+
+function choose(card, btn, origIdx) {
   if (answered) return;
   answered = true;
   const q = Q[i];
@@ -393,7 +425,12 @@ function choose(card, btn, origIdx, order) {
   if (hit) correct++;
   recordAnswer(q, hit);
   log.push({ f: q.f, hit: hit, q: q.q, a: q.c[q.a] });
+  answers[i] = { pick: origIdx, hit: hit };
+  showVerdict(card, btn, hit, true);
+}
 
+function showVerdict(card, btn, hit, focusNext) {
+  const q = Q[i];
   card.querySelectorAll(".ch").forEach(b => {
     b.disabled = true;
     const oi = Number(b.dataset.orig);
@@ -402,19 +439,25 @@ function choose(card, btn, origIdx, order) {
     else b.classList.add("dim");
   });
 
+  const oldNav = card.querySelector(".nav");
+  if (oldNav) oldNav.remove();
+
   const v = document.createElement("div");
   v.className = "verdict";
   v.innerHTML =
     '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (hit ? "正解" : "不正解") + '</div>' +
     '<p class="vnote">' + q.n + '</p>' +
     '<div class="actions">' +
+      (i > 0 ? '<button class="btn ghost" id="prev">← 前へ</button>' : '') +
       '<button class="btn" id="next">' + (i + 1 < Q.length ? "次の問題" : "結果を見る") + '</button>' +
-      '<span class="hintkey">Enter でも進めます</span>' +
+      '<span class="hintkey">← → キーでも移動できます</span>' +
     '</div>';
   card.appendChild(v);
   const nb = v.querySelector("#next");
-  nb.addEventListener("click", () => { i++; render(); });
-  nb.focus();
+  nb.addEventListener("click", goNext);
+  const pb = v.querySelector("#prev");
+  if (pb) pb.addEventListener("click", goPrev);
+  if (focusNext) nb.focus();
   elScore.innerHTML = "正解 <b>" + correct + "</b>";
 }
 
@@ -479,7 +522,7 @@ function renderResult() {
     const keep = new Set(missed.map(m => m.q));
     const subset = Q.filter(q => keep.has(q.q));
     Q.length = 0; subset.forEach(q => Q.push(q));
-    i = 0; correct = 0; log.length = 0; render();
+    i = 0; correct = 0; log.length = 0; answers.length = 0; render();
   });
   card.querySelector("#all").addEventListener("click", () => location.reload());
   const rh = card.querySelector("#resetHist");
@@ -492,6 +535,9 @@ function renderResult() {
 }
 
 document.addEventListener("keydown", e => {
+  if (document.getElementById("pane-quiz").hidden) return;
+  if (e.key === "ArrowLeft") { if (i > 0) { e.preventDefault(); goPrev(); } return; }
+  if (e.key === "ArrowRight") { if (answers[i]) { e.preventDefault(); goNext(); } return; }
   if (e.key === "Enter") {
     const n = document.getElementById("next");
     if (n) { e.preventDefault(); n.click(); }
@@ -551,7 +597,7 @@ document.querySelectorAll(".set").forEach(function (b) {
     const d = b.dataset.set === "weak" ? weakList() : SETS[b.dataset.set];
     if (!d.length) return;
     Q.length = 0; d.forEach(function (q) { Q.push(q); });
-    i = 0; correct = 0; log.length = 0;
+    i = 0; correct = 0; log.length = 0; answers.length = 0;
     render();
   });
 });
@@ -702,7 +748,7 @@ function renderHistory() {
   const st = p.querySelector("#solveThese");
   if (st) st.addEventListener("click", function () {
     Q.length = 0; list.forEach(function (r) { Q.push(r.q); });
-    i = 0; correct = 0; log.length = 0;
+    i = 0; correct = 0; log.length = 0; answers.length = 0;
     document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
     selectTab("quiz"); render();
   });
