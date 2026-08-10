@@ -146,6 +146,30 @@
   .missed ol { margin: 0; padding-left: 1.2rem; font-size: .87rem; color: var(--ink-2); line-height: 1.75; }
   .missed b { color: var(--ink); }
 
+  /* 履歴・フラグ */
+  .hist { font-size: .72rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .flagmark {
+    display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .04em;
+    color: var(--ng); background: var(--ng-soft); border: 1px solid var(--ng);
+    padding: 0 .4rem; border-radius: 2px; margin-left: .45rem; vertical-align: 1px;
+  }
+  .qmeta { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+  .set.weak[aria-pressed="false"] { border-color: var(--ng); color: var(--ng); }
+  .set.weak[aria-pressed="true"] { background: var(--ng); border-color: var(--ng); color: var(--paper); }
+  .set:disabled { opacity: .4; cursor: default; }
+  .reset {
+    font: inherit; font-size: .76rem; cursor: pointer; background: none;
+    color: var(--ink-3); border: 0; border-bottom: 1px solid var(--rule-strong); padding: 0 0 1px;
+  }
+  .reset:hover { color: var(--ng); border-bottom-color: var(--ng); }
+  .lifetime {
+    margin-top: 1.2rem; padding-top: .9rem; border-top: 1px solid var(--rule);
+    display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap;
+    font-size: .82rem; color: var(--ink-3); font-variant-numeric: tabular-nums;
+  }
+  .lifetime b { color: var(--ink); }
+  .lifetime .reset { margin-left: auto; }
+
   /* set switch */
   .sets { display: flex; gap: .35rem; flex-wrap: wrap; margin: 1rem 0 0; }
   .set {
@@ -211,8 +235,9 @@
   <div class="pane" id="pane-quiz" role="tabpanel" aria-labelledby="tab-quiz">
   <div class="sets" role="group" aria-label="出題範囲">
     <button class="set" data-set="white" aria-pressed="true">白書・統計 44問</button>
-    <button class="set" data-set="past" aria-pressed="false">過去問論点 26問</button>
-    <button class="set" data-set="all" aria-pressed="false">まとめて 70問</button>
+    <button class="set" data-set="past" aria-pressed="false">過去問論点 28問</button>
+    <button class="set" data-set="all" aria-pressed="false">まとめて 全問</button>
+    <button class="set weak" data-set="weak" aria-pressed="false" id="weakBtn">苦手 0問</button>
   </div>
 
   <div class="status">
@@ -268,8 +293,14 @@ function render() {
 
   const card = document.createElement("div");
   card.className = "card";
+  const h = histOf(q);
+  let badge = '';
+  if (h) {
+    badge = '<span class="hist">これまで ' + h.n + '回中 ' + h.ok + '回正解</span>';
+    if (h.last === 0) badge += '<span class="flagmark">前回まちがえた</span>';
+  }
   card.innerHTML =
-    '<div class="qn">Q' + (i + 1) + '</div>' +
+    '<div class="qmeta"><span class="qn">Q' + (i + 1) + '</span>' + badge + '</div>' +
     '<p class="qt"></p><p class="qh"></p><div class="choices"></div>';
   card.querySelector(".qt").textContent = q.q;
   card.querySelector(".qh").textContent = q.h;
@@ -296,6 +327,7 @@ function choose(card, btn, origIdx, order) {
   const q = Q[i];
   const hit = origIdx === q.a;
   if (hit) correct++;
+  recordAnswer(q, hit);
   log.push({ f: q.f, hit: hit, q: q.q, a: q.c[q.a] });
 
   card.querySelectorAll(".ch").forEach(b => {
@@ -365,6 +397,13 @@ function renderResult() {
     '<p class="judge">' + judge + '</p>' +
     '<table><thead><tr><th>分野</th><th>正答</th><th>率</th></tr></thead><tbody>' + rows + '</tbody></table>' +
     missedHtml +
+    (function () {
+      const L = lifetimeStats();
+      if (!L.answers) return '';
+      return '<div class="lifetime"><span>累計 <b>' + L.answers + '</b>回解答・正答率 <b>' +
+        Math.round(L.correct / L.answers * 100) + '%</b></span><span>苦手 <b>' + weakList().length +
+        '</b>問</span><button class="reset" id="resetHist">履歴をリセット</button></div>';
+    })() +
     '<div class="actions">' +
       (missed.length ? '<button class="btn" id="again">間違えた ' + missed.length + ' 問をやり直す</button>' : '') +
       '<button class="btn ghost" id="all">最初から全44問</button>' +
@@ -379,6 +418,12 @@ function renderResult() {
     i = 0; correct = 0; log.length = 0; render();
   });
   card.querySelector("#all").addEventListener("click", () => location.reload());
+  const rh = card.querySelector("#resetHist");
+  if (rh) rh.addEventListener("click", function () {
+    if (!confirm("これまでの解答履歴をすべて削除します。よろしいですか。")) return;
+    HIST = {}; saveHist(); refreshWeakBtn(); location.reload();
+  });
+  refreshWeakBtn();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -395,7 +440,42 @@ document.addEventListener("keydown", e => {
   }
 });
 
+/* ---------- 解答履歴（localStorage） ---------- */
+const HKEY = "gq_history_v1";
+let HIST = {};
+try { HIST = JSON.parse(localStorage.getItem(HKEY) || "{}") || {}; } catch (e) { HIST = {}; }
+function saveHist() { try { localStorage.setItem(HKEY, JSON.stringify(HIST)); } catch (e) {} }
+function hkey(q) { return q.q; }
+function histOf(q) { return HIST[hkey(q)] || null; }
+function recordAnswer(q, hit) {
+  const k = hkey(q);
+  const h = HIST[k] || { n: 0, ok: 0, last: null };
+  h.n++; if (hit) h.ok++;
+  h.last = hit ? 1 : 0;
+  HIST[k] = h; saveHist();
+}
+/* 苦手＝直近で誤答した問題、または正答率6割未満の問題 */
+function weakList() {
+  return SETS.all.filter(function (q) {
+    const h = histOf(q);
+    return h && (h.last === 0 || h.ok / h.n < 0.6);
+  });
+}
+function refreshWeakBtn() {
+  const b = document.getElementById("weakBtn");
+  const n = weakList().length;
+  b.textContent = "苦手 " + n + "問";
+  b.disabled = n === 0;
+  if (n === 0 && b.getAttribute("aria-pressed") === "true") b.setAttribute("aria-pressed", "false");
+}
+function lifetimeStats() {
+  let n = 0, ok = 0, q = 0;
+  Object.keys(HIST).forEach(function (k) { n += HIST[k].n; ok += HIST[k].ok; q++; });
+  return { answers: n, correct: ok, questions: q };
+}
+
 /* ---------- 出題範囲の切替 ---------- */
+
 const SETS = {
   white: QUIZ_DATA,
   past:  PASTQ_DATA,
@@ -404,7 +484,8 @@ const SETS = {
 document.querySelectorAll(".set").forEach(function (b) {
   b.addEventListener("click", function () {
     document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
-    const d = SETS[b.dataset.set];
+    const d = b.dataset.set === "weak" ? weakList() : SETS[b.dataset.set];
+    if (!d.length) return;
     Q.length = 0; d.forEach(function (q) { Q.push(q); });
     i = 0; correct = 0; log.length = 0;
     render();
@@ -467,6 +548,7 @@ function selectTab(which) {
 tabQ.addEventListener("click", () => selectTab("quiz"));
 tabT.addEventListener("click", () => selectTab("topics"));
 
+refreshWeakBtn();
 render();
 </script>
 
