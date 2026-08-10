@@ -1,0 +1,5 @@
+_*.html
+*.png
+questions/
+parsed/
+.DS_Store

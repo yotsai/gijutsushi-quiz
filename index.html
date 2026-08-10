@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="技術士第一次試験【19】環境部門・専門科目の学習ツール。令和4〜7年度の過去問140問を全問分類した頻出テーマと、白書・環境省統計の数値を問う4択クイズ44問。">
+<title>技術士一次試験 環境部門 数値クイズ｜頻出テーマ</title>
+</head>
+<body>
+
+<style>
+  :root {
+    --paper: #FCFBF8;
+    --panel: #FFFFFF;
+    --rule: #DCDDD6;
+    --rule-strong: #B7BBB2;
+    --ink: #191D1A;
+    --ink-2: #4A5049;
+    --ink-3: #767C74;
+    --accent: #0E5049;
+    --accent-soft: #E3EDEA;
+    --ok: #1B6B3A;
+    --ok-soft: #E2F0E5;
+    --ng: #9E3324;
+    --ng-soft: #F7E6E2;
+    --shadow: 0 1px 2px rgba(25,29,26,.07);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #131614; --panel: #1A1E1C; --rule: #2C312E; --rule-strong: #454B46;
+      --ink: #E8EBE7; --ink-2: #AFB5AD; --ink-3: #838A82;
+      --accent: #6FBFB2; --accent-soft: #1E3833;
+      --ok: #6FC28C; --ok-soft: #1C3325;
+      --ng: #E08878; --ng-soft: #3A2320;
+      --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #131614; --panel: #1A1E1C; --rule: #2C312E; --rule-strong: #454B46;
+    --ink: #E8EBE7; --ink-2: #AFB5AD; --ink-3: #838A82;
+    --accent: #6FBFB2; --accent-soft: #1E3833;
+    --ok: #6FC28C; --ok-soft: #1C3325;
+    --ng: #E08878; --ng-soft: #3A2320;
+    --shadow: none;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 34rem; margin: 0 auto; padding: 1.5rem 1.1rem 4rem; }
+
+  /* header */
+  header { margin-bottom: 1.3rem; }
+  .eyebrow { font-size: .72rem; letter-spacing: .15em; color: var(--ink-3); }
+  h1 {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-size: 1.32rem; font-weight: 600; margin: .3rem 0 .5rem; line-height: 1.4;
+  }
+  .intro { font-size: .87rem; color: var(--ink-2); margin: 0; }
+
+  /* progress */
+  .status {
+    display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap;
+    font-size: .8rem; color: var(--ink-3); margin: 1.2rem 0 .45rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .status .field { color: var(--accent); font-weight: 600; letter-spacing: .02em; }
+  .status .score { margin-left: auto; }
+  .status b { color: var(--ink); }
+  .bar { height: 3px; background: var(--rule); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .25s; }
+
+  /* card */
+  .card {
+    background: var(--panel); border: 1px solid var(--rule);
+    box-shadow: var(--shadow); padding: 1.15rem 1.1rem 1.25rem; margin-top: 1.1rem;
+  }
+  .qn { font-size: .75rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .qt { font-size: 1.03rem; font-weight: 600; margin: .25rem 0 .1rem; line-height: 1.6; text-wrap: pretty; }
+  .qh { font-size: .82rem; color: var(--ink-3); margin: 0 0 .9rem; line-height: 1.6; }
+
+  .choices { display: flex; flex-direction: column; gap: .45rem; }
+  .ch {
+    display: flex; align-items: flex-start; gap: .65rem; width: 100%;
+    font: inherit; font-size: .95rem; text-align: left; cursor: pointer;
+    background: var(--panel); color: var(--ink);
+    border: 1px solid var(--rule-strong); border-radius: 2px;
+    padding: .58rem .7rem; line-height: 1.55;
+    transition: background .12s, border-color .12s;
+    font-variant-numeric: tabular-nums;
+  }
+  .ch:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+  .ch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ch:disabled { cursor: default; }
+  .ch .key {
+    flex: none; width: 1.35rem; height: 1.35rem; margin-top: .1rem;
+    display: grid; place-items: center;
+    border: 1px solid var(--rule-strong); border-radius: 50%;
+    font-size: .72rem; color: var(--ink-3);
+  }
+  .ch.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .ch.ok .key { border-color: var(--ok); color: var(--ok); font-weight: 700; }
+  .ch.ng { border-color: var(--ng); background: var(--ng-soft); }
+  .ch.ng .key { border-color: var(--ng); color: var(--ng); font-weight: 700; }
+  .ch.dim { opacity: .45; }
+
+  .verdict { margin-top: .95rem; padding-top: .85rem; border-top: 1px solid var(--rule); }
+  .vtag { font-size: .82rem; font-weight: 700; letter-spacing: .04em; }
+  .vtag.ok { color: var(--ok); }
+  .vtag.ng { color: var(--ng); }
+  .vnote { font-size: .86rem; color: var(--ink-2); margin: .3rem 0 0; line-height: 1.72; }
+  .vnote b { color: var(--ink); }
+
+  .actions { display: flex; gap: .5rem; margin-top: 1rem; align-items: center; flex-wrap: wrap; }
+  .btn {
+    font: inherit; font-size: .87rem; font-weight: 600; cursor: pointer;
+    background: var(--accent); color: var(--paper);
+    border: 1px solid var(--accent); border-radius: 2px; padding: .45rem 1.3rem;
+  }
+  .btn:hover { filter: brightness(1.12); }
+  .btn.ghost { background: transparent; color: var(--ink-2); border-color: var(--rule-strong); font-weight: 400; }
+  .btn.ghost:hover { border-color: var(--accent); color: var(--accent); filter: none; }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .hintkey { font-size: .74rem; color: var(--ink-3); margin-left: auto; }
+
+  /* result */
+  .result h2 {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-size: 1.18rem; margin: 0 0 .2rem;
+  }
+  .big { font-size: 2.6rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; color: var(--accent); }
+  .big small { font-size: 1rem; font-weight: 400; color: var(--ink-3); }
+  .judge { font-size: .9rem; color: var(--ink-2); margin: .5rem 0 1.1rem; line-height: 1.7; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  th, td { padding: .38rem .3rem; border-bottom: 1px solid var(--rule); text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { font-size: .75rem; color: var(--ink-3); font-weight: 600; border-bottom: 1px solid var(--rule-strong); }
+  td .mini { display: inline-block; width: 3.2rem; height: 4px; background: var(--rule); vertical-align: middle; margin-left: .4rem; }
+  td .mini i { display: block; height: 100%; background: var(--accent); }
+  .missed { margin-top: 1.4rem; }
+  .missed h3 { font-size: .85rem; margin: 0 0 .5rem; color: var(--ink-3); font-weight: 600; letter-spacing: .03em; }
+  .missed ol { margin: 0; padding-left: 1.2rem; font-size: .87rem; color: var(--ink-2); line-height: 1.75; }
+  .missed b { color: var(--ink); }
+
+  /* tabs */
+  .tabs { display: flex; gap: .4rem; border-bottom: 1px solid var(--rule); margin: 1.1rem 0 0; }
+  .tab {
+    font: inherit; font-size: .87rem; cursor: pointer; background: none; color: var(--ink-3);
+    border: 0; border-bottom: 2px solid transparent; padding: .45rem .75rem; margin-bottom: -1px;
+  }
+  .tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pane[hidden] { display: none; }
+
+  /* 頻出テーマ */
+  .lede { font-size: .88rem; color: var(--ink-2); margin: 1.1rem 0 .3rem; line-height: 1.75; }
+  .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: .9rem; }
+  .stats { width: 100%; min-width: 23rem; border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; }
+  .stats th, .stats td { padding: .35rem .3rem; white-space: nowrap; border-bottom: 1px solid var(--rule); text-align: right; }
+  .stats th:first-child, .stats td:first-child { text-align: left; white-space: normal; min-width: 11rem; }
+  .stats thead th { font-size: .74rem; color: var(--ink-3); border-bottom: 1px solid var(--rule-strong); }
+  .stats .nm { font-weight: 600; }
+  .stats .sb { display: block; font-weight: 400; font-size: .74rem; color: var(--ink-3); line-height: 1.5; }
+  .stats tr.hi td { background: var(--accent-soft); }
+  .topic {
+    border-top: 1px solid var(--rule); padding: .8rem 0;
+    display: grid; grid-template-columns: 2.3rem 1fr; gap: .1rem .7rem;
+  }
+  .topic .cnt {
+    grid-row: span 3; font-variant-numeric: tabular-nums;
+    font-size: 1.25rem; font-weight: 700; color: var(--accent); text-align: center; line-height: 1.5;
+  }
+  .topic .cnt small { display: block; font-size: .62rem; font-weight: 400; color: var(--ink-3); letter-spacing: .06em; }
+  .topic .ti { font-weight: 600; font-size: .95rem; line-height: 1.5; }
+  .topic .meta { font-size: .74rem; color: var(--ink-3); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .topic .meta .f { color: var(--accent); }
+  .topic .flag { color: var(--ng); font-weight: 700; }
+  .topic .nt { font-size: .84rem; color: var(--ink-2); line-height: 1.72; margin-top: .18rem; }
+  .foot { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-size: .76rem; color: var(--ink-3); line-height: 1.8; }
+  .foot a { color: var(--accent); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">技術士第一次試験｜【19】環境部門・専門科目</p>
+    <h1>白書・環境省統計 数値クイズ 全44問</h1>
+    <p class="intro">令和4〜7年度の過去問140問を分類し、白書・統計から実際に出ている論点だけを4択にしました。選ぶと即座に正誤と解説が出ます。キーボードの 1〜4 と Enter でも進められます。</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" id="tab-quiz" role="tab" aria-selected="true" aria-controls="pane-quiz">数値クイズ 44問</button>
+    <button class="tab" id="tab-topics" role="tab" aria-selected="false" aria-controls="pane-topics">過去問の頻出テーマ</button>
+  </div>
+
+  <div class="pane" id="pane-quiz" role="tabpanel" aria-labelledby="tab-quiz">
+  <div class="status">
+    <span class="field" id="field">—</span>
+    <span id="count">0 / 44</span>
+    <span class="score" id="score">正解 <b>0</b></span>
+  </div>
+  <div class="bar"><i id="bar"></i></div>
+
+  <div id="stage"></div>
+  </div>
+
+  <div class="pane" id="pane-topics" role="tabpanel" aria-labelledby="tab-topics" hidden></div>
+</div>
+
+<script src="data.js"></script>
+<script src="topics.js"></script>
+<script>
+const Q = QUIZ_DATA.slice();
+
+const LETTERS = ["1","2","3","4"];
+let i = 0, correct = 0, answered = false;
+const log = [];
+
+const stage = document.getElementById("stage");
+const elField = document.getElementById("field");
+const elCount = document.getElementById("count");
+const elScore = document.getElementById("score");
+const elBar = document.getElementById("bar");
+
+function shuffle(n, seed) {
+  // 決定論的シャッフル（問題ごとに選択肢の並びを変える）
+  const idx = [...Array(n).keys()];
+  for (let k = n - 1; k > 0; k--) {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const j = seed % (k + 1);
+    [idx[k], idx[j]] = [idx[j], idx[k]];
+  }
+  return idx;
+}
+
+function render() {
+  if (i >= Q.length) return renderResult();
+  const q = Q[i];
+  const order = shuffle(q.c.length, i * 7919 + 13);
+  answered = false;
+
+  elField.textContent = q.f;
+  elCount.textContent = (i + 1) + " / " + Q.length;
+  elScore.innerHTML = "正解 <b>" + correct + "</b>";
+  elBar.style.width = (i / Q.length * 100) + "%";
+
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML =
+    '<div class="qn">Q' + (i + 1) + '</div>' +
+    '<p class="qt"></p><p class="qh"></p><div class="choices"></div>';
+  card.querySelector(".qt").textContent = q.q;
+  card.querySelector(".qh").textContent = q.h;
+
+  const box = card.querySelector(".choices");
+  order.forEach((origIdx, pos) => {
+    const b = document.createElement("button");
+    b.className = "ch";
+    b.type = "button";
+    b.innerHTML = '<span class="key">' + LETTERS[pos] + '</span><span></span>';
+    b.lastChild.textContent = q.c[origIdx];
+    b.dataset.orig = origIdx;
+    b.addEventListener("click", () => choose(card, b, origIdx, order));
+    box.appendChild(b);
+  });
+
+  stage.replaceChildren(card);
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function choose(card, btn, origIdx, order) {
+  if (answered) return;
+  answered = true;
+  const q = Q[i];
+  const hit = origIdx === q.a;
+  if (hit) correct++;
+  log.push({ f: q.f, hit: hit, q: q.q, a: q.c[q.a] });
+
+  card.querySelectorAll(".ch").forEach(b => {
+    b.disabled = true;
+    const oi = Number(b.dataset.orig);
+    if (oi === q.a) b.classList.add("ok");
+    else if (b === btn) b.classList.add("ng");
+    else b.classList.add("dim");
+  });
+
+  const v = document.createElement("div");
+  v.className = "verdict";
+  v.innerHTML =
+    '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (hit ? "正解" : "不正解") + '</div>' +
+    '<p class="vnote">' + q.n + '</p>' +
+    '<div class="actions">' +
+      '<button class="btn" id="next">' + (i + 1 < Q.length ? "次の問題" : "結果を見る") + '</button>' +
+      '<span class="hintkey">Enter でも進めます</span>' +
+    '</div>';
+  card.appendChild(v);
+  const nb = v.querySelector("#next");
+  nb.addEventListener("click", () => { i++; render(); });
+  nb.focus();
+  elScore.innerHTML = "正解 <b>" + correct + "</b>";
+}
+
+function renderResult() {
+  elField.textContent = "結果";
+  elCount.textContent = Q.length + " / " + Q.length;
+  elBar.style.width = "100%";
+
+  const pct = Math.round(correct / Q.length * 100);
+  const byField = {};
+  log.forEach(r => {
+    byField[r.f] = byField[r.f] || { n: 0, ok: 0 };
+    byField[r.f].n++;
+    if (r.hit) byField[r.f].ok++;
+  });
+
+  let judge;
+  if (pct >= 90) judge = "白書・統計の年4問はほぼ確実に取れる水準です。ここは仕上がったので、環境測定・分析（年11〜12問）に時間を移してください。";
+  else if (pct >= 70) judge = "あと一歩です。間違えた問題だけ回し直せば1時間かからずに固まります。";
+  else if (pct >= 50) judge = "桁とオーダーが曖昧なままです。値そのものより「一般廃棄物は数千万t、産業廃棄物は数億t」といった桁の対比で覚え直してください。";
+  else judge = "まず鉄板2問（一般廃棄物・産業廃棄物）だけに絞りましょう。この2テーマは4年連続で出ており、確実に2問取れます。";
+
+  let rows = "";
+  Object.keys(byField).forEach(f => {
+    const d = byField[f];
+    const p = Math.round(d.ok / d.n * 100);
+    rows += '<tr><td>' + f + '</td><td>' + d.ok + ' / ' + d.n +
+      '<span class="mini"><i style="width:' + p + '%"></i></span></td><td>' + p + '%</td></tr>';
+  });
+
+  const missed = log.filter(r => !r.hit);
+  let missedHtml = "";
+  if (missed.length) {
+    missedHtml = '<div class="missed"><h3>間違えた ' + missed.length + ' 問</h3><ol>';
+    missed.forEach(r => { missedHtml += '<li>' + r.q + ' → <b>' + r.a + '</b></li>'; });
+    missedHtml += '</ol></div>';
+  }
+
+  const card = document.createElement("div");
+  card.className = "card result";
+  card.innerHTML =
+    '<h2>採点結果</h2>' +
+    '<div class="big">' + correct + '<small> / ' + Q.length + '　（' + pct + '%）</small></div>' +
+    '<p class="judge">' + judge + '</p>' +
+    '<table><thead><tr><th>分野</th><th>正答</th><th>率</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    missedHtml +
+    '<div class="actions">' +
+      (missed.length ? '<button class="btn" id="again">間違えた ' + missed.length + ' 問をやり直す</button>' : '') +
+      '<button class="btn ghost" id="all">最初から全44問</button>' +
+    '</div>';
+  stage.replaceChildren(card);
+
+  const ag = card.querySelector("#again");
+  if (ag) ag.addEventListener("click", () => {
+    const keep = new Set(missed.map(m => m.q));
+    const subset = Q.filter(q => keep.has(q.q));
+    Q.length = 0; subset.forEach(q => Q.push(q));
+    i = 0; correct = 0; log.length = 0; render();
+  });
+  card.querySelector("#all").addEventListener("click", () => location.reload());
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    const n = document.getElementById("next");
+    if (n) { e.preventDefault(); n.click(); }
+    return;
+  }
+  const k = LETTERS.indexOf(e.key);
+  if (k >= 0 && !answered) {
+    const btns = stage.querySelectorAll(".ch");
+    if (btns[k]) { e.preventDefault(); btns[k].click(); }
+  }
+});
+
+/* ---------- 頻出テーマ ---------- */
+const YEARS = ["R4","R5","R6","R7"];
+function renderTopics() {
+  const p = document.getElementById("pane-topics");
+  if (p.dataset.done) return;
+
+  let stats = '<div class="scroll"><table class="stats"><thead><tr><th>出典・分野</th>' +
+    YEARS.map(y => '<th>' + y + '</th>').join('') + '<th>4年計</th><th>比率</th></tr></thead><tbody>';
+  FIELD_STATS.forEach(f => {
+    const hi = (f.name === "環境測定・分析" || f.name === "白書・環境省統計") ? ' class="hi"' : '';
+    stats += '<tr' + hi + '><td><span class="nm">' + f.name + '</span><span class="sb">' + f.sub + '</span></td>' +
+      f.y.map(v => '<td>' + v + '</td>').join('') +
+      '<td><b>' + f.total + '</b></td><td>' + Math.round(f.total / 140 * 100) + '%</td></tr>';
+  });
+  stats += '</tbody></table></div>';
+
+  let list = '';
+  TOPICS.forEach(t => {
+    list += '<div class="topic">' +
+      '<div class="cnt">' + t.n + '<small>回</small></div>' +
+      '<div class="ti">' + t.t + '</div>' +
+      '<div class="meta"><span class="f">' + t.f + '</span>　' + t.cites.join('・') +
+      (t.flag ? '　<span class="flag">' + t.flag + '</span>' : '') + '</div>' +
+      '<div class="nt">' + t.note + '</div>' +
+    '</div>';
+  });
+
+  p.innerHTML =
+    '<p class="lede">令和4〜7年度の環境部門・専門科目 <b>140問（35問×4年）</b>を1問ずつ分類した結果です。' +
+    '問題文は転載していません。番号は<a href="https://www.engineer.or.jp/c_categories/index02021.html" target="_blank" rel="noopener">日本技術士会の公開過去問</a>を参照してください。</p>' +
+    stats +
+    '<p class="lede"><b>合格ラインは35問中25問を選んで13問正解（50%）。</b>捨てられるのは10問だけなので、' +
+    '最大ブロックの環境測定・分析を丸ごと捨てると残り23問から13問＝56.5%が必要になり、一気に苦しくなります。</p>' +
+    '<h2 style="font-family:\'Hiragino Mincho ProN\',\'Yu Mincho\',serif;font-size:1.05rem;margin:1.6rem 0 .2rem">4年で2回以上出たテーマ</h2>' +
+    '<p class="lede" style="margin-top:.2rem">★印は<b>選択肢まで同一で再出題</b>されたもの。順序が入れ替わるだけなので、選択肢単位で覚えると確実に取れます。</p>' +
+    list +
+    '<div class="foot">分類の対象：技術士第一次試験 専門科目【19】環境部門 令和4〜7年度（公益社団法人 日本技術士会 公開過去問）。' +
+    '正答は同会公開の正答表から機械的に取得。本ページは問題文・選択肢を転載せず、分類結果と論点の要約のみを掲載しています。</div>';
+  p.dataset.done = "1";
+}
+
+/* ---------- タブ ---------- */
+const tabQ = document.getElementById("tab-quiz");
+const tabT = document.getElementById("tab-topics");
+function selectTab(which) {
+  const q = which === "quiz";
+  tabQ.setAttribute("aria-selected", String(q));
+  tabT.setAttribute("aria-selected", String(!q));
+  document.getElementById("pane-quiz").hidden = !q;
+  document.getElementById("pane-topics").hidden = q;
+  if (!q) renderTopics();
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+tabQ.addEventListener("click", () => selectTab("quiz"));
+tabT.addEventListener("click", () => selectTab("topics"));
+
+render();
+</script>
+
+</body>
+</html>
