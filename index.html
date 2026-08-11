@@ -307,6 +307,17 @@
   .lim:hover:not([aria-pressed="true"]) { border-color: var(--rule-strong); }
   .lim:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .pickinfo { font-size: .74rem; color: var(--ink-3); margin-left: .2rem; }
+  .unvwrap {
+    display: flex; align-items: center; gap: .4rem; margin-top: .55rem;
+    font-size: .78rem; color: var(--ink-2); cursor: pointer;
+  }
+  .unvwrap input { width: 1rem; height: 1rem; accent-color: var(--ng); cursor: pointer; margin: 0; }
+  .unvwrap .cnt2 { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .unvnote {
+    background: var(--accent-soft); padding: .5rem .75rem; margin-top: .5rem;
+    font-size: .76rem; color: var(--ink-2); line-height: 1.65;
+  }
+  .unvnote.on { background: var(--ng-soft); }
 
   /* tabs */
   .tabs { display: flex; gap: .4rem; border-bottom: 1px solid var(--rule); margin: 1.1rem 0 0; }
@@ -379,6 +390,13 @@
     <button class="lim" data-lim="0" aria-pressed="true">全問</button>
     <span class="pickinfo" id="pickinfo"></span>
   </div>
+
+  <label class="unvwrap">
+    <input type="checkbox" id="incUnv">
+    <span>未検証（△）の問題も出題する</span>
+    <span class="cnt2" id="unvCnt"></span>
+  </label>
+  <div class="unvnote" id="unvNote"></div>
 
   <div class="status">
     <span class="field" id="field">—</span>
@@ -659,6 +677,9 @@ function recordAnswer(q, hit) {
 /* 苦手＝直近で誤答した問題、または正答率6割未満の問題 */
 function weakList() {
   return SETS.all.filter(function (q) {
+    if (!INCLUDE_UNVERIFIED && q.v === "knowledge") return false;
+    return true;
+  }).filter(function (q) {
     const h = histOf(q);
     return h && (h.last === 0 || h.ok / h.n < 0.6);
   });
@@ -727,10 +748,29 @@ function refreshImportedSet() {
 let LIMIT = 0;              // 0 = 全問
 let CUSTOM_LIST = null;     // 履歴タブから渡された任意の問題群
 
+/* 未検証（確度△）の問題は既定で出題しない。誤った知識を覚えないための安全側の既定値 */
+let INCLUDE_UNVERIFIED = false;
+try { INCLUDE_UNVERIFIED = localStorage.getItem("gq_inc_unverified") === "1"; } catch (e) {}
+function verifiedOnly(list) {
+  return INCLUDE_UNVERIFIED ? list : list.filter(function (q) { return q.v !== "knowledge"; });
+}
 function baseList() {
-  if (CURRENT_SET === "weak") return weakList();
-  if (CURRENT_SET === "custom") return CUSTOM_LIST || [];
-  return SETS[CURRENT_SET] || SETS.white;
+  if (CURRENT_SET === "weak") return verifiedOnly(weakList());
+  if (CURRENT_SET === "custom") return verifiedOnly(CUSTOM_LIST || []);
+  return verifiedOnly(SETS[CURRENT_SET] || SETS.white);
+}
+function updateUnvUI() {
+  const all = SETS.all;
+  const unv = all.filter(function (q) { return q.v === "knowledge"; }).length;
+  const cnt = document.getElementById("unvCnt");
+  const note = document.getElementById("unvNote");
+  if (cnt) cnt.textContent = "（" + unv + "問）";
+  if (note) {
+    note.className = "unvnote" + (INCLUDE_UNVERIFIED ? " on" : "");
+    note.innerHTML = INCLUDE_UNVERIFIED
+      ? "<b>未検証の" + unv + "問を含めて出題しています。</b>解説末尾が△の問題は一次資料での裏取りが済んでいません。これまでの検証で実際に5問の誤りが見つかっているため、△の内容はテキストで確認してから覚えてください。"
+      : "一次資料または公開正答表で裏を取った <b>" + (all.length - unv) + "問</b> だけを出題しています（未検証の" + unv + "問は除外）。";
+  }
 }
 /* 未回答 → 直近誤答 → 正答率が低い順に拾う。限られた時間で効くものから出す */
 function pickQuestions(list) {
@@ -755,6 +795,7 @@ function rebuild() {
   if (host) host.innerHTML = "";
   clearSession();
   updatePickInfo();
+  updateUnvUI();
   render();
   return true;
 }
@@ -835,6 +876,16 @@ document.querySelectorAll(".set").forEach(function (b) {
 });
 
 
+
+(function () {
+  const cb = document.getElementById("incUnv");
+  cb.checked = INCLUDE_UNVERIFIED;
+  cb.addEventListener("change", function () {
+    INCLUDE_UNVERIFIED = cb.checked;
+    try { localStorage.setItem("gq_inc_unverified", cb.checked ? "1" : "0"); } catch (e) {}
+    updateUnvUI(); refreshWeakBtn(); rebuild();
+  });
+})();
 
 document.querySelectorAll(".lim").forEach(function (b) {
   b.addEventListener("click", function () {
@@ -1126,6 +1177,7 @@ Object.keys(TABS).forEach(function (k) {
 });
 
 refreshImportedSet();
+updateUnvUI();
 refreshWeakBtn();
 (function boot() {
   if (!STORAGE_OK) {
