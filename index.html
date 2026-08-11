@@ -452,7 +452,9 @@ function shuffle(n, seed) {
 function render() {
   if (i >= Q.length) return renderResult();
   const q = Q[i];
-  const order = shuffle(q.c.length, i * 7919 + 13);
+  let seed = 0;
+  for (let k = 0; k < q.q.length; k++) seed = (seed * 31 + q.q.charCodeAt(k)) & 0x7fffffff;
+  const order = shuffle(q.c.length, seed);
   const prev = answers[i];
   answered = !!prev;
 
@@ -765,17 +767,30 @@ function updateUnvUI() {
   const cnt = document.getElementById("unvCnt");
   const note = document.getElementById("unvNote");
   if (cnt) cnt.textContent = "（" + unv + "問）";
+  const wrap = document.querySelector(".unvwrap");
+  if (wrap) wrap.hidden = (unv === 0);
   if (note) {
+    note.hidden = (unv === 0);
     note.className = "unvnote" + (INCLUDE_UNVERIFIED ? " on" : "");
     note.innerHTML = INCLUDE_UNVERIFIED
       ? "<b>未検証の" + unv + "問を含めて出題しています。</b>解説末尾が△の問題は一次資料での裏取りが済んでいません。これまでの検証で実際に5問の誤りが見つかっているため、△の内容はテキストで確認してから覚えてください。"
       : "一次資料または公開正答表で裏を取った <b>" + (all.length - unv) + "問</b> だけを出題しています（未検証の" + unv + "問は除外）。";
   }
 }
-/* 未回答 → 直近誤答 → 正答率が低い順に拾う。限られた時間で効くものから出す */
+/* その場でシャッフル（Fisher-Yates）。同じ並びで覚えてしまうのを防ぐ */
+function shuffled(list) {
+  const a = list.slice();
+  for (let k = a.length - 1; k > 0; k--) {
+    const j = Math.floor(Math.random() * (k + 1));
+    const t = a[k]; a[k] = a[j]; a[j] = t;
+  }
+  return a;
+}
+/* 絞り込むときは「未回答 → 直近誤答 → 正答率が低い順」で拾い、拾ったあとに順番を混ぜる */
 function pickQuestions(list) {
-  if (!LIMIT || list.length <= LIMIT) return list.slice();
-  const scored = list.map(function (q, idx) {
+  if (!LIMIT || list.length <= LIMIT) return shuffled(list);
+  const base = shuffled(list);                     // 同点のときの並びも毎回変える
+  const scored = base.map(function (q, idx) {
     const h = histOf(q);
     let s;
     if (!h) s = 0;
@@ -784,7 +799,7 @@ function pickQuestions(list) {
     return { q: q, s: s, idx: idx };
   });
   scored.sort(function (a, b) { return a.s - b.s || a.idx - b.idx; });
-  return scored.slice(0, LIMIT).map(function (x) { return x.q; });
+  return shuffled(scored.slice(0, LIMIT).map(function (x) { return x.q; }));
 }
 function rebuild() {
   const picked = pickQuestions(baseList());
@@ -1199,8 +1214,10 @@ refreshWeakBtn();
     if (SETS[sv.set]) applySetButtons(sv.set); else applySetButtons("__none__");
     updatePickInfo();
     showResume(sv.i, Q.length);
+    render();
+  } else {
+    rebuild();   // 初回は必ず抽選・シャッフルを通す
   }
-  render();
 })();
 </script>
 
