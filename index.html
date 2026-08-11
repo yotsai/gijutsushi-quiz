@@ -114,6 +114,11 @@
   .vtag.ng { color: var(--ng); }
   .vnote { font-size: .86rem; color: var(--ink-2); margin: .3rem 0 0; line-height: 1.72; }
   .vnote b { color: var(--ink); }
+  .vsrc {
+    font-size: .73rem; color: var(--ink-3); margin: .55rem 0 0;
+    padding-top: .45rem; border-top: 1px dotted var(--rule);
+  }
+  .vsrc.k { color: var(--ng); }
 
   .actions { display: flex; gap: .5rem; margin-top: 1rem; align-items: center; flex-wrap: wrap; }
   .btn {
@@ -344,6 +349,12 @@
 const Q = QUIZ_DATA.slice();
 
 const LETTERS = ["1","2","3","4"];
+/* 解説の根拠の質。誤った知識を覚えないよう、どこまで裏を取ったかを明示する */
+const VLABEL = {
+  primary:   "◎ 白書・法令・告示など一次資料で確認",
+  answer:    "○ 公開正答表との突合により確定",
+  knowledge: "△ 教科書的知識にもとづく記述（一次資料は未確認。テキストでの確認を推奨）"
+};
 let i = 0, correct = 0, answered = false;
 const log = [];
 const answers = [];
@@ -468,6 +479,7 @@ function showVerdict(card, btn, hit, focusNext) {
   v.innerHTML =
     '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (hit ? "正解" : "不正解") + '</div>' +
     '<p class="vnote">' + q.n + '</p>' +
+    (q.v ? '<p class="vsrc' + (q.v === "knowledge" ? " k" : "") + '">' + VLABEL[q.v] + '</p>' : '') +
     '<div class="actions">' +
       (i > 0 ? '<button class="btn ghost" id="prev">← 前へ</button>' : '') +
       '<button class="btn" id="next">' + (i + 1 < Q.length ? "次の問題" : "結果を見る") + '</button>' +
