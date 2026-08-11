@@ -168,6 +168,37 @@
   }
   .nostore b { color: var(--ink); }
 
+  /* データ読み込み */
+  .datamgr { margin-top: 2rem; padding-top: 1.1rem; border-top: 1px solid var(--rule); }
+  .datamgr h3 {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    font-size: 1rem; font-weight: 600; margin: 0 0 .3rem;
+  }
+  .datamgr p { font-size: .82rem; color: var(--ink-2); margin: 0 0 .8rem; line-height: 1.75; }
+  .imp { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  .imp input[type=file] { display: none; }
+  .impfile {
+    font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer;
+    background: var(--accent); color: var(--paper); border: 1px solid var(--accent);
+    border-radius: 2px; padding: .45rem 1.2rem; display: inline-block;
+  }
+  .impfile:hover { filter: brightness(1.12); }
+  .impmsg { font-size: .78rem; }
+  .impmsg.ok { color: var(--ok); }
+  .impmsg.ng { color: var(--ng); }
+  .impitem {
+    display: flex; align-items: baseline; gap: .6rem; padding: .5rem 0;
+    border-bottom: 1px solid var(--rule); font-size: .86rem;
+  }
+  .impitem .n2 { color: var(--ink-3); font-size: .78rem; font-variant-numeric: tabular-nums; }
+  .impitem button {
+    margin-left: auto; font: inherit; font-size: .76rem; cursor: pointer;
+    background: none; color: var(--ink-3); border: 0;
+    border-bottom: 1px solid var(--rule-strong); padding: 0 0 1px;
+  }
+  .impitem button:hover { color: var(--ng); border-bottom-color: var(--ng); }
+  .privacy { font-size: .76rem; color: var(--ink-3); line-height: 1.7; margin-top: .8rem; }
+
   /* 学習診断 */
   .diag { margin-top: 1.6rem; }
   .diag h3 {
@@ -264,6 +295,19 @@
   .set[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--paper); font-weight: 600; }
   .set:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+  /* 出題数 */
+  .limits { display: flex; gap: .35rem; flex-wrap: wrap; align-items: center; margin-top: .5rem; }
+  .limits .lab { font-size: .74rem; color: var(--ink-3); margin-right: .1rem; }
+  .lim {
+    font: inherit; font-size: .76rem; cursor: pointer;
+    background: var(--panel); color: var(--ink-2);
+    border: 1px solid var(--rule); border-radius: 2px; padding: .18rem .6rem;
+  }
+  .lim[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 700; background: var(--accent-soft); }
+  .lim:hover:not([aria-pressed="true"]) { border-color: var(--rule-strong); }
+  .lim:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pickinfo { font-size: .74rem; color: var(--ink-3); margin-left: .2rem; }
+
   /* tabs */
   .tabs { display: flex; gap: .4rem; border-bottom: 1px solid var(--rule); margin: 1.1rem 0 0; }
   .tab {
@@ -322,8 +366,18 @@
     <button class="set" data-set="white" aria-pressed="true">白書・統計 44問</button>
     <button class="set" data-set="past" aria-pressed="false">過去問論点 28問</button>
     <button class="set" data-set="measure" aria-pressed="false">測定・分析 30問</button>
+    <button class="set" data-set="extra" aria-pressed="false">5択・適性・基礎 43問</button>
     <button class="set" data-set="all" aria-pressed="false">まとめて 全問</button>
+    <button class="set" data-set="imported" aria-pressed="false" id="impBtn" hidden>過去問 0問</button>
     <button class="set weak" data-set="weak" aria-pressed="false" id="weakBtn">苦手 0問</button>
+  </div>
+
+  <div class="limits" role="group" aria-label="出題数">
+    <span class="lab">出題数</span>
+    <button class="lim" data-lim="10" aria-pressed="false">10問</button>
+    <button class="lim" data-lim="20" aria-pressed="false">20問</button>
+    <button class="lim" data-lim="0" aria-pressed="true">全問</button>
+    <span class="pickinfo" id="pickinfo"></span>
   </div>
 
   <div class="status">
@@ -344,11 +398,12 @@
 <script src="data.js"></script>
 <script src="pastq.js"></script>
 <script src="measure.js"></script>
+<script src="extra.js"></script>
 <script src="topics.js"></script>
 <script>
 const Q = QUIZ_DATA.slice();
 
-const LETTERS = ["1","2","3","4"];
+const LETTERS = ["1","2","3","4","5"];
 /* 解説の根拠の質。誤った知識を覚えないよう、どこまで裏を取ったかを明示する */
 const VLABEL = {
   primary:   "◎ 白書・法令・告示など一次資料で確認",
@@ -546,7 +601,8 @@ function renderResult() {
         '</b>問</span><button class="reset" id="resetHist">履歴をリセット</button></div>';
     })() +
     '<div class="actions">' +
-      (missed.length ? '<button class="btn" id="again">間違えた ' + missed.length + ' 問をやり直す</button>' : '') +
+      (LIMIT && baseList().length > Q.length ? '<button class="btn" id="nextBatch">次の ' + LIMIT + '問へ</button>' : '') +
+      (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をやり直す</button>' : '') +
       '<button class="btn ghost" id="all">最初から全44問</button>' +
     '</div>';
   stage.replaceChildren(card);
@@ -558,6 +614,8 @@ function renderResult() {
     Q.length = 0; subset.forEach(q => Q.push(q));
     i = 0; correct = 0; log.length = 0; answers.length = 0; render();
   });
+  const nb2 = card.querySelector("#nextBatch");
+  if (nb2) nb2.addEventListener("click", function () { rebuild(); });
   card.querySelector("#all").addEventListener("click", () => location.reload());
   const rh = card.querySelector("#resetHist");
   if (rh) rh.addEventListener("click", function () {
@@ -618,6 +676,96 @@ function lifetimeStats() {
   return { answers: n, correct: ok, questions: q };
 }
 
+/* ---------- 過去問データの読み込み（端末内のみ） ---------- */
+/* 著作権のため、過去問本文はリポジトリに置かず利用者の端末にだけ保存する */
+const IKEY = "gq_imported_v1";
+let IMPORTED = {};
+try { IMPORTED = JSON.parse(localStorage.getItem(IKEY) || "{}") || {}; } catch (e) { IMPORTED = {}; }
+function saveImported() {
+  try { localStorage.setItem(IKEY, JSON.stringify(IMPORTED)); return true; }
+  catch (e) { return false; }
+}
+function importedQuestions() {
+  const out = [];
+  Object.keys(IMPORTED).sort().forEach(function (k) {
+    (IMPORTED[k].questions || []).forEach(function (q) { out.push(q); });
+  });
+  return out;
+}
+function validateImport(d) {
+  if (!d || typeof d !== "object") return "JSONとして読めません";
+  if (!d.id || !d.label) return "id / label がありません";
+  if (!Array.isArray(d.questions) || !d.questions.length) return "questions が空です";
+  for (let i = 0; i < d.questions.length; i++) {
+    const q = d.questions[i];
+    if (!q.q || !Array.isArray(q.c) || q.c.length < 2 || typeof q.a !== "number") {
+      return (i + 1) + "問目の形式が不正です（q / c / a が必要）";
+    }
+    if (q.a < 0 || q.a >= q.c.length) return (i + 1) + "問目の正答番号が範囲外です";
+  }
+  return null;
+}
+function applyImport(d) {
+  IMPORTED[d.id] = { label: d.label, count: d.questions.length, questions: d.questions };
+  if (!saveImported()) return "端末の保存領域が足りません";
+  refreshImportedSet();
+  return null;
+}
+function refreshImportedSet() {
+  const list = importedQuestions();
+  SETS.imported = list;
+  SETS.all = QUIZ_DATA.concat(PASTQ_DATA, MEASURE_DATA, EXTRA_DATA, list);
+  const btn = document.getElementById("impBtn");
+  if (btn) {
+    btn.textContent = "過去問 " + list.length + "問";
+    btn.hidden = list.length === 0;
+  }
+  refreshWeakBtn();
+}
+
+/* ---------- 出題数の絞り込み ---------- */
+let LIMIT = 0;              // 0 = 全問
+let CUSTOM_LIST = null;     // 履歴タブから渡された任意の問題群
+
+function baseList() {
+  if (CURRENT_SET === "weak") return weakList();
+  if (CURRENT_SET === "custom") return CUSTOM_LIST || [];
+  return SETS[CURRENT_SET] || SETS.white;
+}
+/* 未回答 → 直近誤答 → 正答率が低い順に拾う。限られた時間で効くものから出す */
+function pickQuestions(list) {
+  if (!LIMIT || list.length <= LIMIT) return list.slice();
+  const scored = list.map(function (q, idx) {
+    const h = histOf(q);
+    let s;
+    if (!h) s = 0;
+    else if (h.last === 0) s = 1;
+    else s = 2 + (h.ok / h.n);
+    return { q: q, s: s, idx: idx };
+  });
+  scored.sort(function (a, b) { return a.s - b.s || a.idx - b.idx; });
+  return scored.slice(0, LIMIT).map(function (x) { return x.q; });
+}
+function rebuild() {
+  const picked = pickQuestions(baseList());
+  if (!picked.length) return false;
+  Q.length = 0; picked.forEach(function (q) { Q.push(q); });
+  i = 0; correct = 0; log.length = 0; answers.length = 0;
+  const host = document.getElementById("resumeHost");
+  if (host) host.innerHTML = "";
+  clearSession();
+  updatePickInfo();
+  render();
+  return true;
+}
+function updatePickInfo() {
+  const el = document.getElementById("pickinfo");
+  if (!el) return;
+  const total = baseList().length;
+  el.textContent = (LIMIT && total > LIMIT)
+    ? "（" + total + "問中、未回答と苦手を優先して" + LIMIT + "問）" : "";
+}
+
 /* ---------- 進捗の保存と再開 ---------- */
 const SKEY = "gq_session_v1";
 let CURRENT_SET = "white";
@@ -631,7 +779,7 @@ function saveSession() {
   if (!STORAGE_OK) return;
   try {
     localStorage.setItem(SKEY, JSON.stringify({
-      set: CURRENT_SET,
+      set: CURRENT_SET, limit: LIMIT,
       keys: Q.map(function (q) { return q.q; }),
       i: i, correct: correct, answers: answers
     }));
@@ -649,7 +797,7 @@ function loadSession() {
     SETS.all.forEach(function (q) { byKey[q.q] = q; });
     const list = d.keys.map(function (k) { return byKey[k]; });
     if (list.some(function (q) { return !q; })) return null;  // 問題が入れ替わっていたら破棄
-    return { set: d.set, list: list, i: d.i, correct: d.correct || 0, answers: d.answers || [] };
+    return { set: d.set, limit: d.limit || 0, list: list, i: d.i, correct: d.correct || 0, answers: d.answers || [] };
   } catch (e) { return null; }
 }
 function applySetButtons(key) {
@@ -670,32 +818,39 @@ function showResume(n, total) {
 /* ---------- 出題範囲の切替 ---------- */
 
 const SETS = {
-  white:   QUIZ_DATA,
-  past:    PASTQ_DATA,
-  measure: MEASURE_DATA,
-  all:     QUIZ_DATA.concat(PASTQ_DATA, MEASURE_DATA)
+  white:    QUIZ_DATA,
+  past:     PASTQ_DATA,
+  measure:  MEASURE_DATA,
+  extra:    EXTRA_DATA,
+  imported: [],
+  all:      QUIZ_DATA.concat(PASTQ_DATA, MEASURE_DATA, EXTRA_DATA)
 };
 document.querySelectorAll(".set").forEach(function (b) {
   b.addEventListener("click", function () {
     document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
-    const d = b.dataset.set === "weak" ? weakList() : SETS[b.dataset.set];
-    if (!d.length) return;
+    const prevSet = CURRENT_SET;
     CURRENT_SET = b.dataset.set;
-    Q.length = 0; d.forEach(function (q) { Q.push(q); });
-    i = 0; correct = 0; log.length = 0; answers.length = 0;
-    document.getElementById("resumeHost").innerHTML = "";
-    clearSession(); render();
+    if (!rebuild()) { CURRENT_SET = prevSet; return; }
   });
 });
 
 
+
+document.querySelectorAll(".lim").forEach(function (b) {
+  b.addEventListener("click", function () {
+    document.querySelectorAll(".lim").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
+    LIMIT = Number(b.dataset.lim);
+    rebuild();
+  });
+});
 
 /* ---------- 学習診断 ---------- */
 /* 本試験での年間出題数の目安（令和4〜7年度140問の分類を35問/年に換算） */
 const EXAM_WEIGHT = {
   "測定・分析": 11.5, "自然環境": 5.0, "生物多様性": 2.0, "法令・制度": 6.0,
   "地球環境": 4.0, "国際": 1.75, "統計": 1.5, "大気・水質": 1.5,
-  "一般廃棄物": 0.75, "産業廃棄物": 0.75, "循環経済": 0.75
+  "一般廃棄物": 0.75, "産業廃棄物": 0.75, "循環経済": 0.75, "化学物質": 1.5,
+  "適性科目": 0, "基礎科目": 0
 };
 function fieldStats() {
   const m = {};
@@ -710,7 +865,7 @@ function fieldStats() {
     const rate = d.n ? d.ok / d.n : null;
     const w = EXAM_WEIGHT[f] || 1;
     return { f: f, rate: rate, n: d.n, done: d.done, total: d.q, weight: w,
-             loss: rate === null ? null : w * (1 - rate) };
+             loss: (rate === null || w === 0) ? null : w * (1 - rate) };
   }).sort(function (a, b) {
     if (a.loss === null && b.loss === null) return b.weight - a.weight;
     if (a.loss === null) return 1;
@@ -731,7 +886,7 @@ function renderDiagnosis() {
       '<div class="dn">' + r.f + '</div>' +
       '<div class="dv">' + (r.rate === null ? '未着手' : Math.round(r.rate * 100) + '%') + '</div>' +
       '<div class="dloss">' + (r.loss === null ? '—' : '▲' + r.loss.toFixed(1)) + '</div>' +
-      '<div class="dsub">本試験で年 ' + r.weight + '問前後 ／ 収録 ' + r.total + '問中 ' + r.done + '問に解答' +
+      '<div class="dsub">' + (r.weight ? '本試験で年 ' + r.weight + '問前後' : '専門科目とは別の科目') + ' ／ 収録 ' + r.total + '問中 ' + r.done + '問に解答' +
         (r.n ? '（延べ' + r.n + '回）' : '') + '</div>' +
     '</div>';
   });
@@ -769,6 +924,57 @@ function diagnosisText() {
   }
   t += "\n※このテキストをClaudeに貼ると、次に何をやるべきか分析してもらえます。";
   return t;
+}
+
+
+function renderDataManager() {
+  let items = "";
+  Object.keys(IMPORTED).sort().forEach(function (k) {
+    const d = IMPORTED[k];
+    items += '<div class="impitem"><span>' + d.label + '</span><span class="n2">' +
+      (d.questions ? d.questions.length : 0) + '問</span>' +
+      '<button data-del="' + k + '">削除</button></div>';
+  });
+  return '<div class="datamgr"><h3>過去問データの読み込み</h3>' +
+    '<p>過去問の本文は<b>この端末の中だけ</b>に保存されます。' +
+    'アプリを置いているGitHubには問題文を一切含めていないため、' +
+    '読み込みは端末ごとに1回だけ必要です。</p>' +
+    '<div class="imp">' +
+      '<label class="impfile" for="impFile">JSONファイルを選ぶ</label>' +
+      '<input type="file" id="impFile" accept="application/json,.json">' +
+      '<span class="impmsg" id="impMsg"></span>' +
+    '</div>' +
+    (items ? '<div style="margin-top:1rem">' + items + '</div>' : '') +
+    '<p class="privacy">保存先はブラウザのローカル領域です。他人には見えません。' +
+    'ブラウザのデータを消すと再読み込みが必要になります。</p></div>';
+}
+function wireDataManager(p) {
+  const f = p.querySelector("#impFile");
+  const msg = p.querySelector("#impMsg");
+  if (f) f.addEventListener("change", function () {
+    const file = f.files && f.files[0];
+    if (!file) return;
+    const r = new FileReader();
+    r.onload = function () {
+      let d = null;
+      try { d = JSON.parse(r.result); } catch (e) {
+        msg.className = "impmsg ng"; msg.textContent = "JSONとして読めませんでした"; return;
+      }
+      const err = validateImport(d) || applyImport(d);
+      if (err) { msg.className = "impmsg ng"; msg.textContent = err; return; }
+      msg.className = "impmsg ok";
+      msg.textContent = d.label + " を " + d.questions.length + "問 読み込みました";
+      renderHistory();
+    };
+    r.readAsText(file);
+  });
+  p.querySelectorAll("[data-del]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (!confirm(IMPORTED[b.dataset.del].label + " を削除します。よろしいですか。")) return;
+      delete IMPORTED[b.dataset.del];
+      saveImported(); refreshImportedSet(); renderHistory();
+    });
+  });
 }
 
 /* ---------- 履歴タブ ---------- */
@@ -822,7 +1028,7 @@ function renderHistory() {
       : '<p class="empty">' + (HFILTER === "miss"
           ? "間違えた問題はありません。まだ解いていない場合は「未回答」から始めてください。"
           : HFILTER === "none" ? "すべての問題に一度は解答済みです。" : "履歴がありません。") + '</p>')
-    + renderDiagnosis();
+    + renderDiagnosis() + renderDataManager();
 
   // 問題文は textContent で入れる
   const qs = p.querySelectorAll(".hq");
@@ -833,14 +1039,13 @@ function renderHistory() {
   });
   const st = p.querySelector("#solveThese");
   if (st) st.addEventListener("click", function () {
-    Q.length = 0; list.forEach(function (r) { Q.push(r.q); });
+    CUSTOM_LIST = list.map(function (r) { return r.q; });
     CURRENT_SET = "custom";
-    i = 0; correct = 0; log.length = 0; answers.length = 0;
-    document.getElementById("resumeHost").innerHTML = "";
-    clearSession();
     document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
-    selectTab("quiz"); render();
+    selectTab("quiz");
+    rebuild();
   });
+  wireDataManager(p);
   const cd = p.querySelector("#copyDiag");
   if (cd) cd.addEventListener("click", function () {
     const txt = diagnosisText();
@@ -921,6 +1126,7 @@ Object.keys(TABS).forEach(function (k) {
   document.getElementById(TABS[k]).addEventListener("click", function () { selectTab(k); });
 });
 
+refreshImportedSet();
 refreshWeakBtn();
 (function boot() {
   if (!STORAGE_OK) {
@@ -932,10 +1138,15 @@ refreshWeakBtn();
   const sv = loadSession();
   if (sv) {
     CURRENT_SET = sv.set;
+    LIMIT = sv.limit;
+    document.querySelectorAll(".lim").forEach(function (o) {
+      o.setAttribute("aria-pressed", String(Number(o.dataset.lim) === LIMIT));
+    });
     Q.length = 0; sv.list.forEach(function (q) { Q.push(q); });
     i = sv.i; correct = sv.correct;
     answers.length = 0; sv.answers.forEach(function (a, idx) { answers[idx] = a; });
     if (SETS[sv.set]) applySetButtons(sv.set); else applySetButtons("__none__");
+    updatePickInfo();
     showResume(sv.i, Q.length);
   }
   render();
