@@ -1,0 +1,9 @@
+# Cloudflare Pages のキャッシュ制御
+# 学習データは更新頻度が高いので、常に最新を取りに行かせる
+/*
+  Cache-Control: no-cache, must-revalidate
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/kankyo-anki-sheet.pdf
+  Cache-Control: public, max-age=3600

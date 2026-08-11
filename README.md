@@ -2,7 +2,10 @@
 
 技術士第一次試験・専門科目（環境部門）の学習用Webアプリ。スマホのブラウザでそのまま使える。
 
-**https://yotsai.github.io/gijutsushi-quiz/**
+**https://gijutsushi-quiz.pages.dev/**（Cloudflare Access で本人のみ）
+
+> 移行中：現時点では https://yotsai.github.io/gijutsushi-quiz/ でも公開中。
+> Cloudflare への移行が完了したらGitHub Pagesは停止し、リポジトリをprivateにする。
 
 ## 収録内容
 
