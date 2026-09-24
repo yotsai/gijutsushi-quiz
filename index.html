@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="技術士第一次試験【19】環境部門・専門科目の学習ツール。令和4〜7年度の過去問140問を全問分類した頻出テーマと、白書・環境省統計の数値を問う4択クイズ44問。">
+<meta name="description" content="技術士第一次試験【19】環境部門・専門科目の学習ツール。令和4〜7年度の過去問140問を全問分類した頻出テーマと、白書・環境省統計の数値を問う4択クイズ。">
 <title>技術士一次試験 環境部門 数値クイズ｜頻出テーマ</title>
 </head>
 <body>
@@ -271,6 +271,34 @@
   .set.weak[aria-pressed="false"] { border-color: var(--ng); color: var(--ng); }
   .set.weak[aria-pressed="true"] { background: var(--ng); border-color: var(--ng); color: var(--paper); }
   .set:disabled { opacity: .4; cursor: default; }
+  .set.bm[aria-pressed="false"]:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+  /* ブックマーク・メモ */
+  .qtools { margin-left: auto; display: flex; gap: .35rem; }
+  .qtool {
+    font: inherit; font-size: .74rem; line-height: 1.6; cursor: pointer;
+    background: var(--panel); color: var(--ink-3);
+    border: 1px solid var(--rule-strong); border-radius: 999px; padding: .12rem .65rem; white-space: nowrap;
+  }
+  .qtool:hover { border-color: var(--accent); color: var(--accent); }
+  .qtool[aria-pressed="true"], .qtool.has { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .qtool:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .memo { margin-top: 1rem; padding-top: .8rem; border-top: 1px dashed var(--rule-strong); }
+  .memo[hidden] { display: none; }
+  .memo label { display: block; font-size: .74rem; color: var(--ink-3); margin-bottom: .3rem; }
+  .memo textarea {
+    display: block; width: 100%; min-height: 4.6rem; resize: vertical;
+    font: inherit; font-size: 16px; line-height: 1.6; color: var(--ink);
+    background: var(--paper); border: 1px solid var(--rule-strong); border-radius: 2px; padding: .5rem .6rem;
+  }
+  .memo textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .memo .saved { font-size: .72rem; color: var(--ink-3); margin-top: .25rem; min-height: 1.2em; }
+  .hrow .bmk { color: var(--accent); margin-right: .3rem; }
+  .hrow .hmemo {
+    grid-column: 1 / -1; margin-top: .35rem; padding: .35rem .6rem;
+    font-size: .8rem; line-height: 1.6; color: var(--ink-2); background: var(--accent-soft);
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
   .reset {
     font: inherit; font-size: .76rem; cursor: pointer; background: none;
     color: var(--ink-3); border: 0; border-bottom: 1px solid var(--rule-strong); padding: 0 0 1px;
@@ -362,7 +390,7 @@
   <header>
     <p class="eyebrow">技術士第一次試験｜【19】環境部門・専門科目</p>
     <h1>環境部門 専門科目クイズ</h1>
-    <p class="intro">令和4〜7年度の過去問140問を1問ずつ分類し、実際に出ている論点を4択にしました。選ぶと即座に正誤と解説が出ます。キーボードの 1〜4 と Enter でも進められます。</p>
+    <p class="intro">令和4〜7年度の過去問140問を1問ずつ分類し、実際に出ている論点を4択にしました。選ぶと即座に正誤と解説が出ます。キーボードの 1〜4 と Enter でも進められます。問題ごとに<b>ブックマーク</b>と<b>メモ</b>を残せます（この端末に保存）。</p>
   </header>
 
   <div class="tabs" role="tablist">
@@ -375,12 +403,13 @@
   <div class="pane" id="pane-quiz" role="tabpanel" aria-labelledby="tab-quiz">
   <div class="sets" role="group" aria-label="出題範囲">
     <button class="set" data-set="white" aria-pressed="true">白書・統計 62問</button>
-    <button class="set" data-set="past" aria-pressed="false">過去問論点 28問</button>
+    <button class="set" data-set="past" aria-pressed="false">過去問論点 37問</button>
     <button class="set" data-set="measure" aria-pressed="false">測定・分析 30問</button>
     <button class="set" data-set="extra" aria-pressed="false">5択問題 31問</button>
     <button class="set" data-set="all" aria-pressed="false">まとめて 全問</button>
     <button class="set" data-set="imported" aria-pressed="false" id="impBtn" hidden>過去問 0問</button>
     <button class="set weak" data-set="weak" aria-pressed="false" id="weakBtn">苦手 0問</button>
+    <button class="set bm" data-set="bm" aria-pressed="false" id="bmBtn">★ ブックマーク 0問</button>
   </div>
 
   <div class="limits" role="group" aria-label="出題数">
@@ -471,11 +500,22 @@ function render() {
     badge = '<span class="hist">これまで ' + h.n + '回中 ' + h.ok + '回正解</span>';
     if (h.last === 0) badge += '<span class="flagmark">前回まちがえた</span>';
   }
+  const bm = isBookmarked(q);
   card.innerHTML =
-    '<div class="qmeta"><span class="qn">Q' + (i + 1) + '</span>' + badge + '</div>' +
-    '<p class="qt"></p><p class="qh"></p><div class="choices"></div>';
+    '<div class="qmeta"><span class="qn">Q' + (i + 1) + '</span>' + badge +
+      '<span class="qtools">' +
+        '<button type="button" class="qtool" id="bmTog" aria-pressed="' + bm + '">' + bmLabel(bm) + '</button>' +
+        '<button type="button" class="qtool" id="memoTog" aria-expanded="false" aria-controls="memoBox"></button>' +
+      '</span></div>' +
+    '<p class="qt"></p><p class="qh"></p><div class="choices"></div>' +
+    '<div class="memo" id="memoBox" hidden>' +
+      '<label for="memoTa">メモ（この端末に自動で保存されます）</label>' +
+      '<textarea id="memoTa" rows="3" placeholder="覚え方、間違えた理由など"></textarea>' +
+      '<div class="saved" aria-live="polite"></div>' +
+    '</div>';
   card.querySelector(".qt").textContent = q.q;
   card.querySelector(".qh").textContent = q.h;
+  wireNoteTools(card, q);
 
   const box = card.querySelector(".choices");
   order.forEach((origIdx, pos) => {
@@ -514,7 +554,7 @@ function renderNav(card, afterVerdict) {
   if (!afterVerdict && answers[i]) html += '<button class="btn" id="fwd">次の問題 →</button>';
   if (!html) return;
   nav.innerHTML = html;
-  card.appendChild(nav);
+  card.insertBefore(nav, card.querySelector(".memo"));
   const pb = nav.querySelector("#prev");
   if (pb) pb.addEventListener("click", goPrev);
   const fb = nav.querySelector("#fwd");
@@ -560,7 +600,9 @@ function showVerdict(card, btn, hit, focusNext) {
       '<button class="btn" id="next">' + (i + 1 < Q.length ? "次の問題" : "結果を見る") + '</button>' +
       '<span class="hintkey">← → キーでも移動できます</span>' +
     '</div>';
-  card.appendChild(v);
+  card.insertBefore(v, card.querySelector(".memo"));
+  // 解答前はメモを閉じておく（答えを書いたメモが先に見えないように）。解答後に開く
+  if (memoOf(q)) showMemo(card, true);
   const nb = v.querySelector("#next");
   nb.addEventListener("click", goNext);
   const pb = v.querySelector("#prev");
@@ -623,7 +665,7 @@ function renderResult() {
     '<div class="actions">' +
       (LIMIT && baseList().length > Q.length ? '<button class="btn" id="nextBatch">次の ' + LIMIT + '問へ</button>' : '') +
       (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をやり直す</button>' : '') +
-      '<button class="btn ghost" id="all">最初から全44問</button>' +
+      '<button class="btn ghost" id="all">最初からやり直す</button>' +
     '</div>';
   stage.replaceChildren(card);
 
@@ -648,6 +690,10 @@ function renderResult() {
 
 document.addEventListener("keydown", e => {
   if (document.getElementById("pane-quiz").hidden) return;
+  const tg = e.target;
+  // メモ入力中の矢印・数字・Enterで問題が進んだり選択肢が押されたりしないように
+  if (tg && (tg.tagName === "TEXTAREA" || tg.tagName === "INPUT")) return;
+  if (tg && tg.classList && tg.classList.contains("qtool") && (e.key === "Enter" || e.key === " ")) return;
   if (e.key === "ArrowLeft") { if (i > 0) { e.preventDefault(); goPrev(); } return; }
   if (e.key === "ArrowRight") { if (answers[i]) { e.preventDefault(); goNext(); } return; }
   if (e.key === "Enter") {
@@ -692,11 +738,82 @@ function refreshWeakBtn() {
   b.textContent = "苦手 " + n + "問";
   b.disabled = n === 0;
   if (n === 0 && b.getAttribute("aria-pressed") === "true") b.setAttribute("aria-pressed", "false");
+  refreshBmBtn();
 }
 function lifetimeStats() {
   let n = 0, ok = 0, q = 0;
   Object.keys(HIST).forEach(function (k) { n += HIST[k].n; ok += HIST[k].ok; q++; });
   return { answers: n, correct: ok, questions: q };
+}
+
+/* ---------- ブックマーク・メモ（localStorage） ---------- */
+const NKEY = "gq_notes_v1";
+let NOTES = {};
+try { NOTES = JSON.parse(localStorage.getItem(NKEY) || "{}") || {}; } catch (e) { NOTES = {}; }
+function saveNotes() { try { localStorage.setItem(NKEY, JSON.stringify(NOTES)); } catch (e) {} }
+function noteOf(q) { return NOTES[hkey(q)] || null; }
+function setNote(q, patch) {
+  const k = hkey(q);
+  const n = Object.assign({ bm: false, memo: "" }, NOTES[k] || {}, patch, { t: Date.now() });
+  if (!n.bm && !n.memo) delete NOTES[k]; else NOTES[k] = n;
+  saveNotes();
+}
+function isBookmarked(q) { const n = noteOf(q); return !!(n && n.bm); }
+function memoOf(q) { const n = noteOf(q); return (n && n.memo) || ""; }
+function bmLabel(on) { return on ? "★ ブックマーク済み" : "☆ ブックマーク"; }
+function bookmarkList() {
+  return verifiedOnly(SETS.all.filter(isBookmarked));
+}
+function refreshBmBtn() {
+  const b = document.getElementById("bmBtn");
+  if (!b) return;
+  const n = bookmarkList().length;
+  b.textContent = "★ ブックマーク " + n + "問";
+  b.disabled = n === 0;
+  if (n === 0 && b.getAttribute("aria-pressed") === "true") b.setAttribute("aria-pressed", "false");
+}
+function showMemo(card, open) {
+  card.querySelector(".memo").hidden = !open;
+  card.querySelector("#memoTog").setAttribute("aria-expanded", String(open));
+}
+function wireNoteTools(card, q) {
+  const bt = card.querySelector("#bmTog");
+  bt.addEventListener("click", function () {
+    const on = !isBookmarked(q);
+    setNote(q, { bm: on });
+    bt.setAttribute("aria-pressed", String(on));
+    bt.textContent = bmLabel(on);
+    refreshBmBtn();
+  });
+
+  const mt = card.querySelector("#memoTog");
+  const ta = card.querySelector("#memoTa");
+  const saved = card.querySelector(".memo .saved");
+  function labelMemo() {
+    const has = !!ta.value.trim();
+    mt.textContent = has ? "メモあり" : "メモ";
+    mt.classList.toggle("has", has);
+  }
+  ta.value = memoOf(q);
+  labelMemo();
+
+  let timer = null;
+  function commit() {
+    clearTimeout(timer); timer = null;
+    setNote(q, { memo: ta.value.trim() ? ta.value : "" });
+    labelMemo();
+    saved.textContent = "保存しました";
+  }
+  ta.addEventListener("input", function () {
+    saved.textContent = "";
+    clearTimeout(timer); timer = setTimeout(commit, 600);
+  });
+  ta.addEventListener("blur", function () { if (timer) commit(); });
+  mt.addEventListener("click", function () {
+    const open = card.querySelector(".memo").hidden;
+    showMemo(card, open);
+    if (open) ta.focus();
+  });
 }
 
 /* ---------- 過去問データの読み込み（端末内のみ） ---------- */
@@ -758,6 +875,7 @@ function verifiedOnly(list) {
 }
 function baseList() {
   if (CURRENT_SET === "weak") return verifiedOnly(weakList());
+  if (CURRENT_SET === "bm") return bookmarkList();
   if (CURRENT_SET === "custom") return verifiedOnly(CUSTOM_LIST || []);
   return verifiedOnly(SETS[CURRENT_SET] || SETS.white);
 }
@@ -881,6 +999,11 @@ const SETS = {
   imported: [],
   all:      QUIZ_DATA.concat(PASTQ_DATA, MEASURE_DATA, EXTRA_DATA)
 };
+// 問題数はデータから数える（HTMLに書いた数字は追加のたびに古くなるため）
+[["white", "白書・統計"], ["past", "過去問論点"], ["measure", "測定・分析"], ["extra", "5択問題"]].forEach(function (p) {
+  const b = document.querySelector('.set[data-set="' + p[0] + '"]');
+  if (b) b.textContent = p[1] + " " + SETS[p[0]].length + "問";
+});
 document.querySelectorAll(".set").forEach(function (b) {
   b.addEventListener("click", function () {
     document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
@@ -1054,6 +1177,10 @@ function renderHistory() {
   let list = all.map(function (q) { return { q: q, h: histOf(q) }; });
   if (HFILTER === "miss") list = list.filter(function (r) { return r.h && (r.h.last === 0 || r.h.ok / r.h.n < 0.6); });
   else if (HFILTER === "none") list = list.filter(function (r) { return !r.h; });
+  else if (HFILTER === "bm") list = list.filter(function (r) { return isBookmarked(r.q); });
+  else if (HFILTER === "memo") list = list.filter(function (r) { return !!memoOf(r.q); });
+  const nBm = all.filter(isBookmarked).length;
+  const nMemo = all.filter(function (q) { return !!memoOf(q); }).length;
   // 正答率が低い順、未回答は末尾
   list.sort(function (a, b) {
     if (!a.h && !b.h) return 0;
@@ -1069,7 +1196,8 @@ function renderHistory() {
     const pct = h ? Math.round(h.ok / h.n * 100) : 0;
     const bad = h && pct < 60 ? " bad" : "";
     rows += '<div class="hrow ' + cls + '">' +
-      '<div><div class="hf">' + r.q.f + '</div><div class="hq"></div></div>' +
+      '<div><div class="hf">' + (isBookmarked(r.q) ? '<span class="bmk" aria-label="ブックマーク">★</span>' : '') +
+        r.q.f + '</div><div class="hq"></div></div>' +
       '<div class="hn">' + (h ? '<b>' + h.ok + '</b> / ' + h.n + '　' + pct + '%' : '未回答') +
         (h ? '<span class="hbar' + bad + '"><i style="width:' + pct + '%"></i></span>' : '') + '</div>' +
       '</div>';
@@ -1086,18 +1214,33 @@ function renderHistory() {
       '<button class="flt" data-f="miss" aria-pressed="' + (HFILTER === "miss") + '">間違えた問題</button>' +
       '<button class="flt" data-f="all" aria-pressed="' + (HFILTER === "all") + '">すべて</button>' +
       '<button class="flt" data-f="none" aria-pressed="' + (HFILTER === "none") + '">未回答</button>' +
+      '<button class="flt" data-f="bm" aria-pressed="' + (HFILTER === "bm") + '">★ ブックマーク ' + nBm + '</button>' +
+      '<button class="flt" data-f="memo" aria-pressed="' + (HFILTER === "memo") + '">メモあり ' + nMemo + '</button>' +
     '</div>' +
     (list.length
       ? '<div class="hact"><button class="btn" id="solveThese">この ' + list.length + '問を解く</button>' +
         (L.answers ? '<button class="reset" id="resetHist2">履歴をリセット</button>' : '') + '</div>' + rows
       : '<p class="empty">' + (HFILTER === "miss"
           ? "間違えた問題はありません。まだ解いていない場合は「未回答」から始めてください。"
-          : HFILTER === "none" ? "すべての問題に一度は解答済みです。" : "履歴がありません。") + '</p>')
+          : HFILTER === "none" ? "すべての問題に一度は解答済みです。"
+          : HFILTER === "bm" ? "ブックマークした問題はありません。クイズ画面で問題の右上の「☆ ブックマーク」を押すと、ここに集まります。"
+          : HFILTER === "memo" ? "メモを書いた問題はありません。クイズ画面で問題の右上の「メモ」から書けます。"
+          : "履歴がありません。") + '</p>')
     + renderDiagnosis() + renderDataManager();
 
-  // 問題文は textContent で入れる
-  const qs = p.querySelectorAll(".hq");
-  list.forEach(function (r, idx) { if (qs[idx]) qs[idx].textContent = r.q.q; });
+  // 問題文・メモは利用者の入力を含むので textContent で入れる
+  p.querySelectorAll(".hrow").forEach(function (row, idx) {
+    const r = list[idx];
+    if (!r) return;
+    row.querySelector(".hq").textContent = r.q.q;
+    const m = memoOf(r.q);
+    if (m) {
+      const d = document.createElement("div");
+      d.className = "hmemo";
+      d.textContent = m;
+      row.appendChild(d);
+    }
+  });
 
   p.querySelectorAll(".flt").forEach(function (b) {
     b.addEventListener("click", function () { HFILTER = b.dataset.f; renderHistory(); });
@@ -1211,7 +1354,7 @@ refreshWeakBtn();
     Q.length = 0; sv.list.forEach(function (q) { Q.push(q); });
     i = sv.i; correct = sv.correct;
     answers.length = 0; sv.answers.forEach(function (a, idx) { answers[idx] = a; });
-    if (SETS[sv.set]) applySetButtons(sv.set); else applySetButtons("__none__");
+    if (SETS[sv.set] || sv.set === "weak" || sv.set === "bm") applySetButtons(sv.set); else applySetButtons("__none__");
     updatePickInfo();
     showResume(sv.i, Q.length);
     render();
