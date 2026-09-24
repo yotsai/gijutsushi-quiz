@@ -140,9 +140,12 @@
   .btn.ghost:hover { border-color: var(--accent); color: var(--accent); filter: none; }
   .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .btn:disabled { opacity: .35; cursor: default; filter: none; }
-  .qnav { flex-wrap: nowrap; }
-  .qnav .btn { padding: .45rem .85rem; white-space: nowrap; }
-  .qnav .fwd { margin-left: auto; }
+  /* 一番よく押す「次の問題」を横幅いっぱいに、その下に「前の問題」「ホーム」を半分ずつ */
+  .qnav { margin-top: 1rem; }
+  .navrow { display: grid; gap: .5rem; }
+  .navrow.one { grid-template-columns: 1fr; margin-bottom: .5rem; }
+  .navrow.two { grid-template-columns: 1fr 1fr; }
+  .qnav .btn { padding: .6rem .5rem; white-space: nowrap; text-align: center; }
   .hintkey { font-size: .74rem; color: var(--ink-3); margin: .55rem 0 0; }
   @media (hover: none) { .hintkey { display: none; } }
 
@@ -568,9 +571,11 @@ function render() {
 /* 前へ／次へのナビゲーション。解答前でも「前へ」で戻れる */
 /* 解答前も解答後も「← 前の問題／ホーム／次の問題 →」を同じ位置に出す */
 function navHtml(nextLabel) {
-  return '<button class="btn ghost" id="prev"' + (i > 0 ? '' : ' disabled') + '>← 前の問題</button>' +
-    '<button class="btn ghost" id="home">ホーム</button>' +
-    (nextLabel ? '<button class="btn fwd" id="next">' + nextLabel + '</button>' : '');
+  return (nextLabel ? '<div class="navrow one"><button class="btn" id="next">' + nextLabel + '</button></div>' : '') +
+    '<div class="navrow two">' +
+      '<button class="btn ghost" id="prev"' + (i > 0 ? '' : ' disabled') + '>← 前の問題</button>' +
+      '<button class="btn ghost" id="home">ホーム</button>' +
+    '</div>';
 }
 function wireNav(el) {
   el.querySelector("#prev").addEventListener("click", goPrev);
@@ -583,7 +588,7 @@ function renderNav(card) {
   const old = card.querySelector(".nav");
   if (old) old.remove();
   const nav = document.createElement("div");
-  nav.className = "actions qnav nav";
+  nav.className = "qnav nav";
   nav.innerHTML = navHtml(null);
   card.insertBefore(nav, card.querySelector(".memo"));
   wireNav(nav);
@@ -666,7 +671,7 @@ function showVerdict(card, btn, hit, focusNext) {
     '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (hit ? "正解" : "不正解") + '</div>' +
     '<p class="vnote">' + q.n + '</p>' +
     (q.v ? '<p class="vsrc' + (q.v === "knowledge" ? " k" : "") + '">' + VLABEL[q.v] + '</p>' : '') +
-    '<div class="actions qnav">' + navHtml(i + 1 < Q.length ? "次の問題 →" : "結果を見る") + '</div>' +
+    '<div class="qnav">' + navHtml(i + 1 < Q.length ? "次の問題 →" : "結果を見る") + '</div>' +
     '<p class="hintkey">← → キーでも移動できます</p>';
   card.insertBefore(v, card.querySelector(".memo"));
   // 解答前はメモを閉じておく（答えを書いたメモが先に見えないように）。解答後に開く
