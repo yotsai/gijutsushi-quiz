@@ -71,6 +71,15 @@
   .status .field { color: var(--accent); font-weight: 600; letter-spacing: .02em; }
   .status .score { margin-left: auto; }
   .status b { color: var(--ink); }
+  .status[hidden], .bar[hidden] { display: none; }
+  .homecard .hlead { font-size: .9rem; color: var(--ink-2); margin: 0; line-height: 1.7; }
+  .homecard .btn.wide { display: block; width: 100%; text-align: left; padding: .7rem 1rem; margin-top: .9rem; }
+  .homecard .btn.wide .sub { display: block; font-size: .78rem; font-weight: 400; opacity: .88; margin-top: .1rem; }
+  .homestats {
+    display: flex; gap: .4rem 1rem; flex-wrap: wrap; margin-top: 1rem; padding-top: .8rem;
+    border-top: 1px solid var(--rule); font-size: .8rem; color: var(--ink-3); font-variant-numeric: tabular-nums;
+  }
+  .homestats b { color: var(--ink); }
   .bar { height: 3px; background: var(--rule); overflow: hidden; }
   .bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .25s; }
 
@@ -130,7 +139,12 @@
   .btn.ghost { background: transparent; color: var(--ink-2); border-color: var(--rule-strong); font-weight: 400; }
   .btn.ghost:hover { border-color: var(--accent); color: var(--accent); filter: none; }
   .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .hintkey { font-size: .74rem; color: var(--ink-3); margin-left: auto; }
+  .btn:disabled { opacity: .35; cursor: default; filter: none; }
+  .qnav { flex-wrap: nowrap; }
+  .qnav .btn { padding: .45rem .85rem; white-space: nowrap; }
+  .qnav .fwd { margin-left: auto; }
+  .hintkey { font-size: .74rem; color: var(--ink-3); margin: .55rem 0 0; }
+  @media (hover: none) { .hintkey { display: none; } }
 
   /* result */
   .result h2 {
@@ -486,6 +500,8 @@ function shuffle(n, seed) {
 }
 
 function render() {
+  AT_HOME = false;
+  setQuizChrome(true);
   if (i >= Q.length) return renderResult();
   const q = Q[i];
   let seed = 0;
@@ -550,25 +566,73 @@ function render() {
 }
 
 /* 前へ／次へのナビゲーション。解答前でも「前へ」で戻れる */
-function renderNav(card, afterVerdict) {
+/* 解答前も解答後も「← 前の問題／ホーム／次の問題 →」を同じ位置に出す */
+function navHtml(nextLabel) {
+  return '<button class="btn ghost" id="prev"' + (i > 0 ? '' : ' disabled') + '>← 前の問題</button>' +
+    '<button class="btn ghost" id="home">ホーム</button>' +
+    (nextLabel ? '<button class="btn fwd" id="next">' + nextLabel + '</button>' : '');
+}
+function wireNav(el) {
+  el.querySelector("#prev").addEventListener("click", goPrev);
+  el.querySelector("#home").addEventListener("click", goHome);
+  const nb = el.querySelector("#next");
+  if (nb) nb.addEventListener("click", goNext);
+  return nb;
+}
+function renderNav(card) {
   const old = card.querySelector(".nav");
   if (old) old.remove();
-  if (i === 0 && afterVerdict) return;      // 1問目の解答後は「次へ」だけで足りる
   const nav = document.createElement("div");
-  nav.className = "actions nav";
-  let html = '';
-  if (i > 0) html += '<button class="btn ghost" id="prev">← 前の問題</button>';
-  if (!afterVerdict && answers[i]) html += '<button class="btn" id="fwd">次の問題 →</button>';
-  if (!html) return;
-  nav.innerHTML = html;
+  nav.className = "actions qnav nav";
+  nav.innerHTML = navHtml(null);
   card.insertBefore(nav, card.querySelector(".memo"));
-  const pb = nav.querySelector("#prev");
-  if (pb) pb.addEventListener("click", goPrev);
-  const fb = nav.querySelector("#fwd");
-  if (fb) fb.addEventListener("click", goNext);
+  wireNav(nav);
 }
 function goPrev() { if (i > 0) { i--; saveSession(); render(); } }
 function goNext() { i++; saveSession(); render(); }
+/* ---------- ホーム（出題範囲を選ぶ画面） ---------- */
+/* いまの回は中断するだけで消さない。「続きから」で同じ問題に戻れる */
+let AT_HOME = false;
+const SET_LABEL = { white: "白書・統計", past: "過去問論点", measure: "測定・分析", extra: "5択問題",
+  all: "まとめて", imported: "過去問", weak: "苦手", bm: "ブックマーク", custom: "履歴から選んだ問題" };
+function setQuizChrome(show) {
+  document.querySelector(".status").hidden = !show;
+  document.querySelector(".bar").hidden = !show;
+}
+function goHome() {
+  const inProgress = Q.length > 0 && i < Q.length;
+  if (inProgress) saveSession();
+  AT_HOME = true;
+  setQuizChrome(false);
+  document.getElementById("resumeHost").innerHTML = "";
+  applySetButtons("__none__");
+  const pi = document.getElementById("pickinfo");
+  if (pi) pi.textContent = "";
+
+  const L = lifetimeStats();
+  const card = document.createElement("div");
+  card.className = "card homecard";
+  card.innerHTML =
+    '<p class="hlead">上の<b>出題範囲</b>を選ぶと、新しい回が始まります。</p>' +
+    (inProgress
+      ? '<button class="btn wide" id="cont">続きから解く<span class="sub">' +
+          (SET_LABEL[CURRENT_SET] || "前回の回") + '　' + (i + 1) + ' / ' + Q.length + '問目・正解 ' + correct + '</span></button>'
+      : '') +
+    (L.answers
+      ? '<div class="homestats"><span>累計 <b>' + L.answers + '</b>回解答</span>' +
+          '<span>正答率 <b>' + Math.round(L.correct / L.answers * 100) + '%</b></span>' +
+          '<span>苦手 <b>' + weakList().length + '</b>問</span>' +
+          '<span>ブックマーク <b>' + bookmarkList().length + '</b>問</span></div>'
+      : '');
+  stage.replaceChildren(card);
+  const c = card.querySelector("#cont");
+  if (c) c.addEventListener("click", function () {
+    applySetButtons(SETS[CURRENT_SET] || CURRENT_SET === "weak" || CURRENT_SET === "bm" ? CURRENT_SET : "__none__");
+    updatePickInfo();
+    render();
+  });
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
 function choose(card, btn, origIdx) {
   if (answered) return;
@@ -602,18 +666,12 @@ function showVerdict(card, btn, hit, focusNext) {
     '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (hit ? "正解" : "不正解") + '</div>' +
     '<p class="vnote">' + q.n + '</p>' +
     (q.v ? '<p class="vsrc' + (q.v === "knowledge" ? " k" : "") + '">' + VLABEL[q.v] + '</p>' : '') +
-    '<div class="actions">' +
-      (i > 0 ? '<button class="btn ghost" id="prev">← 前へ</button>' : '') +
-      '<button class="btn" id="next">' + (i + 1 < Q.length ? "次の問題" : "結果を見る") + '</button>' +
-      '<span class="hintkey">← → キーでも移動できます</span>' +
-    '</div>';
+    '<div class="actions qnav">' + navHtml(i + 1 < Q.length ? "次の問題 →" : "結果を見る") + '</div>' +
+    '<p class="hintkey">← → キーでも移動できます</p>';
   card.insertBefore(v, card.querySelector(".memo"));
   // 解答前はメモを閉じておく（答えを書いたメモが先に見えないように）。解答後に開く
   if (memoOf(q)) showMemo(card, true);
-  const nb = v.querySelector("#next");
-  nb.addEventListener("click", goNext);
-  const pb = v.querySelector("#prev");
-  if (pb) pb.addEventListener("click", goPrev);
+  const nb = wireNav(v);
   if (focusNext) nb.focus();
   elScore.innerHTML = "正解 <b>" + correct + "</b>";
 }
@@ -672,7 +730,7 @@ function renderResult() {
     '<div class="actions">' +
       (LIMIT && baseList().length > Q.length ? '<button class="btn" id="nextBatch">次の ' + LIMIT + '問へ</button>' : '') +
       (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をやり直す</button>' : '') +
-      '<button class="btn ghost" id="all">最初からやり直す</button>' +
+      '<button class="btn ghost" id="home">ホーム</button>' +
     '</div>';
   stage.replaceChildren(card);
 
@@ -685,7 +743,7 @@ function renderResult() {
   });
   const nb2 = card.querySelector("#nextBatch");
   if (nb2) nb2.addEventListener("click", function () { rebuild(); });
-  card.querySelector("#all").addEventListener("click", () => location.reload());
+  card.querySelector("#home").addEventListener("click", goHome);
   const rh = card.querySelector("#resetHist");
   if (rh) rh.addEventListener("click", function () {
     if (!confirm("これまでの解答履歴をすべて削除します。よろしいですか。")) return;
@@ -697,10 +755,12 @@ function renderResult() {
 
 document.addEventListener("keydown", e => {
   if (document.getElementById("pane-quiz").hidden) return;
+  if (AT_HOME) return;
   const tg = e.target;
   // メモ入力中の矢印・数字・Enterで問題が進んだり選択肢が押されたりしないように
   if (tg && (tg.tagName === "TEXTAREA" || tg.tagName === "INPUT")) return;
-  if (tg && tg.classList && tg.classList.contains("qtool") && (e.key === "Enter" || e.key === " ")) return;
+  // フォーカス中のボタン（ホーム・前の問題・ブックマーク等）は Enter でそのボタン自身を押す
+  if (tg && tg.tagName === "BUTTON" && tg.id !== "next" && (e.key === "Enter" || e.key === " ")) return;
   if (e.key === "ArrowLeft") { if (i > 0) { e.preventDefault(); goPrev(); } return; }
   if (e.key === "ArrowRight") { if (answers[i]) { e.preventDefault(); goNext(); } return; }
   if (e.key === "Enter") {
@@ -728,6 +788,7 @@ function recordAnswer(q, hit) {
   h.n++; if (hit) h.ok++;
   h.last = hit ? 1 : 0;
   HIST[k] = h; saveHist();
+  refreshWeakBtn();   // 結果画面まで待たずに「苦手 N問」を更新する
 }
 /* 苦手＝直近で誤答した問題、または正答率6割未満の問題 */
 function weakList() {
@@ -1028,7 +1089,8 @@ document.querySelectorAll(".set").forEach(function (b) {
   cb.addEventListener("change", function () {
     INCLUDE_UNVERIFIED = cb.checked;
     try { localStorage.setItem("gq_inc_unverified", cb.checked ? "1" : "0"); } catch (e) {}
-    updateUnvUI(); refreshWeakBtn(); rebuild();
+    updateUnvUI(); refreshWeakBtn();
+    if (!AT_HOME) rebuild();
   });
 })();
 
@@ -1036,7 +1098,7 @@ document.querySelectorAll(".lim").forEach(function (b) {
   b.addEventListener("click", function () {
     document.querySelectorAll(".lim").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
     LIMIT = Number(b.dataset.lim);
-    rebuild();
+    if (!AT_HOME) rebuild();   // ホームでは出題範囲を選んだときに始める
   });
 });
 
