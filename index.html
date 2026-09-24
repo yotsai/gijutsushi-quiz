@@ -570,8 +570,14 @@ function render() {
 
 /* 前へ／次へのナビゲーション。解答前でも「前へ」で戻れる */
 /* 解答前も解答後も「← 前の問題／ホーム／次の問題 →」を同じ位置に出す */
-function navHtml(nextLabel) {
-  return (nextLabel ? '<div class="navrow one"><button class="btn" id="next">' + nextLabel + '</button></div>' : '') +
+/* 解答前は「とばす」扱い（控えめな見た目・Enterでは押されない）、解答後は通常の「次へ」 */
+function navHtml(answeredNow) {
+  const label = i + 1 < Q.length ? "次の問題 →" : "結果を見る";
+  return '<div class="navrow one">' +
+      (answeredNow
+        ? '<button class="btn" id="next">' + label + '</button>'
+        : '<button class="btn ghost" id="skip">' + label + '</button>') +
+    '</div>' +
     '<div class="navrow two">' +
       '<button class="btn ghost" id="prev"' + (i > 0 ? '' : ' disabled') + '>← 前の問題</button>' +
       '<button class="btn ghost" id="home">ホーム</button>' +
@@ -582,6 +588,8 @@ function wireNav(el) {
   el.querySelector("#home").addEventListener("click", goHome);
   const nb = el.querySelector("#next");
   if (nb) nb.addEventListener("click", goNext);
+  const sk = el.querySelector("#skip");
+  if (sk) sk.addEventListener("click", goNext);
   return nb;
 }
 function renderNav(card) {
@@ -589,7 +597,7 @@ function renderNav(card) {
   if (old) old.remove();
   const nav = document.createElement("div");
   nav.className = "qnav nav";
-  nav.innerHTML = navHtml(null);
+  nav.innerHTML = navHtml(false);
   card.insertBefore(nav, card.querySelector(".memo"));
   wireNav(nav);
 }
@@ -671,7 +679,7 @@ function showVerdict(card, btn, hit, focusNext) {
     '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (hit ? "正解" : "不正解") + '</div>' +
     '<p class="vnote">' + q.n + '</p>' +
     (q.v ? '<p class="vsrc' + (q.v === "knowledge" ? " k" : "") + '">' + VLABEL[q.v] + '</p>' : '') +
-    '<div class="qnav">' + navHtml(i + 1 < Q.length ? "次の問題 →" : "結果を見る") + '</div>' +
+    '<div class="qnav">' + navHtml(true) + '</div>' +
     '<p class="hintkey">← → キーでも移動できます</p>';
   card.insertBefore(v, card.querySelector(".memo"));
   // 解答前はメモを閉じておく（答えを書いたメモが先に見えないように）。解答後に開く
@@ -710,6 +718,7 @@ function renderResult() {
   });
 
   const missed = log.filter(r => !r.hit);
+  const skipped = Q.filter((q, k) => !answers[k]);
   let missedHtml = "";
   if (missed.length) {
     missedHtml = '<div class="missed"><h3>間違えた ' + missed.length + ' 問</h3><ol>';
@@ -723,6 +732,7 @@ function renderResult() {
     '<h2>採点結果</h2>' +
     '<div class="big">' + correct + '<small> / ' + Q.length + '　（' + pct + '%）</small></div>' +
     '<p class="judge">' + judge + '</p>' +
+    (skipped.length ? '<p class="judge">とばして答えていない問題が <b>' + skipped.length + '問</b> あります（未解答は不正解として計算）。</p>' : '') +
     '<table><thead><tr><th>分野</th><th>正答</th><th>率</th></tr></thead><tbody>' + rows + '</tbody></table>' +
     missedHtml +
     (function () {
@@ -735,6 +745,7 @@ function renderResult() {
     '<div class="actions">' +
       (LIMIT && baseList().length > Q.length ? '<button class="btn" id="nextBatch">次の ' + LIMIT + '問へ</button>' : '') +
       (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をやり直す</button>' : '') +
+      (skipped.length ? '<button class="btn ghost" id="doSkipped">とばした ' + skipped.length + ' 問を解く</button>' : '') +
       '<button class="btn ghost" id="home">ホーム</button>' +
     '</div>';
   stage.replaceChildren(card);
@@ -745,6 +756,11 @@ function renderResult() {
     const subset = Q.filter(q => keep.has(q.q));
     Q.length = 0; subset.forEach(q => Q.push(q));
     i = 0; correct = 0; log.length = 0; answers.length = 0; render();
+  });
+  const ds = card.querySelector("#doSkipped");
+  if (ds) ds.addEventListener("click", () => {
+    Q.length = 0; skipped.forEach(q => Q.push(q));
+    i = 0; correct = 0; log.length = 0; answers.length = 0; saveSession(); render();
   });
   const nb2 = card.querySelector("#nextBatch");
   if (nb2) nb2.addEventListener("click", function () { rebuild(); });
@@ -767,7 +783,7 @@ document.addEventListener("keydown", e => {
   // フォーカス中のボタン（ホーム・前の問題・ブックマーク等）は Enter でそのボタン自身を押す
   if (tg && tg.tagName === "BUTTON" && tg.id !== "next" && (e.key === "Enter" || e.key === " ")) return;
   if (e.key === "ArrowLeft") { if (i > 0) { e.preventDefault(); goPrev(); } return; }
-  if (e.key === "ArrowRight") { if (answers[i]) { e.preventDefault(); goNext(); } return; }
+  if (e.key === "ArrowRight") { if (i < Q.length) { e.preventDefault(); goNext(); } return; }
   if (e.key === "Enter") {
     const n = document.getElementById("next");
     if (n) { e.preventDefault(); n.click(); }
