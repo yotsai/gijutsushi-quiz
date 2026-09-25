@@ -701,10 +701,12 @@ const elBar = document.getElementById("bar");
 
 function shuffle(n, seed) {
   // 決定論的シャッフル（問題ごとに選択肢の並びを変える）
+  // 掛け算は Math.imul で32bitに収める。普通の * だと2^53を超えて下位ビットが消え、
+  // 4択の正答がすべて④に固定されていた（2026-09-25 修正）
   const idx = [...Array(n).keys()];
   for (let k = n - 1; k > 0; k--) {
-    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-    const j = seed % (k + 1);
+    seed = (Math.imul(seed, 1103515245) + 12345) >>> 0;
+    const j = Math.floor(seed / 4294967296 * (k + 1));
     [idx[k], idx[j]] = [idx[j], idx[k]];
   }
   return idx;
