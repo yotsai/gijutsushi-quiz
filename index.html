@@ -74,6 +74,31 @@
   .status[hidden], .bar[hidden] { display: none; }
 
   /* 本番までの残り日数 */
+  /* おまかせ出題 */
+  .set.auto[aria-pressed="false"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .set .badge {
+    display: inline-block; min-width: 1.4em; margin-left: .35em; padding: 0 .35em; border-radius: 999px;
+    background: var(--ng); color: #fff; font-size: .68rem; font-weight: 700; line-height: 1.55; text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .auto { margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--rule); }
+  .auto h3 { font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 1rem; font-weight: 600; margin: 0 0 .3rem; }
+  .auto-lead { font-size: .82rem; color: var(--ink-2); margin: 0 0 .7rem; line-height: 1.75; }
+  .auto-n { display: flex; justify-content: space-between; align-items: baseline; font-size: .85rem; }
+  .auto-n output { font-weight: 700; color: var(--accent); font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+  #autoN { display: block; width: 100%; margin: .45rem 0 .1rem; accent-color: var(--accent); }
+  .auto-scale { display: flex; justify-content: space-between; font-size: .72rem; color: var(--ink-3); }
+  .auto .btn.wide { margin-top: .8rem; }
+  .mastery { display: flex; flex-wrap: wrap; gap: .3rem .9rem; margin-top: .7rem; font-size: .76rem; color: var(--ink-3); }
+  .mastery b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .mastery .m1 b { color: var(--ng); }
+  .mastery .m3 b, .mastery .m4 b { color: var(--ok); }
+  .mst {
+    display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .04em; padding: 0 .4rem;
+    border-radius: 2px; margin-left: .45rem; vertical-align: 1px; border: 1px solid var(--rule-strong); color: var(--ink-3);
+  }
+  .mst.m1 { color: var(--ng); border-color: var(--ng); }
+  .mst.m3, .mst.m4 { color: var(--ok); border-color: var(--ok); }
   .countdown { font-size: .82rem; color: var(--ink-2); margin: .5rem 0 0; font-variant-numeric: tabular-nums; }
   .countdown b { color: var(--accent); font-size: 1rem; }
   .countdown .cd2 { font-size: .76rem; color: var(--ink-3); }
@@ -376,7 +401,7 @@
   .lifetime .reset { margin-left: auto; }
 
   /* set switch */
-  .sets { display: flex; gap: .35rem; flex-wrap: wrap; margin: 1rem 0 0; }
+  .sets { display: flex; gap: .35rem; flex-wrap: wrap; align-items: center; margin: 1rem 0 0; }
   .set {
     font: inherit; font-size: .78rem; cursor: pointer;
     background: var(--panel); color: var(--ink-2);
@@ -452,6 +477,142 @@
   .foot { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-size: .76rem; color: var(--ink-3); line-height: 1.8; }
   .foot a { color: var(--accent); }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  /* ===== スマホアプリ風のレイアウト ===== */
+  .unvwrap[hidden], .unvnote[hidden] { display: none !important; }
+  .wrap { padding-bottom: calc(5.6rem + env(safe-area-inset-bottom)); }
+  header { margin-bottom: .6rem; }
+  header .eyebrow { display: none; }
+  header h1 { font-size: 1.02rem; margin: 0; letter-spacing: .02em; }
+  header .intro { display: none; }
+
+  /* 下部ナビ（タブを画面下に固定） */
+  .tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; margin: 0; gap: 0;
+    display: grid; grid-template-columns: repeat(4, 1fr); border: 0;
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border-top: 1px solid var(--rule); padding: .35rem .3rem calc(.35rem + env(safe-area-inset-bottom));
+  }
+  .tab {
+    position: relative; display: flex; flex-direction: column; align-items: center; gap: .1rem;
+    padding: .25rem 0; border: 0; margin: 0; font-size: .68rem; color: var(--ink-3);
+    text-decoration: none; background: none; line-height: 1.3;
+  }
+  .tab svg { width: 24px; height: 24px; }
+  .tab[aria-selected="true"] { color: var(--accent); border: 0; font-weight: 700; }
+  .navbadge {
+    position: absolute; top: .05rem; left: calc(50% + 6px); min-width: 1.2rem; padding: 0 .3rem;
+    border-radius: 999px; background: var(--ng); color: #fff; font-size: .64rem; font-style: normal;
+    font-weight: 700; line-height: 1.5; text-align: center; font-variant-numeric: tabular-nums;
+  }
+  .navbadge[hidden] { display: none; }
+
+  /* ホームと問題を解く画面の切り替え */
+  body:not(.home-mode) #setsHead, body:not(.home-mode) .sets, body:not(.home-mode) .limits,
+  body:not(.home-mode) .unvwrap, body:not(.home-mode) .unvnote, body:not(.home-mode) #homeBottom,
+  body:not(.home-mode) .countdown { display: none !important; }
+  body.home-mode #pane-quiz:not([hidden]) { display: flex; flex-direction: column; }
+  body.home-mode #stage { order: 1; }
+  body.home-mode #setsHead { order: 2; }
+  body.home-mode .sets { order: 3; }
+  body.home-mode .limits { order: 4; }
+  body.home-mode .unvwrap { order: 5; }
+  body.home-mode .unvnote { order: 6; }
+  body.home-mode #homeBottom { order: 7; }
+  body.home-mode #autoBtn { display: none; }
+
+  /* 本番までの日数（ヒーロー） */
+  .countdown {
+    margin: .7rem 0 0; padding: .9rem 1rem; border-radius: 16px; background: var(--panel);
+    border: 1px solid var(--rule); font-size: .8rem; color: var(--ink-3); line-height: 1.5;
+  }
+  .countdown b { font-size: 2.1rem; color: var(--ink); font-weight: 800; letter-spacing: -.02em; margin: 0 .15rem; }
+  .countdown .cd2 { display: block; margin-top: .15rem; }
+  .countdown-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem .6rem; flex-wrap: wrap; }
+  .countdown-text { flex: 1 1 220px; min-width: 0; }
+  .countdown-text .cd-days { white-space: nowrap; }
+  .examEditBtn {
+    display: inline-flex; align-items: center; gap: .3rem; flex-shrink: 0; min-height: 44px; margin-left: auto;
+    font: inherit; font-size: .78rem; font-weight: 600; cursor: pointer;
+    background: transparent; color: var(--ink-2); border: 1px solid var(--rule-strong);
+    border-radius: 999px; padding: .4rem .85rem;
+  }
+  .examEditBtn:hover { border-color: var(--accent); color: var(--accent); }
+  .examEditBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .examEditBtn svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .examEdit {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+    margin-top: .8rem; padding-top: .8rem; border-top: 1px solid var(--rule);
+  }
+  .examEdit[hidden] { display: none; }
+  .examEdit input[type="date"] {
+    font: inherit; font-size: .85rem; color: var(--ink); background: var(--paper);
+    border: 1px solid var(--rule-strong); border-radius: 2px; padding: .4rem .6rem; min-height: 44px;
+  }
+  .examEdit .btn { padding: .5rem 1rem; min-height: 44px; }
+
+  /* ホームのカード共通 */
+  body.home-mode .homecard { border-radius: 16px; border: 1px solid var(--rule); padding: 1rem; margin-top: .8rem; background: var(--panel); }
+  body.home-mode #stage > .homecard { background: none; border: 0; padding: 0; box-shadow: none; }
+  .homecard .hlead { display: none; }
+
+  /* おまかせ出題（主役カード） */
+  .homecard .auto.hero {
+    margin: 0; padding: 1.1rem 1rem 1rem; border: 0; border-radius: 16px; color: #fff;
+    background: linear-gradient(135deg, #0E5049, #2C7C72);
+  }
+  .auto.hero h3 { color: #fff; font-family: inherit; font-size: .95rem; font-weight: 700; margin: 0; opacity: .92; }
+  .auto.hero .due { margin: .35rem 0 .1rem; font-size: .82rem; opacity: .9; }
+  .auto.hero .due b { font-size: 2.4rem; font-weight: 800; line-height: 1.1; margin-right: .15rem; font-variant-numeric: tabular-nums; }
+  .auto.hero .auto-n { color: #fff; margin-top: .6rem; }
+  .auto.hero .auto-n output { color: #fff; }
+  .auto.hero #autoN { accent-color: #fff; }
+  .auto.hero .auto-scale { color: rgba(255,255,255,.75); }
+  .auto.hero .btn.wide {
+    margin-top: .8rem; background: #fff; color: #0E5049; border-color: #fff; border-radius: 12px;
+    text-align: center; font-size: 1.05rem; font-weight: 800; padding: .8rem 1rem;
+  }
+  .auto.hero details { margin-top: .7rem; font-size: .78rem; opacity: .92; }
+  .auto.hero summary { cursor: pointer; }
+  .auto.hero details p { margin: .35rem 0 0; line-height: 1.7; }
+  .auto.hero .mastery { color: rgba(255,255,255,.85); }
+  .auto.hero .mastery b { color: #fff; }
+
+  /* 続きから */
+  .homecard .btn.wide#cont { border-radius: 12px; margin-top: .8rem; }
+
+  /* 数字のタイル（2×2） */
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; margin-top: .8rem; }
+  .tile {
+    font: inherit; text-align: left; border: 1px solid var(--rule); border-radius: 14px; background: var(--paper);
+    padding: .7rem .8rem; color: var(--ink-3); font-size: .74rem; line-height: 1.4;
+  }
+  .tile b { display: block; color: var(--ink); font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: .15rem; }
+  .tile b small { font-size: .75rem; font-weight: 600; color: var(--ink-3); margin-left: .15rem; }
+  button.tile { cursor: pointer; }
+  button.tile:disabled { cursor: default; opacity: .55; }
+  .tile.warn b { color: var(--ng); }
+
+  /* 分野のタイル */
+  .home-h { font-size: .95rem; font-weight: 700; margin: 1.3rem .1rem .55rem; font-family: inherit; }
+  body.home-mode .sets { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; margin: 0; }
+  body.home-mode .set {
+    border-radius: 14px; padding: .8rem .8rem; text-align: left; font-size: .86rem; font-weight: 600;
+    background: var(--panel); border: 1px solid var(--rule); color: var(--ink); min-height: 3.2rem;
+  }
+  body.home-mode .set[aria-pressed="true"] { background: var(--panel); color: var(--ink); border-color: var(--rule); }
+  body.home-mode .set.weak:not(:disabled) { color: var(--ng); border-color: color-mix(in srgb, var(--ng) 45%, var(--rule)); }
+  body.home-mode .set.bm:not(:disabled) { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--rule)); }
+  body.home-mode .limits { margin: .7rem .1rem 0; }
+  body.home-mode .lim { border-radius: 999px; }
+
+  /* 道のり（たたむ） */
+  #homeBottom .homecard { margin-top: 1.1rem; }
+  #homeBottom .roadmap { margin: 0; padding: 0; border: 0; }
+  #homeBottom .roadmap details { margin-top: .5rem; }
+  #homeBottom .roadmap summary { cursor: pointer; font-size: .82rem; color: var(--accent); font-weight: 600; }
+  #homeBottom .rm-next .btn { border-radius: 12px; }
 </style>
 
 <div class="wrap">
@@ -463,14 +624,16 @@
   </header>
 
   <div class="tabs" role="tablist">
-    <button class="tab" id="tab-quiz" role="tab" aria-selected="true" aria-controls="pane-quiz">クイズ</button>
-    <button class="tab" id="tab-topics" role="tab" aria-selected="false" aria-controls="pane-topics">頻出テーマ</button>
-    <button class="tab" id="tab-hist" role="tab" aria-selected="false" aria-controls="pane-hist">履歴</button>
-    <a class="tab" href="print.html" style="text-decoration:none;line-height:2.1">印刷用シート</a>
+    <button class="tab" id="tab-quiz" role="tab" aria-selected="true" aria-controls="pane-quiz"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 10v9.5h5v-6h3v6h5V10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg><span>ホーム</span><i class="navbadge" id="navBadge" hidden></i></button>
+    <button class="tab" id="tab-topics" role="tab" aria-selected="false" aria-controls="pane-topics"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>頻出テーマ</span></button>
+    <button class="tab" id="tab-hist" role="tab" aria-selected="false" aria-controls="pane-hist"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>履歴</span></button>
+    <a class="tab" href="print.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 5 9h14a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 19 17h-2M7 14h10v6H7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>印刷</span></a>
   </div>
 
   <div class="pane" id="pane-quiz" role="tabpanel" aria-labelledby="tab-quiz">
+  <h2 class="home-h" id="setsHead">分野を選んで解く</h2>
   <div class="sets" role="group" aria-label="出題範囲">
+    <button class="set auto" data-set="auto" aria-pressed="false" id="autoBtn">おまかせ</button>
     <button class="set" data-set="white" aria-pressed="true">白書・統計 62問</button>
     <button class="set" data-set="past" aria-pressed="false">過去問論点 37問</button>
     <button class="set" data-set="measure" aria-pressed="false">測定・分析 30問</button>
@@ -495,6 +658,7 @@
     <span class="cnt2" id="unvCnt"></span>
   </label>
   <div class="unvnote" id="unvNote"></div>
+  <div id="homeBottom"></div>
 
   <div class="status">
     <span class="field" id="field">—</span>
@@ -550,6 +714,9 @@ function shuffle(n, seed) {
 function render() {
   AT_HOME = false;
   setQuizChrome(true);
+  document.body.classList.remove("home-mode");
+  const hb = document.getElementById("homeBottom");
+  if (hb) hb.innerHTML = "";
   if (i >= Q.length) return renderResult();
   const q = Q[i];
   let seed = 0;
@@ -570,6 +737,7 @@ function render() {
   if (h) {
     badge = '<span class="hist">これまで ' + h.n + '回中 ' + h.ok + '回正解</span>';
     if (h.last === 0) badge += '<span class="flagmark">前回まちがえた</span>';
+    else badge += '<span class="mst m' + mastery(q) + '">' + MASTERY[mastery(q)] + '</span>';
   }
   const bm = isBookmarked(q);
   card.innerHTML =
@@ -650,10 +818,46 @@ function renderNav(card) {
 function goPrev() { if (i > 0) { i--; saveSession(); render(); } }
 function goNext() { i++; saveSession(); render(); }
 /* ---------- 合格までの道のり（本番日と期日の目安） ---------- */
-const EXAM_DAY = new Date(2026, 10, 22);
-const RM_ROUND1 = new Date(2026, 9, 15);   // 全問1周
-const RM_RATE = new Date(2026, 10, 1);     // 正答率70%・測定分析の見直し
-const RM_FINAL = new Date(2026, 10, 8);    // 以降は苦手とブックマークだけ
+/* 受験日はホーム画面から変更でき、この端末に保存する。未設定・壊れた値は既定日にフォールバック */
+const EKEY = "gq_exam_day";
+const EXAM_DAY_DEFAULT = new Date(2026, 10, 22);
+function pad2(x) { return String(x).padStart(2, "0"); }
+function ymd(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function mdLabel(d) { return (d.getMonth() + 1) + "/" + d.getDate(); }
+function mdJp(d) { return (d.getMonth() + 1) + "月" + d.getDate() + "日"; }
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+/* "YYYY-MM-DD" 以外・2/30のような存在しない日付はnullを返す（new Dateは繰り上げて解釈してしまうため） */
+function parseYmd(s) {
+  if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  const parts = s.split("-").map(Number);
+  const y = parts[0], m = parts[1], dd = parts[2];
+  const d = new Date(y, m - 1, dd);
+  if (d.getFullYear() !== y || d.getMonth() !== m - 1 || d.getDate() !== dd) return null;
+  return d;
+}
+function loadExamDay() {
+  try {
+    const d = parseYmd(localStorage.getItem(EKEY));
+    if (d) return d;
+  } catch (e) {}
+  return new Date(EXAM_DAY_DEFAULT);
+}
+let EXAM_DAY = loadExamDay();
+let RM_ROUND1, RM_RATE, RM_FINAL;
+function computeRoadmapDates() {
+  RM_ROUND1 = addDays(EXAM_DAY, -38);  // 全問1周
+  RM_RATE = addDays(EXAM_DAY, -21);    // 正答率70%・測定分析の見直し
+  RM_FINAL = addDays(EXAM_DAY, -14);   // 以降は苦手とブックマークだけ
+}
+computeRoadmapDates();
+function setExamDay(s) {
+  const d = parseYmd(s);
+  if (!d) return false;
+  EXAM_DAY = d;
+  computeRoadmapDates();
+  try { localStorage.setItem(EKEY, s); } catch (e) {}
+  return true;
+}
 function todayMid() { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
 function daysLeft() { return Math.round((EXAM_DAY - todayMid()) / 86400000); }
 /* 正答率は「直近の解答で正解している問題の割合」。累計だと最初の失点をいつまでも引きずるため */
@@ -710,13 +914,13 @@ function renderRoadmap() {
   return '<div class="roadmap"><h3>合格までの道のり</h3>' +
     '<p class="rm-lead">本番まであと<b>' + left + '日</b>。35問から25問を選び、<b>13問正解</b>で合格です。' +
     '当日の読み違いを見込んで、目標は<b>16問</b>に置きます。</p>' +
-    '<ol class="rm-steps">' +
-      li(s1, "〜10/15", "全問を1周する", "解いた問題 " + p.done + " / " + p.total) +
-      li(s2, "〜11/1", "正答率を70%以上にする", "いま " + pct(p.rate) + "（直近の解答で正解している割合）") +
-      li(s3, "11/1", "測定・分析が50%未満なら、頻出論点だけに絞る", "測定・分析 いま " + pct(p.mRate)) +
-      li(s4, "11/8〜", "新しい範囲は増やさず、苦手とブックマークだけを回す", "") +
-      li(st(left === 0 ? "now" : "todo", left === 0 ? "今日" : ""), "11/22", "本番", "") +
-    '</ol>' +
+    '<details><summary>期日ごとの目安を見る</summary><ol class="rm-steps">' +
+      li(s1, "〜" + mdLabel(RM_ROUND1), "全問を1周する", "解いた問題 " + p.done + " / " + p.total) +
+      li(s2, "〜" + mdLabel(RM_RATE), "正答率を70%以上にする", "いま " + pct(p.rate) + "（直近の解答で正解している割合）") +
+      li(s3, mdLabel(RM_RATE), "測定・分析が50%未満なら、頻出論点だけに絞る", "測定・分析 いま " + pct(p.mRate)) +
+      li(s4, mdLabel(RM_FINAL) + "〜", "新しい範囲は増やさず、苦手とブックマークだけを回す", "") +
+      li(st(left === 0 ? "now" : "todo", left === 0 ? "今日" : ""), mdLabel(EXAM_DAY), "本番", "") +
+    '</ol></details>' +
     '<div class="rm-next"><p class="lab">次にやること</p>' + btns + '</div></div>';
 }
 function wireRoadmap(card) {
@@ -741,14 +945,58 @@ function renderCountdown() {
   const el = document.getElementById("countdown");
   if (!el) return;
   const left = daysLeft();
-  el.innerHTML = left >= 0 ? '本番（11月22日）まで あと <b>' + left + '日</b><br><span class="cd2">合格ライン：35問から25問を選んで13問正解</span>' : '';
+  const editBtn =
+    '<button type="button" class="examEditBtn" id="examEditBtn" aria-expanded="false">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>' +
+      '変更' +
+    '</button>';
+  let textHtml;
+  if (left > 0) {
+    textHtml = '本番（' + mdJp(EXAM_DAY) + '）まで あと <span class="cd-days"><b>' + left + '</b>日</span><br><span class="cd2">合格ライン：35問から25問を選んで13問正解</span>';
+  } else if (left === 0) {
+    textHtml = '<b>本番は今日です</b><br><span class="cd2">合格ライン：35問から25問を選んで13問正解</span>';
+  } else {
+    textHtml = '<b>試験日を過ぎました</b>';
+  }
+  el.innerHTML =
+    '<div class="countdown-row"><div class="countdown-text">' + textHtml + '</div>' + editBtn + '</div>' +
+    '<div class="examEdit" id="examEdit" hidden>' +
+      '<input type="date" id="examDate" value="' + ymd(EXAM_DAY) + '">' +
+      '<button type="button" class="btn" id="examSave">保存</button>' +
+      '<button type="button" class="btn ghost" id="examCancel">キャンセル</button>' +
+    '</div>';
+  wireExamEdit(el);
+}
+function wireExamEdit(el) {
+  const editBtn = el.querySelector("#examEditBtn");
+  const editRow = el.querySelector("#examEdit");
+  const dateInput = el.querySelector("#examDate");
+  const saveBtn = el.querySelector("#examSave");
+  const cancelBtn = el.querySelector("#examCancel");
+  editBtn.addEventListener("click", function () {
+    const opening = editRow.hidden;
+    editRow.hidden = !opening;
+    editBtn.setAttribute("aria-expanded", String(opening));
+    if (opening) dateInput.focus();
+  });
+  cancelBtn.addEventListener("click", function () {
+    editRow.hidden = true;
+    editBtn.setAttribute("aria-expanded", "false");
+    dateInput.value = ymd(EXAM_DAY);
+  });
+  saveBtn.addEventListener("click", function () {
+    const v = dateInput.value;
+    if (!v || !setExamDay(v)) return;
+    renderCountdown();
+    if (AT_HOME) goHome();   // ホーム表示中は道のりの期日も描き直す（回を中断するだけなので壊れない）
+  });
 }
 
 /* ---------- ホーム（出題範囲を選ぶ画面） ---------- */
 /* いまの回は中断するだけで消さない。「続きから」で同じ問題に戻れる */
 let AT_HOME = false;
 const SET_LABEL = { white: "白書・統計", past: "過去問論点", measure: "測定・分析", extra: "5択問題",
-  all: "まとめて", imported: "過去問", weak: "苦手", bm: "ブックマーク", custom: "選んだ問題" };
+  all: "まとめて", imported: "過去問", weak: "苦手", bm: "ブックマーク", custom: "選んだ問題", auto: "おまかせ" };
 function setQuizChrome(show) {
   document.querySelector(".status").hidden = !show;
   document.querySelector(".bar").hidden = !show;
@@ -767,23 +1015,24 @@ function goHome() {
   const card = document.createElement("div");
   card.className = "card homecard";
   card.innerHTML =
-    '<p class="hlead">上の<b>出題範囲</b>を選ぶと、新しい回が始まります。</p>' +
+    renderAutoBlock() +
     (inProgress
       ? '<button class="btn wide" id="cont">続きから解く<span class="sub">' +
           (SET_LABEL[CURRENT_SET] || "前回の回") + '　' + (i + 1) + ' / ' + Q.length + '問目・正解 ' + correct + '</span></button>'
       : '') +
-    renderRoadmap() +
-    (L.answers
-      ? '<div class="homestats"><span>累計 <b>' + L.answers + '</b>回解答</span>' +
-          '<span>正答率 <b>' + Math.round(L.correct / L.answers * 100) + '%</b></span>' +
-          '<span>苦手 <b>' + weakList().length + '</b>問</span>' +
-          '<span>ブックマーク <b>' + bookmarkList().length + '</b>問</span></div>'
-      : '');
+    renderTiles();
+  const hb = document.getElementById("homeBottom");
+  hb.innerHTML = '<div class="card homecard">' + renderRoadmap() + '</div>';
   stage.replaceChildren(card);
-  wireRoadmap(card);
+  document.body.classList.add("home-mode");
+  wireAutoBlock(card);
+  wireRoadmap(hb);
+  const tw = card.querySelector("#tileWeak"), tb = card.querySelector("#tileBm");
+  if (tw) tw.addEventListener("click", function () { document.getElementById("weakBtn").click(); });
+  if (tb) tb.addEventListener("click", function () { document.getElementById("bmBtn").click(); });
   const c = card.querySelector("#cont");
   if (c) c.addEventListener("click", function () {
-    applySetButtons(SETS[CURRENT_SET] || CURRENT_SET === "weak" || CURRENT_SET === "bm" ? CURRENT_SET : "__none__");
+    applySetButtons(SETS[CURRENT_SET] || CURRENT_SET === "weak" || CURRENT_SET === "bm" || CURRENT_SET === "auto" ? CURRENT_SET : "__none__");
     updatePickInfo();
     render();
   });
@@ -965,8 +1214,128 @@ function recordAnswer(q, hit) {
   const h = HIST[k] || { n: 0, ok: 0, last: null };
   h.n++; if (hit) h.ok++;
   h.last = hit ? 1 : 0;
+  h.st = hit ? (h.st || 0) + 1 : 0;
+  srSchedule(h, Date.now());
   HIST[k] = h; saveHist();
   refreshWeakBtn();   // 結果画面まで待たずに「苦手 N問」を更新する
+}
+
+/* ---------- おまかせ出題（忘却曲線にもとづく復習日の管理） ---------- */
+const DAY = 86400000;
+// 連続正解数ごとの、次の復習までの日数。まちがえたら翌日。本番まで約2か月なので最長30日
+const SR_DAYS = [1, 2, 4, 7, 14, 30];
+const MASTERY = ["未学習", "要復習", "学習中", "定着", "完璧"];
+function dayStart(t) { const d = new Date(t); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
+function srSchedule(h, now) {
+  h.ts = now;
+  h.due = dayStart(now) + SR_DAYS[Math.min(h.st || 0, SR_DAYS.length - 1)] * DAY;
+}
+/* 解いた日時を持たない古い履歴：まちがえた問題は今日が復習日、正解した問題は今日解いたものとして扱う */
+function migrateSR() {
+  let changed = false;
+  const now = Date.now();
+  Object.keys(HIST).forEach(function (k) {
+    const h = HIST[k];
+    if (typeof h.due === "number") return;
+    h.st = h.last === 1 ? (h.ok === h.n ? Math.min(h.ok, 2) : 1) : 0;
+    if (h.last === 1) srSchedule(h, now); else { h.ts = now; h.due = dayStart(now); }
+    changed = true;
+  });
+  if (changed) saveHist();
+}
+migrateSR();
+function isDue(h, today) { return !!h && typeof h.due === "number" && h.due <= today; }
+function dueList() {
+  const t = dayStart(Date.now());
+  return verifiedOnly(SETS.all).filter(function (q) { return isDue(histOf(q), t); });
+}
+/* 習熟度：0未学習 1要復習（直近まちがえた／正答率6割未満） 2学習中 3定着（3回連続正解） 4完璧（5回連続正解） */
+function mastery(q) {
+  const h = histOf(q);
+  if (!h) return 0;
+  if (h.last === 0 || h.ok / h.n < 0.6) return 1;
+  const st = h.st || 0;
+  return st >= 5 ? 4 : st >= 3 ? 3 : 2;
+}
+/* 出題の順：①復習日を過ぎた問題（古い順・習熟度の低い順） ②まだ解いていない問題（頻出論点から） ③期限前でも習熟度の低い問題 */
+function autoPick(n) {
+  const today = dayStart(Date.now());
+  const all = verifiedOnly(SETS.all);
+  let pick = all.filter(function (q) { return isDue(histOf(q), today); }).sort(function (a, b) {
+    return histOf(a).due - histOf(b).due || mastery(a) - mastery(b) || whyOf(b).rank - whyOf(a).rank;
+  }).slice(0, n);
+  if (pick.length < n) {
+    const fresh = [];
+    [5, 4, 3, 2, 1].forEach(function (r) {
+      fresh.push.apply(fresh, shuffled(all.filter(function (q) { return !histOf(q) && whyOf(q).rank === r; })));
+    });
+    pick = pick.concat(fresh.slice(0, n - pick.length));
+  }
+  if (pick.length < n) {
+    const ahead = all.filter(function (q) { const h = histOf(q); return h && !isDue(h, today); }).sort(function (a, b) {
+      return mastery(a) - mastery(b) || histOf(a).due - histOf(b).due;
+    });
+    pick = pick.concat(ahead.slice(0, n - pick.length));
+  }
+  return shuffled(pick);
+}
+let AUTO_N = 20;
+try { AUTO_N = Number(localStorage.getItem("gq_auto_n")) || 20; } catch (e) {}
+function startAuto() {
+  const list = autoPick(AUTO_N);
+  if (!list.length) return;
+  Q.length = 0; list.forEach(function (q) { Q.push(q); });
+  CUSTOM_LIST = list.slice(); CURRENT_SET = "auto";
+  i = 0; correct = 0; log.length = 0; answers.length = 0;
+  applySetButtons("auto");
+  const pi = document.getElementById("pickinfo");
+  if (pi) pi.textContent = "";
+  saveSession(); render();
+}
+function refreshAutoBtn() {
+  const b = document.getElementById("autoBtn");
+  if (!b) return;
+  const n = dueList().length;
+  b.innerHTML = "おまかせ" + (n ? '<span class="badge">' + n + '</span>' : "");
+  const nb = document.getElementById("navBadge");
+  if (nb) { nb.textContent = n > 99 ? "99+" : String(n); nb.hidden = !n; }
+}
+function renderAutoBlock() {
+  const due = dueList().length;
+  const m = [0, 0, 0, 0, 0];
+  verifiedOnly(SETS.all).forEach(function (q) { m[mastery(q)]++; });
+  return '<div class="auto hero"><h3>おまかせ出題</h3>' +
+    '<p class="due">' + (due ? '今日の復習 <b>' + due + '</b>問' : '今日の復習はありません。<br>まだ解いていない頻出論点から出します') + '</p>' +
+    '<div class="auto-n"><label for="autoN">出題数</label><output id="autoNv">' + AUTO_N + '問</output></div>' +
+    '<input type="range" id="autoN" min="5" max="100" step="5" value="' + AUTO_N + '">' +
+    '<div class="auto-scale"><span>5問</span><span>100問</span></div>' +
+    '<button class="btn wide" id="autoGo">スタート</button>' +
+    '<details><summary>おまかせ出題とは</summary>' +
+      '<p>忘れかけたころに復習が回ってくるよう、問題ごとに次の復習日を決めて出題します。' +
+      'まちがえた問題は翌日、続けて正解するほど間隔を空けます（2日→4日→7日→14日→30日）。' +
+      '復習日の問題が足りないときは、まだ解いていない頻出論点から出します。</p>' +
+      '<div class="mastery">' + MASTERY.map(function (l, k) { return '<span class="m' + k + '">' + l + ' <b>' + m[k] + '</b></span>'; }).join("") + '</div>' +
+    '</details>' +
+  '</div>';
+}
+function renderTiles() {
+  const p = progressNow(), weak = weakList().length, bm = bookmarkList().length;
+  return '<div class="tiles">' +
+    '<div class="tile">解いた問題<b>' + p.done + '<small>/ ' + p.total + '</small></b></div>' +
+    '<div class="tile">直近の正答率<b>' + pct(p.rate) + '</b></div>' +
+    '<button type="button" class="tile' + (weak ? ' warn' : '') + '" id="tileWeak"' + (weak ? '' : ' disabled') + '>苦手<b>' + weak + '<small>問</small></b></button>' +
+    '<button type="button" class="tile" id="tileBm"' + (bm ? '' : ' disabled') + '>ブックマーク<b>' + bm + '<small>問</small></b></button>' +
+  '</div>';
+}
+function wireAutoBlock(card) {
+  const r = card.querySelector("#autoN"), v = card.querySelector("#autoNv"), go = card.querySelector("#autoGo");
+  if (!r) return;
+  r.addEventListener("input", function () {
+    AUTO_N = Number(r.value);
+    v.textContent = AUTO_N + "問";
+    try { localStorage.setItem("gq_auto_n", String(AUTO_N)); } catch (e) {}
+  });
+  go.addEventListener("click", startAuto);
 }
 /* 苦手＝直近で誤答した問題、または正答率6割未満の問題 */
 function weakList() {
@@ -985,6 +1354,7 @@ function refreshWeakBtn() {
   b.disabled = n === 0;
   if (n === 0 && b.getAttribute("aria-pressed") === "true") b.setAttribute("aria-pressed", "false");
   refreshBmBtn();
+  refreshAutoBtn();
 }
 function lifetimeStats() {
   let n = 0, ok = 0, q = 0;
@@ -1123,6 +1493,7 @@ function verifiedOnly(list) {
 function baseList() {
   if (CURRENT_SET === "weak") return verifiedOnly(weakList());
   if (CURRENT_SET === "bm") return bookmarkList();
+  if (CURRENT_SET === "auto") return verifiedOnly(CUSTOM_LIST || []);
   if (CURRENT_SET === "custom") return verifiedOnly(CUSTOM_LIST || []);
   return verifiedOnly(SETS[CURRENT_SET] || SETS.white);
 }
@@ -1254,6 +1625,7 @@ const SETS = {
 });
 document.querySelectorAll(".set").forEach(function (b) {
   b.addEventListener("click", function () {
+    if (b.dataset.set === "auto") { startAuto(); return; }
     document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
     const prevSet = CURRENT_SET;
     CURRENT_SET = b.dataset.set;
@@ -1443,7 +1815,7 @@ function exportStudyData() {
   const nh = Object.keys(HIST).length, nn = Object.keys(NOTES).length;
   if (!nh && !nn) return null;
   const d = { app: "gijutsushi-quiz", kind: "study-data", v: 1,
-              exported: new Date().toISOString(), history: HIST, notes: NOTES };
+              exported: new Date().toISOString(), history: HIST, notes: NOTES, examDay: ymd(EXAM_DAY) };
   const t = new Date();
   const pad = function (x) { return String(x).padStart(2, "0"); };
   const a = document.createElement("a");
@@ -1466,6 +1838,9 @@ function mergeStudyData(d) {
     // 合算すると同じファイルを2回読んだとき回数が倍になるので、解答回数の多い方を残す
     if (!cur || r.n > cur.n) {
       HIST[k] = { n: r.n, ok: r.ok, last: (r.last === 0 || r.last === 1) ? r.last : null };
+      if (typeof r.st === "number" && r.st >= 0) HIST[k].st = r.st;
+      if (typeof r.ts === "number") HIST[k].ts = r.ts;
+      if (typeof r.due === "number") HIST[k].due = r.due;
       h++;
     }
   });
@@ -1480,7 +1855,13 @@ function mergeStudyData(d) {
     if (!cur || t > (cur.t || 0)) { NOTES[k] = { bm: bm, memo: memo, t: t || Date.now() }; n++; }
   });
   saveHist(); saveNotes();
-  return { h: h, n: n };
+  migrateSR();   // 復習日を持たない古い形式のファイルにも復習日を付ける
+  // 受験日はこの端末が既定日のままのときだけ取り込む（すでに変更済みの設定を上書きしないため）
+  let examTaken = false;
+  if (typeof d.examDay === "string" && ymd(EXAM_DAY) === ymd(EXAM_DAY_DEFAULT) && setExamDay(d.examDay)) {
+    examTaken = true;
+  }
+  return { h: h, n: n, e: examTaken };
 }
 function renderBackup() {
   return '<div class="datamgr"><h3>学習データのバックアップ</h3>' +
@@ -1517,8 +1898,9 @@ function wireBackup(p) {
       const res = mergeStudyData(d);
       if (res.err) { say("ng", res.err); return; }
       refreshWeakBtn();
+      if (res.e) { renderCountdown(); if (AT_HOME) goHome(); }
       renderHistory();   // 画面を描き直してから結果を出す（先に出すと描き直しで消える）
-      say("ok", "読み込みました（履歴 " + res.h + "問・ブックマーク/メモ " + res.n + "問を反映）");
+      say("ok", "読み込みました（履歴 " + res.h + "問・ブックマーク/メモ " + res.n + "問を反映" + (res.e ? "・受験日も反映" : "") + "）");
     };
     rd.readAsText(file);
     f.value = "";
@@ -1742,7 +2124,10 @@ function selectTab(which) {
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 Object.keys(TABS).forEach(function (k) {
-  document.getElementById(TABS[k]).addEventListener("click", function () { selectTab(k); });
+  document.getElementById(TABS[k]).addEventListener("click", function () {
+    if (k === "quiz" && !document.getElementById("pane-quiz").hidden && !AT_HOME) { goHome(); return; }
+    selectTab(k);
+  });
 });
 
 refreshImportedSet();
@@ -1766,7 +2151,7 @@ refreshWeakBtn();
     Q.length = 0; sv.list.forEach(function (q) { Q.push(q); });
     i = sv.i; correct = sv.correct;
     answers.length = 0; sv.answers.forEach(function (a, idx) { answers[idx] = a; });
-    if (SETS[sv.set] || sv.set === "weak" || sv.set === "bm") applySetButtons(sv.set); else applySetButtons("__none__");
+    if (SETS[sv.set] || sv.set === "weak" || sv.set === "bm" || sv.set === "auto") applySetButtons(sv.set); else applySetButtons("__none__");
     updatePickInfo();
     showResume(sv.i, Q.length);
     render();
