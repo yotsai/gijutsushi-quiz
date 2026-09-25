@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="技術士第一次試験【19】環境部門・専門科目の学習ツール。令和4〜7年度の過去問140問を全問分類した頻出テーマと、白書・環境省統計の数値を問う4択クイズ。">
+<meta name="description" content="技術士第一次試験【19】環境部門・専門科目の学習ツール。令和元年度〜7年度の過去問245問を全問分類した頻出テーマと、白書・環境省統計の数値を問う4択クイズ。">
 <title>技術士一次試験 環境部門 数値クイズ｜頻出テーマ</title>
 </head>
 <body>
@@ -458,7 +458,7 @@
   <header>
     <p class="eyebrow">技術士第一次試験｜【19】環境部門・専門科目</p>
     <h1>環境部門 専門科目クイズ</h1>
-    <p class="intro">令和4〜7年度の過去問140問を1問ずつ分類し、実際に出ている論点を4択にしました。選ぶと即座に正誤と解説が出ます。キーボードの 1〜4 と Enter でも進められます。問題ごとに<b>ブックマーク</b>と<b>メモ</b>を残せます（この端末に保存）。</p>
+    <p class="intro">令和元年度〜7年度の過去問245問を1問ずつ分類し、実際に出ている論点を4択にしました。選ぶと即座に正誤と解説が出ます。キーボードの 1〜4 と Enter でも進められます。問題ごとに<b>ブックマーク</b>と<b>メモ</b>を残せます（この端末に保存）。</p>
     <p class="countdown" id="countdown"></p>
   </header>
 
@@ -700,7 +700,7 @@ function renderRoadmap() {
   } else if (weak.length) {
     RM_ACTIONS.push({ label: "苦手を解く", sub: weak.length + "問", list: weak });
   }
-  RM_ACTIONS.push({ label: "★ 頻出論点だけ解く", sub: freq.length + "問・過去4年で2回以上出た論点。まずここを固める", list: freq, ghost: true });
+  RM_ACTIONS.push({ label: "★ 頻出論点だけ解く", sub: freq.length + "問・過去7年で2回以上出た論点。まずここを固める", list: freq, ghost: true });
 
   let btns = "";
   RM_ACTIONS.forEach(function (a, k) {
@@ -1312,7 +1312,7 @@ TOPICS.forEach(function (t) {
 const WHY_CACHE = new Map();
 function whyOf(q) {
   if (WHY_CACHE.has(q)) return WHY_CACHE.get(q);
-  const cs = ((q.n || "") + " " + (q.h || "")).match(/R[4-7]-Ⅲ-\d+/g) || [];
+  const cs = ((q.n || "") + " " + (q.h || "")).match(/R[1-7]-Ⅲ-\d+/g) || [];
   let t = null;
   cs.forEach(function (c) {
     const x = TOPIC_BY_CITE[c];
@@ -1323,7 +1323,7 @@ function whyOf(q) {
   let w;
   if (t) {
     const y = yearsOf(t);
-    w = { tier: y >= 3 ? 3 : 2, rank: y >= 3 ? 5 : 4, years: y, topic: t, same: t.flag === "選択肢が同一", label: "過去4年で" + y + "回出題" };
+    w = { tier: y >= 3 ? 3 : 2, rank: y >= 3 ? 5 : 4, years: y, topic: t, same: t.flag === "選択肢が同一", label: "過去7年で" + y + "回出題" };
   } else if (cs.length) {
     const uniq = cs.filter(function (c, k) { return cs.indexOf(c) === k; });
     w = { tier: 0, rank: 3, once: uniq, label: "" };
@@ -1345,7 +1345,7 @@ function whyChips(w) {
 function whyBox(q, w) {
   let body;
   if (w.tier >= 2) {
-    body = '過去4年で<b>' + w.years + '回</b>出題（' + w.topic.cites.join("・") + '）。' +
+    body = '過去7年で<b>' + w.years + '回</b>出題（' + w.topic.cites.join("・") + '）。' +
       (w.same ? '過去問では、<b>同じ内容の選択肢が並び順だけ変えて繰り返し出ています</b>。' : '') + w.topic.note;
   } else if (w.tier === 1) {
     // 予想の根拠が問題ごとに違うものは、データ側の y に理由を書く
@@ -1689,18 +1689,18 @@ function renderHistory() {
 }
 
 /* ---------- 頻出テーマ ---------- */
-const YEARS = ["R4","R5","R6","R7"];
+const YEARS = ["R1","R2","R3","R4","R5","R6","R7"];
 function renderTopics() {
   const p = document.getElementById("pane-topics");
   if (p.dataset.done) return;
 
   let stats = '<div class="scroll"><table class="stats"><thead><tr><th>出典・分野</th>' +
-    YEARS.map(y => '<th>' + y + '</th>').join('') + '<th>4年計</th><th>比率</th></tr></thead><tbody>';
+    YEARS.map(y => '<th>' + y + '</th>').join('') + '<th>7年計</th><th>比率</th></tr></thead><tbody>';
   FIELD_STATS.forEach(f => {
     const hi = (f.name === "環境測定・分析" || f.name === "白書・環境省統計") ? ' class="hi"' : '';
     stats += '<tr' + hi + '><td><span class="nm">' + f.name + '</span><span class="sb">' + f.sub + '</span></td>' +
       f.y.map(v => '<td>' + v + '</td>').join('') +
-      '<td><b>' + f.total + '</b></td><td>' + Math.round(f.total / 140 * 100) + '%</td></tr>';
+      '<td><b>' + f.total + '</b></td><td>' + Math.round(f.total / 245 * 100) + '%</td></tr>';
   });
   stats += '</tbody></table></div>';
 
@@ -1716,15 +1716,15 @@ function renderTopics() {
   });
 
   p.innerHTML =
-    '<p class="lede">令和4〜7年度の環境部門・専門科目 <b>140問（35問×4年）</b>を1問ずつ分類した結果です。' +
+    '<p class="lede">令和元年度（再試験）〜7年度の環境部門・専門科目 <b>245問（35問×7年）</b>を1問ずつ分類した結果です。' +
     '問題文は転載していません。番号は<a href="https://www.engineer.or.jp/c_categories/index02021.html" target="_blank" rel="noopener">日本技術士会の公開過去問</a>を参照してください。</p>' +
     stats +
     '<p class="lede"><b>合格ラインは35問中25問を選んで13問正解（50%）。</b>捨てられるのは10問だけなので、' +
     '最大ブロックの環境測定・分析を丸ごと捨てると残り23問から13問＝56.5%が必要になり、一気に苦しくなります。</p>' +
-    '<h2 style="font-family:\'Hiragino Mincho ProN\',\'Yu Mincho\',serif;font-size:1.05rem;margin:1.6rem 0 .2rem">4年で2回以上出たテーマ</h2>' +
+    '<h2 style="font-family:\'Hiragino Mincho ProN\',\'Yu Mincho\',serif;font-size:1.05rem;margin:1.6rem 0 .2rem">7年で2回以上出たテーマ</h2>' +
     '<p class="lede" style="margin-top:.2rem">★印は<b>選択肢まで同一で再出題</b>されたもの。順序が入れ替わるだけなので、選択肢単位で覚えると確実に取れます。</p>' +
     list +
-    '<div class="foot">分類の対象：技術士第一次試験 専門科目【19】環境部門 令和4〜7年度（公益社団法人 日本技術士会 公開過去問）。' +
+    '<div class="foot">分類の対象：技術士第一次試験 専門科目【19】環境部門 令和元年度（再試験）〜7年度（公益社団法人 日本技術士会 公開過去問）。' +
     '正答は同会公開の正答表から機械的に取得。本ページは問題文・選択肢を転載せず、分類結果と論点の要約のみを掲載しています。</div>';
   p.dataset.done = "1";
 }
