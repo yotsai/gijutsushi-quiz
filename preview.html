@@ -477,6 +477,120 @@
   .foot { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-size: .76rem; color: var(--ink-3); line-height: 1.8; }
   .foot a { color: var(--accent); }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  /* ===== スマホアプリ風のレイアウト ===== */
+  .unvwrap[hidden], .unvnote[hidden] { display: none !important; }
+  .wrap { padding-bottom: calc(5.6rem + env(safe-area-inset-bottom)); }
+  header { margin-bottom: .6rem; }
+  header .eyebrow { display: none; }
+  header h1 { font-size: 1.02rem; margin: 0; letter-spacing: .02em; }
+  header .intro { display: none; }
+
+  /* 下部ナビ（タブを画面下に固定） */
+  .tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; margin: 0; gap: 0;
+    display: grid; grid-template-columns: repeat(4, 1fr); border: 0;
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border-top: 1px solid var(--rule); padding: .35rem .3rem calc(.35rem + env(safe-area-inset-bottom));
+  }
+  .tab {
+    position: relative; display: flex; flex-direction: column; align-items: center; gap: .1rem;
+    padding: .25rem 0; border: 0; margin: 0; font-size: .68rem; color: var(--ink-3);
+    text-decoration: none; background: none; line-height: 1.3;
+  }
+  .tab svg { width: 24px; height: 24px; }
+  .tab[aria-selected="true"] { color: var(--accent); border: 0; font-weight: 700; }
+  .navbadge {
+    position: absolute; top: .05rem; left: calc(50% + 6px); min-width: 1.2rem; padding: 0 .3rem;
+    border-radius: 999px; background: var(--ng); color: #fff; font-size: .64rem; font-style: normal;
+    font-weight: 700; line-height: 1.5; text-align: center; font-variant-numeric: tabular-nums;
+  }
+  .navbadge[hidden] { display: none; }
+
+  /* ホームと問題を解く画面の切り替え */
+  body:not(.home-mode) #setsHead, body:not(.home-mode) .sets, body:not(.home-mode) .limits,
+  body:not(.home-mode) .unvwrap, body:not(.home-mode) .unvnote, body:not(.home-mode) #homeBottom,
+  body:not(.home-mode) .countdown { display: none !important; }
+  body.home-mode #pane-quiz:not([hidden]) { display: flex; flex-direction: column; }
+  body.home-mode #stage { order: 1; }
+  body.home-mode #setsHead { order: 2; }
+  body.home-mode .sets { order: 3; }
+  body.home-mode .limits { order: 4; }
+  body.home-mode .unvwrap { order: 5; }
+  body.home-mode .unvnote { order: 6; }
+  body.home-mode #homeBottom { order: 7; }
+  body.home-mode #autoBtn { display: none; }
+
+  /* 本番までの日数（ヒーロー） */
+  .countdown {
+    margin: .7rem 0 0; padding: .9rem 1rem; border-radius: 16px; background: var(--panel);
+    border: 1px solid var(--rule); font-size: .8rem; color: var(--ink-3); line-height: 1.5;
+  }
+  .countdown b { font-size: 2.1rem; color: var(--ink); font-weight: 800; letter-spacing: -.02em; margin: 0 .15rem; }
+  .countdown .cd2 { display: block; margin-top: .15rem; }
+
+  /* ホームのカード共通 */
+  body.home-mode .homecard { border-radius: 16px; border: 1px solid var(--rule); padding: 1rem; margin-top: .8rem; background: var(--panel); }
+  body.home-mode #stage > .homecard { background: none; border: 0; padding: 0; box-shadow: none; }
+  .homecard .hlead { display: none; }
+
+  /* おまかせ出題（主役カード） */
+  .homecard .auto.hero {
+    margin: 0; padding: 1.1rem 1rem 1rem; border: 0; border-radius: 16px; color: #fff;
+    background: linear-gradient(135deg, #0E5049, #2C7C72);
+  }
+  .auto.hero h3 { color: #fff; font-family: inherit; font-size: .95rem; font-weight: 700; margin: 0; opacity: .92; }
+  .auto.hero .due { margin: .35rem 0 .1rem; font-size: .82rem; opacity: .9; }
+  .auto.hero .due b { font-size: 2.4rem; font-weight: 800; line-height: 1.1; margin-right: .15rem; font-variant-numeric: tabular-nums; }
+  .auto.hero .auto-n { color: #fff; margin-top: .6rem; }
+  .auto.hero .auto-n output { color: #fff; }
+  .auto.hero #autoN { accent-color: #fff; }
+  .auto.hero .auto-scale { color: rgba(255,255,255,.75); }
+  .auto.hero .btn.wide {
+    margin-top: .8rem; background: #fff; color: #0E5049; border-color: #fff; border-radius: 12px;
+    text-align: center; font-size: 1.05rem; font-weight: 800; padding: .8rem 1rem;
+  }
+  .auto.hero details { margin-top: .7rem; font-size: .78rem; opacity: .92; }
+  .auto.hero summary { cursor: pointer; }
+  .auto.hero details p { margin: .35rem 0 0; line-height: 1.7; }
+  .auto.hero .mastery { color: rgba(255,255,255,.85); }
+  .auto.hero .mastery b { color: #fff; }
+
+  /* 続きから */
+  .homecard .btn.wide#cont { border-radius: 12px; margin-top: .8rem; }
+
+  /* 数字のタイル（2×2） */
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; margin-top: .8rem; }
+  .tile {
+    font: inherit; text-align: left; border: 1px solid var(--rule); border-radius: 14px; background: var(--paper);
+    padding: .7rem .8rem; color: var(--ink-3); font-size: .74rem; line-height: 1.4;
+  }
+  .tile b { display: block; color: var(--ink); font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: .15rem; }
+  .tile b small { font-size: .75rem; font-weight: 600; color: var(--ink-3); margin-left: .15rem; }
+  button.tile { cursor: pointer; }
+  button.tile:disabled { cursor: default; opacity: .55; }
+  .tile.warn b { color: var(--ng); }
+
+  /* 分野のタイル */
+  .home-h { font-size: .95rem; font-weight: 700; margin: 1.3rem .1rem .55rem; font-family: inherit; }
+  body.home-mode .sets { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; margin: 0; }
+  body.home-mode .set {
+    border-radius: 14px; padding: .8rem .8rem; text-align: left; font-size: .86rem; font-weight: 600;
+    background: var(--panel); border: 1px solid var(--rule); color: var(--ink); min-height: 3.2rem;
+  }
+  body.home-mode .set[aria-pressed="true"] { background: var(--panel); color: var(--ink); border-color: var(--rule); }
+  body.home-mode .set.weak:not(:disabled) { color: var(--ng); border-color: color-mix(in srgb, var(--ng) 45%, var(--rule)); }
+  body.home-mode .set.bm:not(:disabled) { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--rule)); }
+  body.home-mode .limits { margin: .7rem .1rem 0; }
+  body.home-mode .lim { border-radius: 999px; }
+
+  /* 道のり（たたむ） */
+  #homeBottom .homecard { margin-top: 1.1rem; }
+  #homeBottom .roadmap { margin: 0; padding: 0; border: 0; }
+  #homeBottom .roadmap details { margin-top: .5rem; }
+  #homeBottom .roadmap summary { cursor: pointer; font-size: .82rem; color: var(--accent); font-weight: 600; }
+  #homeBottom .rm-next .btn { border-radius: 12px; }
 </style>
 
 <div class="wrap">
@@ -488,13 +602,14 @@
   </header>
 
   <div class="tabs" role="tablist">
-    <button class="tab" id="tab-quiz" role="tab" aria-selected="true" aria-controls="pane-quiz">クイズ</button>
-    <button class="tab" id="tab-topics" role="tab" aria-selected="false" aria-controls="pane-topics">頻出テーマ</button>
-    <button class="tab" id="tab-hist" role="tab" aria-selected="false" aria-controls="pane-hist">履歴</button>
-    <a class="tab" href="print.html" style="text-decoration:none;line-height:2.1">印刷用シート</a>
+    <button class="tab" id="tab-quiz" role="tab" aria-selected="true" aria-controls="pane-quiz"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 10v9.5h5v-6h3v6h5V10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg><span>ホーム</span><i class="navbadge" id="navBadge" hidden></i></button>
+    <button class="tab" id="tab-topics" role="tab" aria-selected="false" aria-controls="pane-topics"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>頻出テーマ</span></button>
+    <button class="tab" id="tab-hist" role="tab" aria-selected="false" aria-controls="pane-hist"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>履歴</span></button>
+    <a class="tab" href="print.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 5 9h14a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 19 17h-2M7 14h10v6H7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>印刷</span></a>
   </div>
 
   <div class="pane" id="pane-quiz" role="tabpanel" aria-labelledby="tab-quiz">
+  <h2 class="home-h" id="setsHead">分野を選んで解く</h2>
   <div class="sets" role="group" aria-label="出題範囲">
     <button class="set auto" data-set="auto" aria-pressed="false" id="autoBtn">おまかせ</button>
     <button class="set" data-set="white" aria-pressed="true">白書・統計 62問</button>
@@ -521,6 +636,7 @@
     <span class="cnt2" id="unvCnt"></span>
   </label>
   <div class="unvnote" id="unvNote"></div>
+  <div id="homeBottom"></div>
 
   <div class="status">
     <span class="field" id="field">—</span>
@@ -576,6 +692,9 @@ function shuffle(n, seed) {
 function render() {
   AT_HOME = false;
   setQuizChrome(true);
+  document.body.classList.remove("home-mode");
+  const hb = document.getElementById("homeBottom");
+  if (hb) hb.innerHTML = "";
   if (i >= Q.length) return renderResult();
   const q = Q[i];
   let seed = 0;
@@ -737,13 +856,13 @@ function renderRoadmap() {
   return '<div class="roadmap"><h3>合格までの道のり</h3>' +
     '<p class="rm-lead">本番まであと<b>' + left + '日</b>。35問から25問を選び、<b>13問正解</b>で合格です。' +
     '当日の読み違いを見込んで、目標は<b>16問</b>に置きます。</p>' +
-    '<ol class="rm-steps">' +
+    '<details><summary>期日ごとの目安を見る</summary><ol class="rm-steps">' +
       li(s1, "〜10/15", "全問を1周する", "解いた問題 " + p.done + " / " + p.total) +
       li(s2, "〜11/1", "正答率を70%以上にする", "いま " + pct(p.rate) + "（直近の解答で正解している割合）") +
       li(s3, "11/1", "測定・分析が50%未満なら、頻出論点だけに絞る", "測定・分析 いま " + pct(p.mRate)) +
       li(s4, "11/8〜", "新しい範囲は増やさず、苦手とブックマークだけを回す", "") +
       li(st(left === 0 ? "now" : "todo", left === 0 ? "今日" : ""), "11/22", "本番", "") +
-    '</ol>' +
+    '</ol></details>' +
     '<div class="rm-next"><p class="lab">次にやること</p>' + btns + '</div></div>';
 }
 function wireRoadmap(card) {
@@ -794,22 +913,21 @@ function goHome() {
   const card = document.createElement("div");
   card.className = "card homecard";
   card.innerHTML =
-    '<p class="hlead">毎日の学習は<b>おまかせ出題</b>がおすすめです。分野を選んで解くときは、上の<b>出題範囲</b>から選びます。</p>' +
+    renderAutoBlock() +
     (inProgress
       ? '<button class="btn wide" id="cont">続きから解く<span class="sub">' +
           (SET_LABEL[CURRENT_SET] || "前回の回") + '　' + (i + 1) + ' / ' + Q.length + '問目・正解 ' + correct + '</span></button>'
       : '') +
-    renderAutoBlock() +
-    renderRoadmap() +
-    (L.answers
-      ? '<div class="homestats"><span>累計 <b>' + L.answers + '</b>回解答</span>' +
-          '<span>正答率 <b>' + Math.round(L.correct / L.answers * 100) + '%</b></span>' +
-          '<span>苦手 <b>' + weakList().length + '</b>問</span>' +
-          '<span>ブックマーク <b>' + bookmarkList().length + '</b>問</span></div>'
-      : '');
+    renderTiles();
+  const hb = document.getElementById("homeBottom");
+  hb.innerHTML = '<div class="card homecard">' + renderRoadmap() + '</div>';
   stage.replaceChildren(card);
+  document.body.classList.add("home-mode");
   wireAutoBlock(card);
-  wireRoadmap(card);
+  wireRoadmap(hb);
+  const tw = card.querySelector("#tileWeak"), tb = card.querySelector("#tileBm");
+  if (tw) tw.addEventListener("click", function () { document.getElementById("weakBtn").click(); });
+  if (tb) tb.addEventListener("click", function () { document.getElementById("bmBtn").click(); });
   const c = card.querySelector("#cont");
   if (c) c.addEventListener("click", function () {
     applySetButtons(SETS[CURRENT_SET] || CURRENT_SET === "weak" || CURRENT_SET === "bm" || CURRENT_SET === "auto" ? CURRENT_SET : "__none__");
@@ -1077,21 +1195,34 @@ function refreshAutoBtn() {
   if (!b) return;
   const n = dueList().length;
   b.innerHTML = "おまかせ" + (n ? '<span class="badge">' + n + '</span>' : "");
+  const nb = document.getElementById("navBadge");
+  if (nb) { nb.textContent = n > 99 ? "99+" : String(n); nb.hidden = !n; }
 }
 function renderAutoBlock() {
   const due = dueList().length;
   const m = [0, 0, 0, 0, 0];
   verifiedOnly(SETS.all).forEach(function (q) { m[mastery(q)]++; });
-  return '<div class="auto"><h3>おまかせ出題</h3>' +
-    '<p class="auto-lead">忘れかけたころに復習が回ってくるよう、問題ごとに次の復習日を決めて出題します。' +
-    'まちがえた問題は翌日、続けて正解するほど間隔を空けます（2日→4日→7日→14日→30日）。' +
-    '復習日の問題が足りないときは、まだ解いていない頻出論点から出します。</p>' +
+  return '<div class="auto hero"><h3>おまかせ出題</h3>' +
+    '<p class="due">' + (due ? '今日の復習 <b>' + due + '</b>問' : '今日の復習はありません。<br>まだ解いていない頻出論点から出します') + '</p>' +
     '<div class="auto-n"><label for="autoN">出題数</label><output id="autoNv">' + AUTO_N + '問</output></div>' +
     '<input type="range" id="autoN" min="5" max="100" step="5" value="' + AUTO_N + '">' +
     '<div class="auto-scale"><span>5問</span><span>100問</span></div>' +
-    '<button class="btn wide" id="autoGo">スタート<span class="sub">' +
-      (due ? '今日が復習日の問題 <b>' + due + '問</b>' : '今日が復習日の問題はありません（新しい問題から出します）') + '</span></button>' +
-    '<div class="mastery">' + MASTERY.map(function (l, k) { return '<span class="m' + k + '">' + l + ' <b>' + m[k] + '</b></span>'; }).join("") + '</div>' +
+    '<button class="btn wide" id="autoGo">スタート</button>' +
+    '<details><summary>おまかせ出題とは</summary>' +
+      '<p>忘れかけたころに復習が回ってくるよう、問題ごとに次の復習日を決めて出題します。' +
+      'まちがえた問題は翌日、続けて正解するほど間隔を空けます（2日→4日→7日→14日→30日）。' +
+      '復習日の問題が足りないときは、まだ解いていない頻出論点から出します。</p>' +
+      '<div class="mastery">' + MASTERY.map(function (l, k) { return '<span class="m' + k + '">' + l + ' <b>' + m[k] + '</b></span>'; }).join("") + '</div>' +
+    '</details>' +
+  '</div>';
+}
+function renderTiles() {
+  const p = progressNow(), weak = weakList().length, bm = bookmarkList().length;
+  return '<div class="tiles">' +
+    '<div class="tile">解いた問題<b>' + p.done + '<small>/ ' + p.total + '</small></b></div>' +
+    '<div class="tile">直近の正答率<b>' + pct(p.rate) + '</b></div>' +
+    '<button type="button" class="tile' + (weak ? ' warn' : '') + '" id="tileWeak"' + (weak ? '' : ' disabled') + '>苦手<b>' + weak + '<small>問</small></b></button>' +
+    '<button type="button" class="tile" id="tileBm"' + (bm ? '' : ' disabled') + '>ブックマーク<b>' + bm + '<small>問</small></b></button>' +
   '</div>';
 }
 function wireAutoBlock(card) {
@@ -1885,7 +2016,10 @@ function selectTab(which) {
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 Object.keys(TABS).forEach(function (k) {
-  document.getElementById(TABS[k]).addEventListener("click", function () { selectTab(k); });
+  document.getElementById(TABS[k]).addEventListener("click", function () {
+    if (k === "quiz" && !document.getElementById("pane-quiz").hidden && !AT_HOME) { goHome(); return; }
+    selectTab(k);
+  });
 });
 
 refreshImportedSet();
