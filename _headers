@@ -5,5 +5,3 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
 
-/kankyo-anki-sheet.pdf
-  Cache-Control: public, max-age=3600
