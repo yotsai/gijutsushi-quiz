@@ -529,6 +529,28 @@
   }
   .countdown b { font-size: 2.1rem; color: var(--ink); font-weight: 800; letter-spacing: -.02em; margin: 0 .15rem; }
   .countdown .cd2 { display: block; margin-top: .15rem; }
+  .countdown-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem .6rem; flex-wrap: wrap; }
+  .countdown-text { flex: 1 1 220px; min-width: 0; }
+  .countdown-text .cd-days { white-space: nowrap; }
+  .examEditBtn {
+    display: inline-flex; align-items: center; gap: .3rem; flex-shrink: 0; min-height: 44px; margin-left: auto;
+    font: inherit; font-size: .78rem; font-weight: 600; cursor: pointer;
+    background: transparent; color: var(--ink-2); border: 1px solid var(--rule-strong);
+    border-radius: 999px; padding: .4rem .85rem;
+  }
+  .examEditBtn:hover { border-color: var(--accent); color: var(--accent); }
+  .examEditBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .examEditBtn svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .examEdit {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+    margin-top: .8rem; padding-top: .8rem; border-top: 1px solid var(--rule);
+  }
+  .examEdit[hidden] { display: none; }
+  .examEdit input[type="date"] {
+    font: inherit; font-size: .85rem; color: var(--ink); background: var(--paper);
+    border: 1px solid var(--rule-strong); border-radius: 2px; padding: .4rem .6rem; min-height: 44px;
+  }
+  .examEdit .btn { padding: .5rem 1rem; min-height: 44px; }
 
   /* ホームのカード共通 */
   body.home-mode .homecard { border-radius: 16px; border: 1px solid var(--rule); padding: 1rem; margin-top: .8rem; background: var(--panel); }
@@ -796,10 +818,46 @@ function renderNav(card) {
 function goPrev() { if (i > 0) { i--; saveSession(); render(); } }
 function goNext() { i++; saveSession(); render(); }
 /* ---------- 合格までの道のり（本番日と期日の目安） ---------- */
-const EXAM_DAY = new Date(2026, 10, 22);
-const RM_ROUND1 = new Date(2026, 9, 15);   // 全問1周
-const RM_RATE = new Date(2026, 10, 1);     // 正答率70%・測定分析の見直し
-const RM_FINAL = new Date(2026, 10, 8);    // 以降は苦手とブックマークだけ
+/* 受験日はホーム画面から変更でき、この端末に保存する。未設定・壊れた値は既定日にフォールバック */
+const EKEY = "gq_exam_day";
+const EXAM_DAY_DEFAULT = new Date(2026, 10, 22);
+function pad2(x) { return String(x).padStart(2, "0"); }
+function ymd(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function mdLabel(d) { return (d.getMonth() + 1) + "/" + d.getDate(); }
+function mdJp(d) { return (d.getMonth() + 1) + "月" + d.getDate() + "日"; }
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+/* "YYYY-MM-DD" 以外・2/30のような存在しない日付はnullを返す（new Dateは繰り上げて解釈してしまうため） */
+function parseYmd(s) {
+  if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  const parts = s.split("-").map(Number);
+  const y = parts[0], m = parts[1], dd = parts[2];
+  const d = new Date(y, m - 1, dd);
+  if (d.getFullYear() !== y || d.getMonth() !== m - 1 || d.getDate() !== dd) return null;
+  return d;
+}
+function loadExamDay() {
+  try {
+    const d = parseYmd(localStorage.getItem(EKEY));
+    if (d) return d;
+  } catch (e) {}
+  return new Date(EXAM_DAY_DEFAULT);
+}
+let EXAM_DAY = loadExamDay();
+let RM_ROUND1, RM_RATE, RM_FINAL;
+function computeRoadmapDates() {
+  RM_ROUND1 = addDays(EXAM_DAY, -38);  // 全問1周
+  RM_RATE = addDays(EXAM_DAY, -21);    // 正答率70%・測定分析の見直し
+  RM_FINAL = addDays(EXAM_DAY, -14);   // 以降は苦手とブックマークだけ
+}
+computeRoadmapDates();
+function setExamDay(s) {
+  const d = parseYmd(s);
+  if (!d) return false;
+  EXAM_DAY = d;
+  computeRoadmapDates();
+  try { localStorage.setItem(EKEY, s); } catch (e) {}
+  return true;
+}
 function todayMid() { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
 function daysLeft() { return Math.round((EXAM_DAY - todayMid()) / 86400000); }
 /* 正答率は「直近の解答で正解している問題の割合」。累計だと最初の失点をいつまでも引きずるため */
@@ -857,11 +915,11 @@ function renderRoadmap() {
     '<p class="rm-lead">本番まであと<b>' + left + '日</b>。35問から25問を選び、<b>13問正解</b>で合格です。' +
     '当日の読み違いを見込んで、目標は<b>16問</b>に置きます。</p>' +
     '<details><summary>期日ごとの目安を見る</summary><ol class="rm-steps">' +
-      li(s1, "〜10/15", "全問を1周する", "解いた問題 " + p.done + " / " + p.total) +
-      li(s2, "〜11/1", "正答率を70%以上にする", "いま " + pct(p.rate) + "（直近の解答で正解している割合）") +
-      li(s3, "11/1", "測定・分析が50%未満なら、頻出論点だけに絞る", "測定・分析 いま " + pct(p.mRate)) +
-      li(s4, "11/8〜", "新しい範囲は増やさず、苦手とブックマークだけを回す", "") +
-      li(st(left === 0 ? "now" : "todo", left === 0 ? "今日" : ""), "11/22", "本番", "") +
+      li(s1, "〜" + mdLabel(RM_ROUND1), "全問を1周する", "解いた問題 " + p.done + " / " + p.total) +
+      li(s2, "〜" + mdLabel(RM_RATE), "正答率を70%以上にする", "いま " + pct(p.rate) + "（直近の解答で正解している割合）") +
+      li(s3, mdLabel(RM_RATE), "測定・分析が50%未満なら、頻出論点だけに絞る", "測定・分析 いま " + pct(p.mRate)) +
+      li(s4, mdLabel(RM_FINAL) + "〜", "新しい範囲は増やさず、苦手とブックマークだけを回す", "") +
+      li(st(left === 0 ? "now" : "todo", left === 0 ? "今日" : ""), mdLabel(EXAM_DAY), "本番", "") +
     '</ol></details>' +
     '<div class="rm-next"><p class="lab">次にやること</p>' + btns + '</div></div>';
 }
@@ -887,7 +945,51 @@ function renderCountdown() {
   const el = document.getElementById("countdown");
   if (!el) return;
   const left = daysLeft();
-  el.innerHTML = left >= 0 ? '本番（11月22日）まで あと <b>' + left + '日</b><br><span class="cd2">合格ライン：35問から25問を選んで13問正解</span>' : '';
+  const editBtn =
+    '<button type="button" class="examEditBtn" id="examEditBtn" aria-expanded="false">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>' +
+      '変更' +
+    '</button>';
+  let textHtml;
+  if (left > 0) {
+    textHtml = '本番（' + mdJp(EXAM_DAY) + '）まで あと <span class="cd-days"><b>' + left + '</b>日</span><br><span class="cd2">合格ライン：35問から25問を選んで13問正解</span>';
+  } else if (left === 0) {
+    textHtml = '<b>本番は今日です</b><br><span class="cd2">合格ライン：35問から25問を選んで13問正解</span>';
+  } else {
+    textHtml = '<b>試験日を過ぎました</b>';
+  }
+  el.innerHTML =
+    '<div class="countdown-row"><div class="countdown-text">' + textHtml + '</div>' + editBtn + '</div>' +
+    '<div class="examEdit" id="examEdit" hidden>' +
+      '<input type="date" id="examDate" value="' + ymd(EXAM_DAY) + '">' +
+      '<button type="button" class="btn" id="examSave">保存</button>' +
+      '<button type="button" class="btn ghost" id="examCancel">キャンセル</button>' +
+    '</div>';
+  wireExamEdit(el);
+}
+function wireExamEdit(el) {
+  const editBtn = el.querySelector("#examEditBtn");
+  const editRow = el.querySelector("#examEdit");
+  const dateInput = el.querySelector("#examDate");
+  const saveBtn = el.querySelector("#examSave");
+  const cancelBtn = el.querySelector("#examCancel");
+  editBtn.addEventListener("click", function () {
+    const opening = editRow.hidden;
+    editRow.hidden = !opening;
+    editBtn.setAttribute("aria-expanded", String(opening));
+    if (opening) dateInput.focus();
+  });
+  cancelBtn.addEventListener("click", function () {
+    editRow.hidden = true;
+    editBtn.setAttribute("aria-expanded", "false");
+    dateInput.value = ymd(EXAM_DAY);
+  });
+  saveBtn.addEventListener("click", function () {
+    const v = dateInput.value;
+    if (!v || !setExamDay(v)) return;
+    renderCountdown();
+    if (AT_HOME) goHome();   // ホーム表示中は道のりの期日も描き直す（回を中断するだけなので壊れない）
+  });
 }
 
 /* ---------- ホーム（出題範囲を選ぶ画面） ---------- */
@@ -1713,7 +1815,7 @@ function exportStudyData() {
   const nh = Object.keys(HIST).length, nn = Object.keys(NOTES).length;
   if (!nh && !nn) return null;
   const d = { app: "gijutsushi-quiz", kind: "study-data", v: 1,
-              exported: new Date().toISOString(), history: HIST, notes: NOTES };
+              exported: new Date().toISOString(), history: HIST, notes: NOTES, examDay: ymd(EXAM_DAY) };
   const t = new Date();
   const pad = function (x) { return String(x).padStart(2, "0"); };
   const a = document.createElement("a");
@@ -1754,7 +1856,12 @@ function mergeStudyData(d) {
   });
   saveHist(); saveNotes();
   migrateSR();   // 復習日を持たない古い形式のファイルにも復習日を付ける
-  return { h: h, n: n };
+  // 受験日はこの端末が既定日のままのときだけ取り込む（すでに変更済みの設定を上書きしないため）
+  let examTaken = false;
+  if (typeof d.examDay === "string" && ymd(EXAM_DAY) === ymd(EXAM_DAY_DEFAULT) && setExamDay(d.examDay)) {
+    examTaken = true;
+  }
+  return { h: h, n: n, e: examTaken };
 }
 function renderBackup() {
   return '<div class="datamgr"><h3>学習データのバックアップ</h3>' +
@@ -1791,8 +1898,9 @@ function wireBackup(p) {
       const res = mergeStudyData(d);
       if (res.err) { say("ng", res.err); return; }
       refreshWeakBtn();
+      if (res.e) { renderCountdown(); if (AT_HOME) goHome(); }
       renderHistory();   // 画面を描き直してから結果を出す（先に出すと描き直しで消える）
-      say("ok", "読み込みました（履歴 " + res.h + "問・ブックマーク/メモ " + res.n + "問を反映）");
+      say("ok", "読み込みました（履歴 " + res.h + "問・ブックマーク/メモ " + res.n + "問を反映" + (res.e ? "・受験日も反映" : "") + "）");
     };
     rd.readAsText(file);
     f.value = "";
