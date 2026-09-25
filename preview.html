@@ -74,6 +74,31 @@
   .status[hidden], .bar[hidden] { display: none; }
 
   /* 本番までの残り日数 */
+  /* おまかせ出題 */
+  .set.auto[aria-pressed="false"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .set .badge {
+    display: inline-block; min-width: 1.4em; margin-left: .35em; padding: 0 .35em; border-radius: 999px;
+    background: var(--ng); color: #fff; font-size: .68rem; font-weight: 700; line-height: 1.55; text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .auto { margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--rule); }
+  .auto h3 { font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 1rem; font-weight: 600; margin: 0 0 .3rem; }
+  .auto-lead { font-size: .82rem; color: var(--ink-2); margin: 0 0 .7rem; line-height: 1.75; }
+  .auto-n { display: flex; justify-content: space-between; align-items: baseline; font-size: .85rem; }
+  .auto-n output { font-weight: 700; color: var(--accent); font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+  #autoN { display: block; width: 100%; margin: .45rem 0 .1rem; accent-color: var(--accent); }
+  .auto-scale { display: flex; justify-content: space-between; font-size: .72rem; color: var(--ink-3); }
+  .auto .btn.wide { margin-top: .8rem; }
+  .mastery { display: flex; flex-wrap: wrap; gap: .3rem .9rem; margin-top: .7rem; font-size: .76rem; color: var(--ink-3); }
+  .mastery b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .mastery .m1 b { color: var(--ng); }
+  .mastery .m3 b, .mastery .m4 b { color: var(--ok); }
+  .mst {
+    display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .04em; padding: 0 .4rem;
+    border-radius: 2px; margin-left: .45rem; vertical-align: 1px; border: 1px solid var(--rule-strong); color: var(--ink-3);
+  }
+  .mst.m1 { color: var(--ng); border-color: var(--ng); }
+  .mst.m3, .mst.m4 { color: var(--ok); border-color: var(--ok); }
   .countdown { font-size: .82rem; color: var(--ink-2); margin: .5rem 0 0; font-variant-numeric: tabular-nums; }
   .countdown b { color: var(--accent); font-size: 1rem; }
   .countdown .cd2 { font-size: .76rem; color: var(--ink-3); }
@@ -376,7 +401,7 @@
   .lifetime .reset { margin-left: auto; }
 
   /* set switch */
-  .sets { display: flex; gap: .35rem; flex-wrap: wrap; margin: 1rem 0 0; }
+  .sets { display: flex; gap: .35rem; flex-wrap: wrap; align-items: center; margin: 1rem 0 0; }
   .set {
     font: inherit; font-size: .78rem; cursor: pointer;
     background: var(--panel); color: var(--ink-2);
@@ -471,6 +496,7 @@
 
   <div class="pane" id="pane-quiz" role="tabpanel" aria-labelledby="tab-quiz">
   <div class="sets" role="group" aria-label="出題範囲">
+    <button class="set auto" data-set="auto" aria-pressed="false" id="autoBtn">おまかせ</button>
     <button class="set" data-set="white" aria-pressed="true">白書・統計 62問</button>
     <button class="set" data-set="past" aria-pressed="false">過去問論点 37問</button>
     <button class="set" data-set="measure" aria-pressed="false">測定・分析 30問</button>
@@ -570,6 +596,7 @@ function render() {
   if (h) {
     badge = '<span class="hist">これまで ' + h.n + '回中 ' + h.ok + '回正解</span>';
     if (h.last === 0) badge += '<span class="flagmark">前回まちがえた</span>';
+    else badge += '<span class="mst m' + mastery(q) + '">' + MASTERY[mastery(q)] + '</span>';
   }
   const bm = isBookmarked(q);
   card.innerHTML =
@@ -748,7 +775,7 @@ function renderCountdown() {
 /* いまの回は中断するだけで消さない。「続きから」で同じ問題に戻れる */
 let AT_HOME = false;
 const SET_LABEL = { white: "白書・統計", past: "過去問論点", measure: "測定・分析", extra: "5択問題",
-  all: "まとめて", imported: "過去問", weak: "苦手", bm: "ブックマーク", custom: "選んだ問題" };
+  all: "まとめて", imported: "過去問", weak: "苦手", bm: "ブックマーク", custom: "選んだ問題", auto: "おまかせ" };
 function setQuizChrome(show) {
   document.querySelector(".status").hidden = !show;
   document.querySelector(".bar").hidden = !show;
@@ -767,11 +794,12 @@ function goHome() {
   const card = document.createElement("div");
   card.className = "card homecard";
   card.innerHTML =
-    '<p class="hlead">上の<b>出題範囲</b>を選ぶと、新しい回が始まります。</p>' +
+    '<p class="hlead">毎日の学習は<b>おまかせ出題</b>がおすすめです。分野を選んで解くときは、上の<b>出題範囲</b>から選びます。</p>' +
     (inProgress
       ? '<button class="btn wide" id="cont">続きから解く<span class="sub">' +
           (SET_LABEL[CURRENT_SET] || "前回の回") + '　' + (i + 1) + ' / ' + Q.length + '問目・正解 ' + correct + '</span></button>'
       : '') +
+    renderAutoBlock() +
     renderRoadmap() +
     (L.answers
       ? '<div class="homestats"><span>累計 <b>' + L.answers + '</b>回解答</span>' +
@@ -780,10 +808,11 @@ function goHome() {
           '<span>ブックマーク <b>' + bookmarkList().length + '</b>問</span></div>'
       : '');
   stage.replaceChildren(card);
+  wireAutoBlock(card);
   wireRoadmap(card);
   const c = card.querySelector("#cont");
   if (c) c.addEventListener("click", function () {
-    applySetButtons(SETS[CURRENT_SET] || CURRENT_SET === "weak" || CURRENT_SET === "bm" ? CURRENT_SET : "__none__");
+    applySetButtons(SETS[CURRENT_SET] || CURRENT_SET === "weak" || CURRENT_SET === "bm" || CURRENT_SET === "auto" ? CURRENT_SET : "__none__");
     updatePickInfo();
     render();
   });
@@ -965,8 +994,115 @@ function recordAnswer(q, hit) {
   const h = HIST[k] || { n: 0, ok: 0, last: null };
   h.n++; if (hit) h.ok++;
   h.last = hit ? 1 : 0;
+  h.st = hit ? (h.st || 0) + 1 : 0;
+  srSchedule(h, Date.now());
   HIST[k] = h; saveHist();
   refreshWeakBtn();   // 結果画面まで待たずに「苦手 N問」を更新する
+}
+
+/* ---------- おまかせ出題（忘却曲線にもとづく復習日の管理） ---------- */
+const DAY = 86400000;
+// 連続正解数ごとの、次の復習までの日数。まちがえたら翌日。本番まで約2か月なので最長30日
+const SR_DAYS = [1, 2, 4, 7, 14, 30];
+const MASTERY = ["未学習", "要復習", "学習中", "定着", "完璧"];
+function dayStart(t) { const d = new Date(t); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
+function srSchedule(h, now) {
+  h.ts = now;
+  h.due = dayStart(now) + SR_DAYS[Math.min(h.st || 0, SR_DAYS.length - 1)] * DAY;
+}
+/* 解いた日時を持たない古い履歴：まちがえた問題は今日が復習日、正解した問題は今日解いたものとして扱う */
+function migrateSR() {
+  let changed = false;
+  const now = Date.now();
+  Object.keys(HIST).forEach(function (k) {
+    const h = HIST[k];
+    if (typeof h.due === "number") return;
+    h.st = h.last === 1 ? (h.ok === h.n ? Math.min(h.ok, 2) : 1) : 0;
+    if (h.last === 1) srSchedule(h, now); else { h.ts = now; h.due = dayStart(now); }
+    changed = true;
+  });
+  if (changed) saveHist();
+}
+migrateSR();
+function isDue(h, today) { return !!h && typeof h.due === "number" && h.due <= today; }
+function dueList() {
+  const t = dayStart(Date.now());
+  return verifiedOnly(SETS.all).filter(function (q) { return isDue(histOf(q), t); });
+}
+/* 習熟度：0未学習 1要復習（直近まちがえた／正答率6割未満） 2学習中 3定着（3回連続正解） 4完璧（5回連続正解） */
+function mastery(q) {
+  const h = histOf(q);
+  if (!h) return 0;
+  if (h.last === 0 || h.ok / h.n < 0.6) return 1;
+  const st = h.st || 0;
+  return st >= 5 ? 4 : st >= 3 ? 3 : 2;
+}
+/* 出題の順：①復習日を過ぎた問題（古い順・習熟度の低い順） ②まだ解いていない問題（頻出論点から） ③期限前でも習熟度の低い問題 */
+function autoPick(n) {
+  const today = dayStart(Date.now());
+  const all = verifiedOnly(SETS.all);
+  let pick = all.filter(function (q) { return isDue(histOf(q), today); }).sort(function (a, b) {
+    return histOf(a).due - histOf(b).due || mastery(a) - mastery(b) || whyOf(b).rank - whyOf(a).rank;
+  }).slice(0, n);
+  if (pick.length < n) {
+    const fresh = [];
+    [5, 4, 3, 2, 1].forEach(function (r) {
+      fresh.push.apply(fresh, shuffled(all.filter(function (q) { return !histOf(q) && whyOf(q).rank === r; })));
+    });
+    pick = pick.concat(fresh.slice(0, n - pick.length));
+  }
+  if (pick.length < n) {
+    const ahead = all.filter(function (q) { const h = histOf(q); return h && !isDue(h, today); }).sort(function (a, b) {
+      return mastery(a) - mastery(b) || histOf(a).due - histOf(b).due;
+    });
+    pick = pick.concat(ahead.slice(0, n - pick.length));
+  }
+  return shuffled(pick);
+}
+let AUTO_N = 20;
+try { AUTO_N = Number(localStorage.getItem("gq_auto_n")) || 20; } catch (e) {}
+function startAuto() {
+  const list = autoPick(AUTO_N);
+  if (!list.length) return;
+  Q.length = 0; list.forEach(function (q) { Q.push(q); });
+  CUSTOM_LIST = list.slice(); CURRENT_SET = "auto";
+  i = 0; correct = 0; log.length = 0; answers.length = 0;
+  applySetButtons("auto");
+  const pi = document.getElementById("pickinfo");
+  if (pi) pi.textContent = "";
+  saveSession(); render();
+}
+function refreshAutoBtn() {
+  const b = document.getElementById("autoBtn");
+  if (!b) return;
+  const n = dueList().length;
+  b.innerHTML = "おまかせ" + (n ? '<span class="badge">' + n + '</span>' : "");
+}
+function renderAutoBlock() {
+  const due = dueList().length;
+  const m = [0, 0, 0, 0, 0];
+  verifiedOnly(SETS.all).forEach(function (q) { m[mastery(q)]++; });
+  return '<div class="auto"><h3>おまかせ出題</h3>' +
+    '<p class="auto-lead">忘れかけたころに復習が回ってくるよう、問題ごとに次の復習日を決めて出題します。' +
+    'まちがえた問題は翌日、続けて正解するほど間隔を空けます（2日→4日→7日→14日→30日）。' +
+    '復習日の問題が足りないときは、まだ解いていない頻出論点から出します。</p>' +
+    '<div class="auto-n"><label for="autoN">出題数</label><output id="autoNv">' + AUTO_N + '問</output></div>' +
+    '<input type="range" id="autoN" min="5" max="100" step="5" value="' + AUTO_N + '">' +
+    '<div class="auto-scale"><span>5問</span><span>100問</span></div>' +
+    '<button class="btn wide" id="autoGo">スタート<span class="sub">' +
+      (due ? '今日が復習日の問題 <b>' + due + '問</b>' : '今日が復習日の問題はありません（新しい問題から出します）') + '</span></button>' +
+    '<div class="mastery">' + MASTERY.map(function (l, k) { return '<span class="m' + k + '">' + l + ' <b>' + m[k] + '</b></span>'; }).join("") + '</div>' +
+  '</div>';
+}
+function wireAutoBlock(card) {
+  const r = card.querySelector("#autoN"), v = card.querySelector("#autoNv"), go = card.querySelector("#autoGo");
+  if (!r) return;
+  r.addEventListener("input", function () {
+    AUTO_N = Number(r.value);
+    v.textContent = AUTO_N + "問";
+    try { localStorage.setItem("gq_auto_n", String(AUTO_N)); } catch (e) {}
+  });
+  go.addEventListener("click", startAuto);
 }
 /* 苦手＝直近で誤答した問題、または正答率6割未満の問題 */
 function weakList() {
@@ -985,6 +1121,7 @@ function refreshWeakBtn() {
   b.disabled = n === 0;
   if (n === 0 && b.getAttribute("aria-pressed") === "true") b.setAttribute("aria-pressed", "false");
   refreshBmBtn();
+  refreshAutoBtn();
 }
 function lifetimeStats() {
   let n = 0, ok = 0, q = 0;
@@ -1123,6 +1260,7 @@ function verifiedOnly(list) {
 function baseList() {
   if (CURRENT_SET === "weak") return verifiedOnly(weakList());
   if (CURRENT_SET === "bm") return bookmarkList();
+  if (CURRENT_SET === "auto") return verifiedOnly(CUSTOM_LIST || []);
   if (CURRENT_SET === "custom") return verifiedOnly(CUSTOM_LIST || []);
   return verifiedOnly(SETS[CURRENT_SET] || SETS.white);
 }
@@ -1254,6 +1392,7 @@ const SETS = {
 });
 document.querySelectorAll(".set").forEach(function (b) {
   b.addEventListener("click", function () {
+    if (b.dataset.set === "auto") { startAuto(); return; }
     document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
     const prevSet = CURRENT_SET;
     CURRENT_SET = b.dataset.set;
@@ -1466,6 +1605,9 @@ function mergeStudyData(d) {
     // 合算すると同じファイルを2回読んだとき回数が倍になるので、解答回数の多い方を残す
     if (!cur || r.n > cur.n) {
       HIST[k] = { n: r.n, ok: r.ok, last: (r.last === 0 || r.last === 1) ? r.last : null };
+      if (typeof r.st === "number" && r.st >= 0) HIST[k].st = r.st;
+      if (typeof r.ts === "number") HIST[k].ts = r.ts;
+      if (typeof r.due === "number") HIST[k].due = r.due;
       h++;
     }
   });
@@ -1480,6 +1622,7 @@ function mergeStudyData(d) {
     if (!cur || t > (cur.t || 0)) { NOTES[k] = { bm: bm, memo: memo, t: t || Date.now() }; n++; }
   });
   saveHist(); saveNotes();
+  migrateSR();   // 復習日を持たない古い形式のファイルにも復習日を付ける
   return { h: h, n: n };
 }
 function renderBackup() {
@@ -1766,7 +1909,7 @@ refreshWeakBtn();
     Q.length = 0; sv.list.forEach(function (q) { Q.push(q); });
     i = sv.i; correct = sv.correct;
     answers.length = 0; sv.answers.forEach(function (a, idx) { answers[idx] = a; });
-    if (SETS[sv.set] || sv.set === "weak" || sv.set === "bm") applySetButtons(sv.set); else applySetButtons("__none__");
+    if (SETS[sv.set] || sv.set === "weak" || sv.set === "bm" || sv.set === "auto") applySetButtons(sv.set); else applySetButtons("__none__");
     updatePickInfo();
     showResume(sv.i, Q.length);
     render();
