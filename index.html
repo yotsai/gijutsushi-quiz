@@ -511,7 +511,8 @@
   /* ホームと問題を解く画面の切り替え */
   body:not(.home-mode) #setsHead, body:not(.home-mode) .sets, body:not(.home-mode) .limits,
   body:not(.home-mode) .unvwrap, body:not(.home-mode) .unvnote, body:not(.home-mode) #homeBottom,
-  body:not(.home-mode) .countdown { display: none !important; }
+  body:not(.home-mode) .countdown, body:not(.home-mode) .ver { display: none !important; }
+  .ver { margin: .4rem .2rem 0; font-size: .7rem; color: var(--ink-3); }
   body.home-mode #pane-quiz:not([hidden]) { display: flex; flex-direction: column; }
   body.home-mode #stage { order: 1; }
   body.home-mode #setsHead { order: 2; }
@@ -621,6 +622,7 @@
     <h1>環境部門 専門科目クイズ</h1>
     <p class="intro">令和元年度〜7年度の過去問245問を1問ずつ分類し、実際に出ている論点を4択にしました。選ぶと即座に正誤と解説が出ます。キーボードの 1〜4 と Enter でも進められます。問題ごとに<b>ブックマーク</b>と<b>メモ</b>を残せます（この端末に保存）。</p>
     <p class="countdown" id="countdown"></p>
+    <p class="ver">版 2026-09-27（選択肢の並べ替えを修正済み）</p>
   </header>
 
   <div class="tabs" role="tablist">
