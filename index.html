@@ -137,6 +137,7 @@
   .rm-steps .now .st { color: var(--paper); background: var(--accent); }
   .rm-steps .late .st { color: var(--paper); background: var(--ng); }
   .rm-steps .todo .t { color: var(--ink-3); }
+  .roadmap .rm-note { font-size: .76rem; color: var(--ink-3); margin: .45rem 0 0; line-height: 1.65; }
   .rm-next { margin-top: .8rem; }
   .rm-next .lab { font-size: .74rem; color: var(--ink-3); margin: 0 0 .3rem; }
   .rm-next .btn { display: block; width: 100%; text-align: left; padding: .65rem 1rem; margin-top: .45rem; }
@@ -622,7 +623,7 @@
     <h1>環境部門 専門科目クイズ</h1>
     <p class="intro">令和元年度〜7年度の過去問245問を1問ずつ分類し、実際に出ている論点を4択にしました。選ぶと即座に正誤と解説が出ます。キーボードの 1〜4 と Enter でも進められます。問題ごとに<b>ブックマーク</b>と<b>メモ</b>を残せます（この端末に保存）。</p>
     <p class="countdown" id="countdown"></p>
-    <p class="ver">版 2026-09-27（選択肢の並べ替えを修正済み）</p>
+    <p class="ver">版 2026-09-28（迷ったときの絞り込み方を追加）</p>
   </header>
 
   <div class="tabs" role="tablist">
@@ -891,6 +892,7 @@ function renderRoadmap() {
     return '<li class="' + s.c + '"><span class="d">' + d + '</span><span class="t">' + t +
       (s.w ? '<span class="st">' + s.w + '</span>' : '') + '</span>' + (v ? '<span class="v">' + v + '</span>' : '') + '</li>';
   };
+  const tip = function (d, t, v) { return li({ c: "", w: "" }, d, t, v); };
 
   // 次にやること
   const weak = weakList(), freq = verifiedOnly(SETS.all).filter(function (q) { return whyOf(q).tier >= 2; });
@@ -924,6 +926,13 @@ function renderRoadmap() {
       li(s4, mdLabel(RM_FINAL) + "〜", "新しい範囲は増やさず、苦手とブックマークだけを回す", "") +
       li(st(left === 0 ? "now" : "todo", left === 0 ? "今日" : ""), mdLabel(EXAM_DAY), "本番", "") +
     '</ol></details>' +
+    // 過去問R1〜R7の全245問を公式正答と突き合わせた集計（2026-09-28）
+    '<details><summary>迷ったときの絞り込み方（過去7年245問の分析）</summary><ol class="rm-steps">' +
+      tip("手順1", "分かる選択肢を消す", "2つ消すだけで当たる確率は33%。下の目印よりこれが一番効く") +
+      tip("手順2", "「不適切」型は、打ち消しの文を疑う", "「〜ていない」「含まれない」などの選択肢は40%が答え（偶然なら20%）。問題の7割がこの型") +
+      tip("手順3", "「適切」型は、いちばん長い文を選ぶ", "最長が正解だったのは50%。最短が正解だったのは34問中1問だけ") +
+      tip("手順4", "まだ決まらなければ、①と前の問題と同じ番号を外す", "①が正解だったのは7年で13%") +
+    '</ol><p class="rm-note">「すべて」「のみ」はこの試験では誤りの目印になりません。誤りの作り方は、用語の取り違え29%・否定の反転17%・増減の逆転14%・数値の入れ替え11%。</p></details>' +
     '<div class="rm-next"><p class="lab">次にやること</p>' + btns + '</div></div>';
 }
 function wireRoadmap(card) {
