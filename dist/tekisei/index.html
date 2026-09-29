@@ -1,0 +1,2316 @@
+<!-- 生成物です。直接編集しないでください。元は engine/ と subjects/ で、`node build.js tekisei` で作り直します -->
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="技術士第一次試験・適性科目（技術者倫理）の学習ツール。">
+<title>技術士一次試験 適性科目クイズ</title>
+</head>
+<body>
+
+<style>
+  :root {
+    --paper: #FCFBF8;
+    --panel: #FFFFFF;
+    --rule: #DCDDD6;
+    --rule-strong: #B7BBB2;
+    --ink: #191D1A;
+    --ink-2: #4A5049;
+    --ink-3: #767C74;
+    --accent: #0E5049;
+    --accent-soft: #E3EDEA;
+    --ok: #1B6B3A;
+    --ok-soft: #E2F0E5;
+    --ng: #9E3324;
+    --ng-soft: #F7E6E2;
+    --shadow: 0 1px 2px rgba(25,29,26,.07);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #131614; --panel: #1A1E1C; --rule: #2C312E; --rule-strong: #454B46;
+      --ink: #E8EBE7; --ink-2: #AFB5AD; --ink-3: #838A82;
+      --accent: #6FBFB2; --accent-soft: #1E3833;
+      --ok: #6FC28C; --ok-soft: #1C3325;
+      --ng: #E08878; --ng-soft: #3A2320;
+      --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #131614; --panel: #1A1E1C; --rule: #2C312E; --rule-strong: #454B46;
+    --ink: #E8EBE7; --ink-2: #AFB5AD; --ink-3: #838A82;
+    --accent: #6FBFB2; --accent-soft: #1E3833;
+    --ok: #6FC28C; --ok-soft: #1C3325;
+    --ng: #E08878; --ng-soft: #3A2320;
+    --shadow: none;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
+    font-size: 16px; line-height: 1.7; -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 34rem; margin: 0 auto; padding: 1.5rem 1.1rem 4rem; }
+
+  /* header */
+  header { margin-bottom: 1.3rem; }
+  .eyebrow { font-size: .72rem; letter-spacing: .15em; color: var(--ink-3); }
+  h1 {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-size: 1.32rem; font-weight: 600; margin: .3rem 0 .5rem; line-height: 1.4;
+  }
+  .intro { font-size: .87rem; color: var(--ink-2); margin: 0; }
+
+  /* progress */
+  .status {
+    display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap;
+    font-size: .8rem; color: var(--ink-3); margin: 1.2rem 0 .45rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .status .field { color: var(--accent); font-weight: 600; letter-spacing: .02em; }
+  .status .score { margin-left: auto; }
+  .status b { color: var(--ink); }
+  .status[hidden], .bar[hidden] { display: none; }
+
+  /* 本番までの残り日数 */
+  /* おまかせ出題 */
+  .set.auto[aria-pressed="false"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .set .badge {
+    display: inline-block; min-width: 1.4em; margin-left: .35em; padding: 0 .35em; border-radius: 999px;
+    background: var(--ng); color: #fff; font-size: .68rem; font-weight: 700; line-height: 1.55; text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .auto { margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--rule); }
+  .auto h3 { font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 1rem; font-weight: 600; margin: 0 0 .3rem; }
+  .auto-lead { font-size: .82rem; color: var(--ink-2); margin: 0 0 .7rem; line-height: 1.75; }
+  .auto-n { display: flex; justify-content: space-between; align-items: baseline; font-size: .85rem; }
+  .auto-n output { font-weight: 700; color: var(--accent); font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+  #autoN { display: block; width: 100%; margin: .45rem 0 .1rem; accent-color: var(--accent); }
+  .auto-scale { display: flex; justify-content: space-between; font-size: .72rem; color: var(--ink-3); }
+  .auto .btn.wide { margin-top: .8rem; }
+  .mastery { display: flex; flex-wrap: wrap; gap: .3rem .9rem; margin-top: .7rem; font-size: .76rem; color: var(--ink-3); }
+  .mastery b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .mastery .m1 b { color: var(--ng); }
+  .mastery .m3 b, .mastery .m4 b { color: var(--ok); }
+  .mst {
+    display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .04em; padding: 0 .4rem;
+    border-radius: 2px; margin-left: .45rem; vertical-align: 1px; border: 1px solid var(--rule-strong); color: var(--ink-3);
+  }
+  .mst.m1 { color: var(--ng); border-color: var(--ng); }
+  .mst.m3, .mst.m4 { color: var(--ok); border-color: var(--ok); }
+  .countdown { font-size: .82rem; color: var(--ink-2); margin: .5rem 0 0; font-variant-numeric: tabular-nums; }
+  .countdown b { color: var(--accent); font-size: 1rem; }
+  .countdown .cd2 { font-size: .76rem; color: var(--ink-3); }
+
+  /* 覚える理由（過去問の出題実績） */
+  .whys { display: flex; flex-wrap: wrap; gap: .3rem; margin: .35rem 0 0; }
+  .why {
+    display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .02em; line-height: 1.6;
+    padding: 0 .45rem; border-radius: 2px; border: 1px solid var(--accent); color: var(--accent);
+  }
+  .why.t3 { background: var(--accent); color: var(--paper); }
+  .why.same { background: var(--accent-soft); }
+  .why.t1 { border-style: dashed; border-color: var(--rule-strong); color: var(--ink-3); font-weight: 600; }
+  .whybox {
+    margin: .7rem 0 0; padding: .55rem .7rem; background: var(--accent-soft);
+    border-left: 3px solid var(--accent); font-size: .82rem; line-height: 1.7; color: var(--ink-2);
+  }
+  .whybox .wh { display: block; font-size: .72rem; font-weight: 700; color: var(--accent); letter-spacing: .04em; }
+  .whybox.t0 { border-left-color: var(--rule-strong); background: transparent; border: 1px dashed var(--rule); border-left: 3px solid var(--rule-strong); }
+  .whybox.t0 .wh { color: var(--ink-3); }
+
+  /* 合格までの道のり（ホーム） */
+  .roadmap { margin-top: 1.1rem; padding-top: .9rem; border-top: 1px solid var(--rule); }
+  .roadmap h3 { font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 1rem; font-weight: 600; margin: 0 0 .3rem; }
+  .roadmap .rm-lead { font-size: .84rem; color: var(--ink-2); margin: 0 0 .6rem; line-height: 1.75; }
+  .rm-steps { list-style: none; margin: 0; padding: 0; }
+  .rm-steps li {
+    display: grid; grid-template-columns: 4.2rem 1fr; gap: .1rem .6rem; align-items: baseline;
+    padding: .5rem 0; border-bottom: 1px solid var(--rule); font-size: .84rem;
+  }
+  .rm-steps .d { font-size: .74rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .rm-steps .t { color: var(--ink); }
+  .rm-steps .v { grid-column: 2; font-size: .76rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .rm-steps .st { font-size: .68rem; font-weight: 700; padding: 0 .35rem; border-radius: 2px; margin-left: .35rem; vertical-align: 1px; }
+  .rm-steps .done .st { color: var(--ok); border: 1px solid var(--ok); }
+  .rm-steps .now .st { color: var(--paper); background: var(--accent); }
+  .rm-steps .late .st { color: var(--paper); background: var(--ng); }
+  .rm-steps .todo .t { color: var(--ink-3); }
+  .roadmap .rm-note { font-size: .76rem; color: var(--ink-3); margin: .45rem 0 0; line-height: 1.65; }
+  .rm-next { margin-top: .8rem; }
+  .rm-next .lab { font-size: .74rem; color: var(--ink-3); margin: 0 0 .3rem; }
+  .rm-next .btn { display: block; width: 100%; text-align: left; padding: .65rem 1rem; margin-top: .45rem; }
+  .rm-next .btn .sub { display: block; font-size: .76rem; font-weight: 400; opacity: .88; }
+  .homecard .hlead { font-size: .9rem; color: var(--ink-2); margin: 0; line-height: 1.7; }
+  .homecard .btn.wide { display: block; width: 100%; text-align: left; padding: .7rem 1rem; margin-top: .9rem; }
+  .homecard .btn.wide .sub { display: block; font-size: .78rem; font-weight: 400; opacity: .88; margin-top: .1rem; }
+  .homestats {
+    display: flex; gap: .4rem 1rem; flex-wrap: wrap; margin-top: 1rem; padding-top: .8rem;
+    border-top: 1px solid var(--rule); font-size: .8rem; color: var(--ink-3); font-variant-numeric: tabular-nums;
+  }
+  .homestats b { color: var(--ink); }
+  .bar { height: 3px; background: var(--rule); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .25s; }
+
+  /* card */
+  .card {
+    background: var(--panel); border: 1px solid var(--rule);
+    box-shadow: var(--shadow); padding: 1.15rem 1.1rem 1.25rem; margin-top: 1.1rem;
+  }
+  .qn { font-size: .75rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .qt { font-size: 1.03rem; font-weight: 600; margin: .25rem 0 .1rem; line-height: 1.6; text-wrap: pretty; }
+  .qh { font-size: .82rem; color: var(--ink-3); margin: 0 0 .9rem; line-height: 1.6; }
+
+  .choices { display: flex; flex-direction: column; gap: .45rem; }
+  .ch {
+    display: flex; align-items: flex-start; gap: .65rem; width: 100%;
+    font: inherit; font-size: .95rem; text-align: left; cursor: pointer;
+    background: var(--panel); color: var(--ink);
+    border: 1px solid var(--rule-strong); border-radius: 2px;
+    padding: .58rem .7rem; line-height: 1.55;
+    transition: background .12s, border-color .12s;
+    font-variant-numeric: tabular-nums;
+  }
+  .ch:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+  .ch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ch:disabled { cursor: default; }
+  .ch .key {
+    flex: none; width: 1.35rem; height: 1.35rem; margin-top: .1rem;
+    display: grid; place-items: center;
+    border: 1px solid var(--rule-strong); border-radius: 50%;
+    font-size: .72rem; color: var(--ink-3);
+  }
+  .ch.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .ch.ok .key { border-color: var(--ok); color: var(--ok); font-weight: 700; }
+  .ch.ng { border-color: var(--ng); background: var(--ng-soft); }
+  .ch.ng .key { border-color: var(--ng); color: var(--ng); font-weight: 700; }
+  .ch.dim { opacity: .45; }
+
+  .verdict { margin-top: .95rem; padding-top: .85rem; border-top: 1px solid var(--rule); }
+  .vtag { font-size: .82rem; font-weight: 700; letter-spacing: .04em; }
+  .vtag.ok { color: var(--ok); }
+  .vtag.ng { color: var(--ng); }
+  .vnote { font-size: .86rem; color: var(--ink-2); margin: .3rem 0 0; line-height: 1.72; }
+  .vnote b { color: var(--ink); }
+  .vsrc {
+    font-size: .73rem; color: var(--ink-3); margin: .55rem 0 0;
+    padding-top: .45rem; border-top: 1px dotted var(--rule);
+  }
+  .vsrc.k { color: var(--ng); }
+
+  .actions { display: flex; gap: .5rem; margin-top: 1rem; align-items: center; flex-wrap: wrap; }
+  .btn {
+    font: inherit; font-size: .87rem; font-weight: 600; cursor: pointer;
+    background: var(--accent); color: var(--paper);
+    border: 1px solid var(--accent); border-radius: 2px; padding: .45rem 1.3rem;
+  }
+  .btn:hover { filter: brightness(1.12); }
+  .btn.ghost { background: transparent; color: var(--ink-2); border-color: var(--rule-strong); font-weight: 400; }
+  .btn.ghost:hover { border-color: var(--accent); color: var(--accent); filter: none; }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:disabled { opacity: .35; cursor: default; filter: none; }
+  /* 一番よく押す「次の問題」を横幅いっぱいに、その下に「前の問題」「ホーム」を半分ずつ */
+  .qnav { margin-top: 1rem; }
+  .navrow { display: grid; gap: .5rem; }
+  .navrow.one { grid-template-columns: 1fr; margin-bottom: .5rem; }
+  .navrow.two { grid-template-columns: 1fr 1fr; }
+  .qnav .btn { padding: .6rem .5rem; white-space: nowrap; text-align: center; }
+  .hintkey { font-size: .74rem; color: var(--ink-3); margin: .55rem 0 0; }
+  @media (hover: none) { .hintkey { display: none; } }
+
+  /* result */
+  .result h2 {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-size: 1.18rem; margin: 0 0 .2rem;
+  }
+  .big { font-size: 2.6rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; color: var(--accent); }
+  .big small { font-size: 1rem; font-weight: 400; color: var(--ink-3); }
+  .judge { font-size: .9rem; color: var(--ink-2); margin: .5rem 0 1.1rem; line-height: 1.7; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  th, td { padding: .38rem .3rem; border-bottom: 1px solid var(--rule); text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { font-size: .75rem; color: var(--ink-3); font-weight: 600; border-bottom: 1px solid var(--rule-strong); }
+  td .mini { display: inline-block; width: 3.2rem; height: 4px; background: var(--rule); vertical-align: middle; margin-left: .4rem; }
+  td .mini i { display: block; height: 100%; background: var(--accent); }
+  .missed { margin-top: 1.4rem; }
+  .missed h3 { font-size: .85rem; margin: 0 0 .5rem; color: var(--ink-3); font-weight: 600; letter-spacing: .03em; }
+  .missed ol { margin: 0; padding-left: 1.2rem; font-size: .87rem; color: var(--ink-2); line-height: 1.75; }
+  .missed b { color: var(--ink); }
+
+  /* 再開バナー・保存警告 */
+  .resume {
+    display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap;
+    background: var(--accent-soft); border-left: 3px solid var(--accent);
+    padding: .6rem .85rem; margin-top: 1rem; font-size: .84rem; color: var(--ink-2);
+  }
+  .resume b { color: var(--ink); }
+  .resume button {
+    font: inherit; font-size: .78rem; cursor: pointer; background: none; color: var(--accent);
+    border: 0; border-bottom: 1px solid var(--accent); padding: 0 0 1px; margin-left: auto;
+  }
+  .nostore {
+    background: var(--ng-soft); border-left: 3px solid var(--ng);
+    padding: .6rem .85rem; margin-top: 1rem; font-size: .82rem; color: var(--ink-2); line-height: 1.7;
+  }
+  .nostore b { color: var(--ink); }
+
+  /* データ読み込み */
+  .datamgr { margin-top: 2rem; padding-top: 1.1rem; border-top: 1px solid var(--rule); }
+  .datamgr h3 {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    font-size: 1rem; font-weight: 600; margin: 0 0 .3rem;
+  }
+  .datamgr p { font-size: .82rem; color: var(--ink-2); margin: 0 0 .8rem; line-height: 1.75; }
+  .imp { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  .imp input[type=file] { display: none; }
+  .impfile {
+    font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer;
+    background: var(--accent); color: var(--paper); border: 1px solid var(--accent);
+    border-radius: 2px; padding: .45rem 1.2rem; display: inline-block;
+  }
+  .impfile:hover { filter: brightness(1.12); }
+  .impfile.ghost { background: transparent; color: var(--accent); }
+  .impfile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .impmsg { font-size: .78rem; }
+  .impmsg.ok { color: var(--ok); }
+  .impmsg.ng { color: var(--ng); }
+  .impitem {
+    display: flex; align-items: baseline; gap: .6rem; padding: .5rem 0;
+    border-bottom: 1px solid var(--rule); font-size: .86rem;
+  }
+  .impitem .n2 { color: var(--ink-3); font-size: .78rem; font-variant-numeric: tabular-nums; }
+  .impitem button {
+    margin-left: auto; font: inherit; font-size: .76rem; cursor: pointer;
+    background: none; color: var(--ink-3); border: 0;
+    border-bottom: 1px solid var(--rule-strong); padding: 0 0 1px;
+  }
+  .impitem button:hover { color: var(--ng); border-bottom-color: var(--ng); }
+  .privacy { font-size: .76rem; color: var(--ink-3); line-height: 1.7; margin-top: .8rem; }
+
+  /* 学習診断 */
+  .diag { margin-top: 1.6rem; }
+  .diag h3 {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    font-size: 1rem; font-weight: 600; margin: 0 0 .2rem;
+    padding-bottom: .4rem; border-bottom: 1.5px solid var(--ink);
+  }
+  .diag .note2 { font-size: .8rem; color: var(--ink-3); margin: .5rem 0 .8rem; line-height: 1.7; }
+  .drow {
+    display: grid; grid-template-columns: 1fr 4.6rem 3.4rem; gap: .15rem .7rem;
+    padding: .5rem 0; border-bottom: 1px solid var(--rule); align-items: center;
+  }
+  .drow .dn { font-size: .87rem; font-weight: 600; }
+  .drow .dsub { grid-column: 1 / -1; font-size: .72rem; color: var(--ink-3); line-height: 1.55; }
+  .drow .dv { font-size: .82rem; text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  .drow .dloss { font-size: .95rem; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .drow.p1 .dloss { color: var(--ng); }
+  .drow.p2 .dloss { color: var(--amber, #8A6A1F); }
+  .drow.p3 .dloss { color: var(--ink-3); font-weight: 400; }
+  .rx { background: var(--accent-soft); padding: .9rem 1.1rem; margin-top: 1rem; font-size: .87rem; line-height: 1.8; }
+  .rx b { color: var(--ink); }
+  .rx ol { margin: .4rem 0 0; padding-left: 1.2rem; }
+  .rx li { margin-bottom: .3rem; }
+  .exp { margin-top: 1.2rem; display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  .exp .msg { font-size: .78rem; color: var(--accent); }
+
+  /* 履歴タブ */
+  .hsum {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+    gap: .1rem 1rem; margin: 1.1rem 0 .3rem; padding-bottom: .9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hsum div { font-size: .74rem; color: var(--ink-3); }
+  .hsum b { display: block; font-size: 1.35rem; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1.35; }
+  .hsum .warn b { color: var(--ng); }
+  .filters { display: flex; gap: .35rem; flex-wrap: wrap; margin: .9rem 0 .2rem; align-items: center; }
+  .flt {
+    font: inherit; font-size: .78rem; cursor: pointer; background: var(--panel); color: var(--ink-2);
+    border: 1px solid var(--rule-strong); border-radius: 999px; padding: .2rem .75rem;
+  }
+  .flt[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--paper); font-weight: 600; }
+  .flt:hover:not([aria-pressed="true"]) { border-color: var(--accent); color: var(--accent); }
+  .flt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .hrow {
+    display: grid; grid-template-columns: 1fr auto; gap: .1rem .8rem;
+    padding: .62rem 0; border-bottom: 1px solid var(--rule); align-items: baseline;
+  }
+  .hrow .hq { font-size: .87rem; line-height: 1.55; }
+  .hrow .hf { font-size: .7rem; color: var(--accent); letter-spacing: .03em; }
+  .hrow .hn { font-size: .8rem; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+  .hrow .hn b { color: var(--ink); }
+  .hbar { display: block; width: 3.6rem; height: 4px; background: var(--rule); margin-top: .28rem; margin-left: auto; }
+  .hbar i { display: block; height: 100%; background: var(--accent); }
+  .hbar.bad i { background: var(--ng); }
+  .hrow.miss .hq::before {
+    content: "✕"; color: var(--ng); font-weight: 700; font-size: .78rem; margin-right: .35rem;
+  }
+  .hrow.none .hq { color: var(--ink-3); }
+  .empty { font-size: .87rem; color: var(--ink-3); padding: 1.6rem 0; text-align: center; }
+  .hact { margin: 1.2rem 0 .4rem; display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+
+  /* 履歴・フラグ */
+  .hist { font-size: .72rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .flagmark {
+    display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .04em;
+    color: var(--ng); background: var(--ng-soft); border: 1px solid var(--ng);
+    padding: 0 .4rem; border-radius: 2px; margin-left: .45rem; vertical-align: 1px;
+  }
+  .qmeta { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+  .set.weak[aria-pressed="false"] { border-color: var(--ng); color: var(--ng); }
+  .set.weak[aria-pressed="true"] { background: var(--ng); border-color: var(--ng); color: var(--paper); }
+  .set:disabled { opacity: .4; cursor: default; }
+  .set.bm[aria-pressed="false"]:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+  /* ブックマーク・メモ */
+  .qtools { margin-left: auto; display: flex; gap: .35rem; }
+  .qtool {
+    font: inherit; font-size: .74rem; line-height: 1.6; cursor: pointer;
+    background: var(--panel); color: var(--ink-3);
+    border: 1px solid var(--rule-strong); border-radius: 999px; padding: .12rem .65rem; white-space: nowrap;
+  }
+  .qtool:hover { border-color: var(--accent); color: var(--accent); }
+  .qtool[aria-pressed="true"], .qtool.has { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .qtool:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .memo { margin-top: 1rem; padding-top: .8rem; border-top: 1px dashed var(--rule-strong); }
+  .memo[hidden] { display: none; }
+  .memo label { display: block; font-size: .74rem; color: var(--ink-3); margin-bottom: .3rem; }
+  .memo textarea {
+    display: block; width: 100%; min-height: 4.6rem; resize: vertical;
+    font: inherit; font-size: 16px; line-height: 1.6; color: var(--ink);
+    background: var(--paper); border: 1px solid var(--rule-strong); border-radius: 2px; padding: .5rem .6rem;
+  }
+  .memo textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .memo .saved { font-size: .72rem; color: var(--ink-3); margin-top: .25rem; min-height: 1.2em; }
+  .hrow .bmk { color: var(--accent); margin-right: .3rem; }
+  .hrow .hmemo {
+    grid-column: 1 / -1; margin-top: .35rem; padding: .35rem .6rem;
+    font-size: .8rem; line-height: 1.6; color: var(--ink-2); background: var(--accent-soft);
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .reset {
+    font: inherit; font-size: .76rem; cursor: pointer; background: none;
+    color: var(--ink-3); border: 0; border-bottom: 1px solid var(--rule-strong); padding: 0 0 1px;
+  }
+  .reset:hover { color: var(--ng); border-bottom-color: var(--ng); }
+  .lifetime {
+    margin-top: 1.2rem; padding-top: .9rem; border-top: 1px solid var(--rule);
+    display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap;
+    font-size: .82rem; color: var(--ink-3); font-variant-numeric: tabular-nums;
+  }
+  .lifetime b { color: var(--ink); }
+  .lifetime .reset { margin-left: auto; }
+
+  /* set switch */
+  .sets { display: flex; gap: .35rem; flex-wrap: wrap; align-items: center; margin: 1rem 0 0; }
+  .set {
+    font: inherit; font-size: .78rem; cursor: pointer;
+    background: var(--panel); color: var(--ink-2);
+    border: 1px solid var(--rule-strong); border-radius: 999px; padding: .22rem .8rem;
+  }
+  .set:hover { border-color: var(--accent); color: var(--accent); }
+  .set[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--paper); font-weight: 600; }
+  .set:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* 出題数 */
+  .limits { display: flex; gap: .35rem; flex-wrap: wrap; align-items: center; margin-top: .5rem; }
+  .limits .lab { font-size: .74rem; color: var(--ink-3); margin-right: .1rem; }
+  .lim {
+    font: inherit; font-size: .76rem; cursor: pointer;
+    background: var(--panel); color: var(--ink-2);
+    border: 1px solid var(--rule); border-radius: 2px; padding: .18rem .6rem;
+  }
+  .lim[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 700; background: var(--accent-soft); }
+  .lim:hover:not([aria-pressed="true"]) { border-color: var(--rule-strong); }
+  .lim:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pickinfo { font-size: .74rem; color: var(--ink-3); margin-left: .2rem; }
+  .unvwrap {
+    display: flex; align-items: center; gap: .4rem; margin-top: .55rem;
+    font-size: .78rem; color: var(--ink-2); cursor: pointer;
+  }
+  .unvwrap input { width: 1rem; height: 1rem; accent-color: var(--ng); cursor: pointer; margin: 0; }
+  .unvwrap .cnt2 { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .unvnote {
+    background: var(--accent-soft); padding: .5rem .75rem; margin-top: .5rem;
+    font-size: .76rem; color: var(--ink-2); line-height: 1.65;
+  }
+  .unvnote.on { background: var(--ng-soft); }
+
+  /* tabs */
+  .tabs {
+    display: flex; gap: .3rem; border-bottom: 1px solid var(--rule); margin: 1.1rem 0 0;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: none; white-space: nowrap;
+    font: inherit; font-size: .87rem; cursor: pointer; background: none; color: var(--ink-3);
+    border: 0; border-bottom: 2px solid transparent; padding: .45rem .65rem; margin-bottom: -1px;
+  }
+  .tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pane[hidden] { display: none; }
+
+  /* 頻出テーマ */
+  .lede { font-size: .88rem; color: var(--ink-2); margin: 1.1rem 0 .3rem; line-height: 1.75; }
+  .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: .9rem; }
+  .stats { width: 100%; min-width: 23rem; border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; }
+  .stats th, .stats td { padding: .35rem .3rem; white-space: nowrap; border-bottom: 1px solid var(--rule); text-align: right; }
+  .stats th:first-child, .stats td:first-child { text-align: left; white-space: normal; min-width: 11rem; }
+  .stats thead th { font-size: .74rem; color: var(--ink-3); border-bottom: 1px solid var(--rule-strong); }
+  .stats .nm { font-weight: 600; }
+  .stats .sb { display: block; font-weight: 400; font-size: .74rem; color: var(--ink-3); line-height: 1.5; }
+  .stats tr.hi td { background: var(--accent-soft); }
+  .topic {
+    border-top: 1px solid var(--rule); padding: .8rem 0;
+    display: grid; grid-template-columns: 2.3rem 1fr; gap: .1rem .7rem;
+  }
+  .topic .cnt {
+    grid-row: span 3; font-variant-numeric: tabular-nums;
+    font-size: 1.25rem; font-weight: 700; color: var(--accent); text-align: center; line-height: 1.5;
+  }
+  .topic .cnt small { display: block; font-size: .62rem; font-weight: 400; color: var(--ink-3); letter-spacing: .06em; }
+  .topic .ti { font-weight: 600; font-size: .95rem; line-height: 1.5; }
+  .topic .meta { font-size: .74rem; color: var(--ink-3); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .topic .meta .f { color: var(--accent); }
+  .topic .flag { color: var(--ng); font-weight: 700; }
+  .topic .nt { font-size: .84rem; color: var(--ink-2); line-height: 1.72; margin-top: .18rem; }
+  .foot { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-size: .76rem; color: var(--ink-3); line-height: 1.8; }
+  .foot a { color: var(--accent); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  /* ===== スマホアプリ風のレイアウト ===== */
+  .unvwrap[hidden], .unvnote[hidden] { display: none !important; }
+  .wrap { padding-bottom: calc(5.6rem + env(safe-area-inset-bottom)); }
+  header { margin-bottom: .6rem; }
+  header .eyebrow { display: none; }
+  header h1 { font-size: 1.02rem; margin: 0; letter-spacing: .02em; }
+  header .intro { display: none; }
+
+  /* 下部ナビ（タブを画面下に固定） */
+  .tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; margin: 0; gap: 0;
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 0;
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border-top: 1px solid var(--rule); padding: .35rem .3rem calc(.35rem + env(safe-area-inset-bottom));
+  }
+  .tab {
+    position: relative; display: flex; flex-direction: column; align-items: center; gap: .1rem;
+    padding: .25rem 0; border: 0; margin: 0; font-size: .68rem; color: var(--ink-3);
+    text-decoration: none; background: none; line-height: 1.3;
+  }
+  .tab svg { width: 24px; height: 24px; }
+  .tab[aria-selected="true"] { color: var(--accent); border: 0; font-weight: 700; }
+  .navbadge {
+    position: absolute; top: .05rem; left: calc(50% + 6px); min-width: 1.2rem; padding: 0 .3rem;
+    border-radius: 999px; background: var(--ng); color: #fff; font-size: .64rem; font-style: normal;
+    font-weight: 700; line-height: 1.5; text-align: center; font-variant-numeric: tabular-nums;
+  }
+  .navbadge[hidden] { display: none; }
+
+  /* ホームと問題を解く画面の切り替え */
+  body:not(.home-mode) #setsHead, body:not(.home-mode) .sets, body:not(.home-mode) .limits,
+  body:not(.home-mode) .unvwrap, body:not(.home-mode) .unvnote, body:not(.home-mode) #homeBottom,
+  body:not(.home-mode) .countdown, body:not(.home-mode) .ver { display: none !important; }
+  .ver { margin: .4rem .2rem 0; font-size: .7rem; color: var(--ink-3); }
+  body.home-mode #pane-quiz:not([hidden]) { display: flex; flex-direction: column; }
+  body.home-mode #stage { order: 1; }
+  body.home-mode #setsHead { order: 2; }
+  body.home-mode .sets { order: 3; }
+  body.home-mode .limits { order: 4; }
+  body.home-mode .unvwrap { order: 5; }
+  body.home-mode .unvnote { order: 6; }
+  body.home-mode #homeBottom { order: 7; }
+  body.home-mode #autoBtn { display: none; }
+
+  /* 本番までの日数（ヒーロー） */
+  .countdown {
+    margin: .7rem 0 0; padding: .9rem 1rem; border-radius: 16px; background: var(--panel);
+    border: 1px solid var(--rule); font-size: .8rem; color: var(--ink-3); line-height: 1.5;
+  }
+  .countdown b { font-size: 2.1rem; color: var(--ink); font-weight: 800; letter-spacing: -.02em; margin: 0 .15rem; }
+  .countdown .cd2 { display: block; margin-top: .15rem; }
+  .countdown-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem .6rem; flex-wrap: wrap; }
+  .countdown-text { flex: 1 1 220px; min-width: 0; }
+  .countdown-text .cd-days { white-space: nowrap; }
+  .examEditBtn {
+    display: inline-flex; align-items: center; gap: .3rem; flex-shrink: 0; min-height: 44px; margin-left: auto;
+    font: inherit; font-size: .78rem; font-weight: 600; cursor: pointer;
+    background: transparent; color: var(--ink-2); border: 1px solid var(--rule-strong);
+    border-radius: 999px; padding: .4rem .85rem;
+  }
+  .examEditBtn:hover { border-color: var(--accent); color: var(--accent); }
+  .examEditBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .examEditBtn svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .examEdit {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+    margin-top: .8rem; padding-top: .8rem; border-top: 1px solid var(--rule);
+  }
+  .examEdit[hidden] { display: none; }
+  .examEdit input[type="date"] {
+    font: inherit; font-size: .85rem; color: var(--ink); background: var(--paper);
+    border: 1px solid var(--rule-strong); border-radius: 2px; padding: .4rem .6rem; min-height: 44px;
+  }
+  .examEdit .btn { padding: .5rem 1rem; min-height: 44px; }
+
+  /* ホームのカード共通 */
+  body.home-mode .homecard { border-radius: 16px; border: 1px solid var(--rule); padding: 1rem; margin-top: .8rem; background: var(--panel); }
+  body.home-mode #stage > .homecard { background: none; border: 0; padding: 0; box-shadow: none; }
+  .homecard .hlead { display: none; }
+
+  /* おまかせ出題（主役カード） */
+  .homecard .auto.hero {
+    margin: 0; padding: 1.1rem 1rem 1rem; border: 0; border-radius: 16px; color: #fff;
+    background: linear-gradient(135deg, #0E5049, #2C7C72);
+  }
+  .auto.hero h3 { color: #fff; font-family: inherit; font-size: .95rem; font-weight: 700; margin: 0; opacity: .92; }
+  .auto.hero .due { margin: .35rem 0 .1rem; font-size: .82rem; opacity: .9; }
+  .auto.hero .due b { font-size: 2.4rem; font-weight: 800; line-height: 1.1; margin-right: .15rem; font-variant-numeric: tabular-nums; }
+  .auto.hero .auto-n { color: #fff; margin-top: .6rem; }
+  .auto.hero .auto-n output { color: #fff; }
+  .auto.hero #autoN { accent-color: #fff; }
+  .auto.hero .auto-scale { color: rgba(255,255,255,.75); }
+  .auto.hero .btn.wide {
+    margin-top: .8rem; background: #fff; color: #0E5049; border-color: #fff; border-radius: 12px;
+    text-align: center; font-size: 1.05rem; font-weight: 800; padding: .8rem 1rem;
+  }
+  .auto.hero details { margin-top: .7rem; font-size: .78rem; opacity: .92; }
+  .auto.hero summary { cursor: pointer; }
+  .auto.hero details p { margin: .35rem 0 0; line-height: 1.7; }
+  .auto.hero .mastery { color: rgba(255,255,255,.85); }
+  .auto.hero .mastery b { color: #fff; }
+
+  /* 続きから */
+  .homecard .btn.wide#cont { border-radius: 12px; margin-top: .8rem; }
+
+  /* 数字のタイル（2×2） */
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; margin-top: .8rem; }
+  .tile {
+    font: inherit; text-align: left; border: 1px solid var(--rule); border-radius: 14px; background: var(--paper);
+    padding: .7rem .8rem; color: var(--ink-3); font-size: .74rem; line-height: 1.4;
+  }
+  .tile b { display: block; color: var(--ink); font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: .15rem; }
+  .tile b small { font-size: .75rem; font-weight: 600; color: var(--ink-3); margin-left: .15rem; }
+  button.tile { cursor: pointer; }
+  button.tile:disabled { cursor: default; opacity: .55; }
+  .tile.warn b { color: var(--ng); }
+
+  /* 分野のタイル */
+  .home-h { font-size: .95rem; font-weight: 700; margin: 1.3rem .1rem .55rem; font-family: inherit; }
+  body.home-mode .sets { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; margin: 0; }
+  body.home-mode .set {
+    border-radius: 14px; padding: .8rem .8rem; text-align: left; font-size: .86rem; font-weight: 600;
+    background: var(--panel); border: 1px solid var(--rule); color: var(--ink); min-height: 3.2rem;
+  }
+  body.home-mode .set[aria-pressed="true"] { background: var(--panel); color: var(--ink); border-color: var(--rule); }
+  body.home-mode .set.weak:not(:disabled) { color: var(--ng); border-color: color-mix(in srgb, var(--ng) 45%, var(--rule)); }
+  body.home-mode .set.bm:not(:disabled) { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--rule)); }
+  body.home-mode .limits { margin: .7rem .1rem 0; }
+  body.home-mode .lim { border-radius: 999px; }
+
+  /* 道のり（たたむ） */
+  #homeBottom .homecard { margin-top: 1.1rem; }
+  #homeBottom .roadmap { margin: 0; padding: 0; border: 0; }
+  #homeBottom .roadmap details { margin-top: .5rem; }
+  #homeBottom .roadmap summary { cursor: pointer; font-size: .82rem; color: var(--accent); font-weight: 600; }
+  #homeBottom .rm-next .btn { border-radius: 12px; }
+
+  /* 問題が1問もない科目（準備中）：出題操作を隠して案内だけを出す */
+  .empty-note { margin: 1.4rem 0; padding: 1.2rem; border: 1px dashed var(--rule-strong); border-radius: 12px; color: var(--ink-2); text-align: center; font-size: .92rem; }
+  body.empty-mode #setsHead, body.empty-mode .sets, body.empty-mode .limits, body.empty-mode .unvwrap, body.empty-mode .unvnote { display: none; }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">技術士第一次試験｜適性科目</p>
+    <h1>適性科目クイズ</h1>
+    <p class="intro">適性科目の予想問題（技術士法第4章・技術士倫理綱領・製造物責任・知的財産・公益通報・ハラスメント・個人情報。すべて自作で、条文・原文に当たって作成）を4択と組合せ形式にしました。選ぶと即座に正誤と解説が出ます。キーボードの 1〜4 と Enter でも進められます。問題ごとに<b>ブックマーク</b>と<b>メモ</b>を残せます（この端末に保存）。</p>
+    <p class="countdown" id="countdown"></p>
+    <p class="ver">版 2026-09-29</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" id="tab-quiz" role="tab" aria-selected="true" aria-controls="pane-quiz"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 10v9.5h5v-6h3v6h5V10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg><span>ホーム</span><i class="navbadge" id="navBadge" hidden></i></button>
+    <button class="tab" id="tab-topics" role="tab" aria-selected="false" aria-controls="pane-topics"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>頻出テーマ</span></button>
+    <button class="tab" id="tab-hist" role="tab" aria-selected="false" aria-controls="pane-hist"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>履歴</span></button>
+  </div>
+
+  <div class="pane" id="pane-quiz" role="tabpanel" aria-labelledby="tab-quiz">
+  <h2 class="home-h" id="setsHead">分野を選んで解く</h2>
+  <div class="sets" role="group" aria-label="出題範囲" id="setsBox"></div>
+
+  <div class="limits" role="group" aria-label="出題数">
+    <span class="lab">出題数</span>
+    <button class="lim" data-lim="10" aria-pressed="false">10問</button>
+    <button class="lim" data-lim="20" aria-pressed="false">20問</button>
+    <button class="lim" data-lim="0" aria-pressed="true">全問</button>
+    <span class="pickinfo" id="pickinfo"></span>
+  </div>
+
+  <label class="unvwrap">
+    <input type="checkbox" id="incUnv">
+    <span>未検証（△）の問題も出題する</span>
+    <span class="cnt2" id="unvCnt"></span>
+  </label>
+  <div class="unvnote" id="unvNote"></div>
+  <div id="homeBottom"></div>
+
+  <div class="status">
+    <span class="field" id="field">—</span>
+    <span id="count">0 / 44</span>
+    <span class="score" id="score">正解 <b>0</b></span>
+  </div>
+  <div class="bar"><i id="bar"></i></div>
+
+  <div id="resumeHost"></div>
+  <div id="stage"></div>
+  </div>
+
+  <div class="pane" id="pane-topics" role="tabpanel" aria-labelledby="tab-topics" hidden></div>
+  <div class="pane" id="pane-hist" role="tabpanel" aria-labelledby="tab-hist" hidden></div>
+</div>
+
+<script>
+/* 技術士第一次試験・適性科目の自作問題。根拠は各問の【出典】（条文・倫理綱領。e-Gov・日本技術士会の原文で確認）。過去問の転載はしない */
+const TEKISEI_DATA = [
+  {"f":"適性:技術士法","q":"技術士法第4章（技術士等の義務）のうち、条文が「努めなければならない」（努力義務）の形で定めているものの組合せは？","h":"「してはならない」と書かれた条文は禁止（義務）、「努めなければならない」は努力義務です。","c":["公益確保の責務（第45条の2）と資質向上の責務（第47条の2）","信用失墜行為の禁止（第44条）と秘密保持義務（第45条）","名称表示の場合の義務（第46条）と資質向上の責務（第47条の2）","公益確保の責務（第45条の2）と名称表示の場合の義務（第46条）"],"a":0,"v":"primary","n":"<b>努力義務は第45条の2（公益確保の責務）と第47条の2（資質向上の責務）</b>です。どちらも条文末尾が「努めなければならない」です。<br>第44条（信用失墜行為の禁止）・第45条（秘密保持義務）は「してはならない」、第46条（名称表示）は登録部門を明示し未登録の部門を表示してはならないと定める義務規定です。<br><br>【出典】技術士法 第44条〜第47条の2（2025-06-01施行版）"},
+  {"f":"適性:技術士法","q":"技術士法が定める秘密保持義務に関する記述のうち、最も適切なものはどれか。","h":"条文には「漏らし、又は盗用」の2つの行為と、資格を失った後の扱いが書かれています。","c":["技術士でなくなった後も、業務に関して知り得た秘密を漏らしてはならない。","技術士でなくなった時点で義務は終わるが、契約で定めれば引き続き負う。","義務を負うのは技術士だけで、技術士補は対象に含まれない。","秘密を第三者に漏らす行為だけが禁じられ、自己の利益のための利用は含まれない。"],"a":0,"v":"primary","n":"<b>第45条は、技術士又は技術士補が正当の理由なく業務に関して知り得た秘密を漏らし、又は盗用してはならないと定め、技術士又は技術士補でなくなった後も同様</b>としています。<br>・退職・登録抹消後も義務は続きます（契約は不要）。<br>・主体は「技術士又は技術士補」で、技術士補も対象です。<br>・禁止される行為は「漏らし」と「盗用」の2つで、自己の利益のための流用も含みます。<br><br>【出典】技術士法 第45条（2025-06-01施行版）"},
+  {"f":"適性:技術士法","q":"技術士法第45条（秘密保持義務）に違反した者に科される刑事罰の記述として、最も適切なものはどれか。","h":"第8章（罰則）の第59条に規定があります。訴えの条件にも注意してください。","c":["1年以下の拘禁刑又は50万円以下の罰金に処せられ、告訴がなければ公訴を提起できない。","1年以下の拘禁刑又は50万円以下の罰金に処せられ、告訴がなくても公訴を提起できる。","30万円以下の罰金に処せられるだけで、拘禁刑は科されない。","刑事罰の定めはなく、登録の取消しや名称使用の停止の対象になるにとどまる。"],"a":0,"v":"primary","n":"<b>第59条は、第45条違反を1年以下の拘禁刑又は50万円以下の罰金とし、この罪は告訴がなければ公訴を提起できない（親告罪）</b>と定めます。<br>第4章の義務違反のうち、刑事罰が明文で定められているのは第45条（秘密保持義務）です。他の義務違反は第36条第2項による登録の取消しや名称使用の停止などの行政処分の対象になります。<br><br>【出典】技術士法 第59条・第36条第2項（2025-06-01施行版）"},
+  {"f":"適性:技術士法","q":"技術士法第44条（信用失墜行為の禁止）に関する記述のうち、最も適切なものはどれか。","h":"条文の主語と、禁止される行為の範囲を確認してください。","c":["技術士又は技術士補は、技術士及び技術士補全体の不名誉となるような行為もしてはならない。","禁止されるのは、その技術士個人の信用を傷つける行為に限られ、全体の不名誉となる行為は含まれない。","義務を負うのは技術士だけであり、技術士補は、この条文の禁止の対象には含まれない。","文部科学大臣の許可を受けた場合には、この禁止は適用されず、当該行為をすることができる。"],"a":0,"v":"primary","n":"<b>第44条は、技術士又は技術士補は、技術士若しくは技術士補の信用を傷つけ、又は技術士及び技術士補全体の不名誉となるような行為をしてはならないと定めます</b>。<br>・自分個人の信用だけでなく、技術士・技術士補全体の名誉も守る規定です。<br>・主体は技術士と技術士補の両方です。<br>・許可による適用除外の定めはありません。<br><br>【出典】技術士法 第44条（2025-06-01施行版）"},
+  {"f":"適性:技術士法","q":"環境部門でのみ登録を受けている技術士の行為として、技術士法上、最も不適切なものはどれか。","h":"名称を表示するときは、登録を受けた技術部門を明示します。","c":["名刺に「技術士（環境部門・衛生工学部門）」と記載した。","報告書の表紙に「技術士（環境部門）」と記載した。","名称を表示せず、氏名と所属だけを記載して業務を行った。","登録事項に変更があったので、遅滞なく文部科学大臣に届け出た。"],"a":0,"v":"primary","n":"<b>第46条は、技術士は業務に関して技術士の名称を表示するときは、登録を受けた技術部門を明示してするものとし、登録を受けていない技術部門を表示してはならないと定めます</b>。環境部門のみの登録者が衛生工学部門を併記するのは違反です。<br>名称を表示しない業務そのものは禁止されていません。登録事項に変更があったときは、第35条第1項により遅滞なく届け出る義務があります。<br><br>【出典】技術士法 第46条・第35条第1項（2025-06-01施行版）"},
+  {"f":"適性:技術士法","q":"技術士補に関する技術士法の規定として、最も適切なものはどれか。","h":"第2条（定義）と第47条（技術士補の業務の制限等）を確認してください。","c":["技術士を補助する場合を除き、技術士補の名称を表示して技術士の業務を行ってはならない。","登録を受けていれば、単独で技術士の業務を行い、技術士補の名称を表示することができる。","技術士補が補助する技術士の業務に関する名称の表示では、技術部門の明示は必要とされない。","技術士補は、補助する技術士とは別の部門で合格した者であっても、その技術士を補助できる。"],"a":0,"v":"primary","n":"<b>第47条第1項は、技術士補は第2条第1項に規定する業務について技術士を補助する場合を除き、技術士補の名称を表示して当該業務を行ってはならないと定めます</b>。<br>・第2条第2項で、技術士補は技術士を補助する者と定義されています。<br>・第47条第2項により、補助する技術士の業務に関して技術士補の名称を表示する場合も、第46条（登録部門の明示）が準用されます。<br>・第32条第2項で、補助する技術士は、合格した第一次試験の技術部門と同一部門の登録を受けた技術士に限られます。<br><br>【出典】技術士法 第2条・第32条第2項・第47条（2025-06-01施行版）"},
+  {"f":"適性:技術士法","q":"技術士法第5条が定める第一次試験の目的として、最も適切なものはどれか。","h":"適性科目が全部門共通で出題される根拠になっている条文です。","c":["基礎的学識、第4章の規定の遵守に関する適性、技術部門の専門的学識の有無を判定する。","高等の専門的応用能力を有するかどうかを判定することを、その目的としている。","技術部門についての専門的学識を有するかどうかだけを判定することを、その目的としている。","日本技術士会の倫理綱領の遵守に関する適性を有するかどうかを判定することを目的としている。"],"a":0,"v":"primary","n":"<b>第5条第1項は、第一次試験を、科学技術全般にわたる基礎的学識及び第4章の規定の遵守に関する適性並びに技術士補となるのに必要な技術部門についての専門的学識を有するかどうかを判定するものと定めます</b>。適性科目は技術士法第4章（義務規定）の遵守に関する適性を見る科目です。<br>「高等の専門的応用能力」は第二次試験の判定対象（第6条第1項）です。倫理綱領は日本技術士会の規定で、第5条の文言ではありません。<br><br>【出典】技術士法 第5条・第6条第1項（2025-06-01施行版）"},
+  {"f":"適性:技術士法","q":"技術士が技術士法の第4章（次章）の規定に違反した場合の、文部科学大臣の対応に関する記述として最も適切なものはどれか。","h":"「取り消さなければならない」場合と「取り消し、又は…命ずることができる」場合は別です。","c":["登録を取り消し、又は2年以内の名称使用の停止を命ずることができる。","登録を取り消さなければならず、名称の使用の停止を命ずることは認められていない。","2年以内の期間を定めて名称の使用の停止を命ずることはできるが、登録の取消しはできない。","刑事罰の適用だけが認められ、登録や名称の使用に対する処分をすることはできない。"],"a":0,"v":"primary","n":"<b>第36条第2項は、技術士又は技術士補が第4章の規定に違反した場合、文部科学大臣は登録を取り消し、又は2年以内の期間を定めて名称の使用の停止を命ずることができる</b>と定めます（裁量による処分）。<br>取消しが義務（必ず取り消す）となるのは、第36条第1項の場合（欠格事由に該当するに至った場合、虚偽又は不正の事実に基づいて登録を受けた場合など）です。<br><br>【出典】技術士法 第36条第1項・第2項（2025-06-01施行版）"},
+  {"f":"適性:技術士法","q":"技術士法第36条第1項（登録の取消し）に関する記述として、最も適切なものはどれか。","h":"第2項（第4章違反時）と違い、こちらは文部科学大臣に裁量がありません。","c":["虚偽又は不正の事実に基づいて登録を受けた場合、文部科学大臣は登録を取り消さなければならない。","虚偽又は不正の事実に基づいて登録を受けた場合、文部科学大臣は登録を取り消すことができる。","虚偽又は不正の事実に基づいて登録を受けた場合、2年以内の名称使用の停止を命ずることになる。","虚偽又は不正の事実に基づいて登録を受けた場合、罰金のみが科され、登録は維持される。"],"a":0,"v":"primary","n":"<b>第36条第1項は、虚偽又は不正の事実に基づいて登録を受けた場合を含め、文部科学大臣は登録を「取り消さなければならない」</b>と定めます。裁量の余地がありません（第2号）。<br>裁量が認められる第4章違反の場合（第36条第2項）とは区別されます。<br><br>【出典】技術士法 第36条第1項第2号（2025-06-01施行版）"},
+  {"f":"適性:技術士法","q":"技術士法第57条（名称の使用の制限）と第62条に関する記述として、最も適切なものはどれか。","h":"技術士でない者が「技術士」やそれに類似する名称を使う場合の規定です。","c":["技術士でない者が技術士に類似する名称を使用すると、30万円以下の罰金に処せられる。","技術士でない者が技術士の名称を使用した場合の罰則は、1年以下の拘禁刑と定められている。","技術士補でない者が技術士補の名称を使用することは、技術士法上、禁止されていない。","技術士でない者でも、技術士に類似する名称であれば、自由に使用することができる。"],"a":0,"v":"primary","n":"<b>第57条第1項は、技術士でない者は技術士又はこれに類似する名称を使用してはならないと定め、第2項は技術士補についても同様に禁止</b>しています。<br>第62条第3号により、第57条第1項又は第2項に違反した者は<b>30万円以下の罰金</b>に処せられます。<br><br>【出典】技術士法 第57条・第62条第3号（2025-06-01施行版）"},
+  {"f":"適性:技術士法","q":"技術士の業務に対する報酬について、技術士法が定めていることはどれか。","h":"第7章（雑則）にある短い条文です。","c":["技術士の業務に対する報酬は、公正かつ妥当なものでなければならない。","技術士の業務に対する報酬は、日本技術士会が定める標準額を下回ってはならない。","技術士の業務に対する報酬は、文部科学大臣の承認を得て定める。","技術士の業務に対する報酬は、契約の当事者が自由に定めるものとし、法律上の制約はない。"],"a":0,"v":"primary","n":"<b>第56条は、技術士の業務に対する報酬は、公正かつ妥当なものでなければならないと定めます</b>。標準額や承認制の定めはありません。<br>倫理綱領3(3)は、契約に基づく報酬以外の利益を利害関係者との間で授受しないよう求めています。<br><br>【出典】技術士法 第56条（2025-06-01施行版）／技術士倫理綱領 3(3)"},
+  {"f":"適性:技術士法","q":"技術士法第4章の義務のうち、技術士補にも課されるものの組合せとして、最も適切なものはどれか。","h":"条文の主語が「技術士又は技術士補」か「技術士」かを見分けます。","c":["信用失墜行為の禁止（第44条）と秘密保持義務（第45条）","名称表示の場合の義務（第46条）と資質向上の責務（第47条の2）","資質向上の責務（第47条の2）と秘密保持義務（第45条）","信用失墜行為の禁止（第44条）と資質向上の責務（第47条の2）"],"a":0,"v":"primary","n":"第44条（信用失墜行為の禁止）、第45条（秘密保持義務）、第45条の2（公益確保の責務）、第47条（技術士補の業務の制限）は主語が<b>「技術士又は技術士補」</b>です。<br>第46条（名称表示の場合の義務）と第47条の2（資質向上の責務）の主語は<b>「技術士」のみ</b>です。<br><br>【出典】技術士法 第44条〜第47条の2（2025-06-01施行版）"},
+  {"f":"適性:技術士法","q":"技術士法第4章の義務に関する次のア〜エの記述のうち、適切なものの個数はどれか。<br>ア　技術士補は、業務に関して知り得た秘密を漏らしてはならない義務を負わない。<br>イ　技術士は、業務に関して技術士の名称を表示するときは、登録を受けた技術部門を明示しなければならない。<br>ウ　技術士は、業務に関して有する知識及び技能の水準を向上させるよう努めなければならない。<br>エ　信用失墜行為の禁止は、技術士にのみ課される義務である。","h":"各記述を条文と1つずつ突き合わせて、○×を判定してください。","c":["2個","0個","1個","3個","4個"],"a":0,"v":"primary","n":"<b>適切なのはイとウの2個</b>です。<br>ア：第45条は「技術士又は技術士補」が対象で、技術士補も秘密を漏らしてはなりません（不適切）。<br>イ：第46条のとおり（適切）。<br>ウ：第47条の2のとおり。努力義務です（適切）。<br>エ：第44条は「技術士又は技術士補」が対象で、技術士のみではありません（不適切）。<br><br>【出典】技術士法 第44条・第45条・第46条・第47条の2（2025-06-01施行版）"},
+  {"f":"適性:技術士法","q":"技術士法第37条に基づき、文部科学大臣が第4章の規定に違反した技術士に対して登録の取消し又は名称使用の停止を命ずる場合の手続として、最も適切なものはどれか。","h":"処分の前に、本人の言い分を聴く手続があります。","c":["聴聞又は弁明の機会の付与を行った後、科学技術・学術審議会の意見を聴いてする。","本人への通知のみで足り、聴聞や弁明の機会の付与を行うことは、求められていない。","日本技術士会の理事会の議決を経たうえで、文部科学大臣が処分の内容を決定して命ずる。","事前に裁判所の許可を得てからでなければ、取消しや名称使用の停止を命ずることができない。"],"a":0,"v":"primary","n":"<b>第37条第2項は、登録の取消し又は名称の使用の停止の命令をする場合においては、聴聞又は弁明の機会の付与を行った後、科学技術・学術審議会の意見を聴いてするものと定めます</b>。<br>同条第1項により、文部科学大臣は職権で必要な調査もできます。<br><br>【出典】技術士法 第37条（2025-06-01施行版）"},
+  {"f":"適性:技術士法","q":"技術士法第3条（欠格条項）に関する記述として、最も適切なものはどれか。","h":"「執行を終わり、又は執行を受けることがなくなつた日から起算して」何年かを確認してください。","c":["拘禁刑以上の刑に処せられ、その執行を終わってから2年を経過しない者は、技術士又は技術士補となることができない。","拘禁刑以上の刑に処せられた者は、期間の経過にかかわらず、技術士又は技術士補となることができない。","罰金刑に処せられた者は、その理由を問わず、技術士又は技術士補となることができない。","公務員で懲戒免職の処分を受けた者は、処分を受けた日から5年を経過しない間は、技術士又は技術士補となることができない。"],"a":0,"v":"primary","n":"<b>第3条第2号は、拘禁刑以上の刑に処せられ、その執行を終わり、又は執行を受けることがなくなった日から起算して2年を経過しない者を欠格としています</b>。永久に排除されるわけではありません。<br>罰金刑が欠格事由になるのは第57条（名称使用制限）違反の場合（第4号）で、罰金刑一般ではありません。公務員の懲戒免職も、処分の日から2年（第3号）です。<br><br>【出典】技術士法 第3条（2025-06-01施行版）"},
+  {"f":"適性:技術士法","q":"技術士法第45条の2（公益確保の責務）について、最も適切な記述はどれか。","h":"条文が挙げている公益の具体例と、条文末尾の言い回しに注意してください。","c":["業務を行うに当たって、公共の安全、環境の保全その他の公益を害さないよう努めなければならない。","業務を行うに当たって、公共の安全と環境の保全に限り、これらを害してはならないとされている。","依頼者の利益と公益が対立した場合に限って、公益を優先しなければならないとされている。","公益を害するおそれのある業務の依頼は、その内容を問わず断ることが義務づけられている。"],"a":0,"v":"primary","n":"<b>第45条の2は、技術士又は技術士補は、その業務を行うに当たっては、公共の安全、環境の保全その他の公益を害することのないよう努めなければならないと定めます</b>（努力義務）。<br>「公共の安全」「環境の保全」は例示で、「その他の公益」を含みます。依頼を断る義務などは条文にありません。<br><br>【出典】技術士法 第45条の2（2025-06-01施行版）"},
+  {"f":"適性:倫理綱領","q":"技術士倫理綱領（2023年3月改訂）の前文が、技術士の使命として掲げていることとして、最も適切なものはどれか。","h":"前文の第1段落は、業務の履行を通じて何に貢献するかを述べています。","c":["業務の履行を通して、安全で持続可能な社会の実現など、公益の確保に貢献する。","依頼者の利益を最大化することを通して、産業の発展に貢献する。","技術士の職域を拡大することを通して、職業の社会的地位の向上に貢献する。","法令遵守を通して、組織の信頼性の向上に貢献する。"],"a":0,"v":"primary","n":"<b>前文は、技術士は、科学技術の利用が社会や環境に重大な影響を与えることを十分に認識し、業務の履行を通して安全で持続可能な社会の実現など、公益の確保に貢献する</b>と述べます。第2段落では、公正・誠実を旨として自律的に行動することも掲げます。<br><br>【出典】技術士倫理綱領 前文（IPEJ 02-01-2023）"},
+  {"f":"適性:倫理綱領","q":"技術士倫理綱領（2023年3月改訂）の本文の見出しに、含まれないものはどれか。","h":"本文は10項目です。見出しは「〜の優先」「〜の保持」「〜の重視」「〜の確保」などの形です。","c":["顧客満足の最大化","相互の尊重","有能性の重視","秘密情報の保護"],"a":0,"v":"primary","n":"<b>本文の10項目の見出し</b>は、1 安全・健康・福利の優先／2 持続可能な社会の実現／3 信用の保持／4 有能性の重視／5 真実性の確保／6 公正かつ誠実な履行／7 秘密情報の保護／8 法令等の遵守／9 相互の尊重／10 継続研鑽と人材育成です。「顧客満足の最大化」はありません。<br><br>【出典】技術士倫理綱領 本文（IPEJ 02-01-2023）"},
+  {"f":"適性:倫理綱領","q":"技術士が、自分の業務の履行によって公衆の安全、健康や福利が損なわれると判断した場合の対応として、技術士倫理綱領（1(3)）に最も沿うものはどれか。","h":"倫理綱領1(3)は、関係者への働きかけの形を定めています。","c":["関係者に代替案を提案し、適切な解決を図る。","依頼者の指示に従って履行を続けながら、判断の内容を記録に残す。","履行を続けたうえで、事後に問題点を報告書にまとめて提出する。","履行の可否を自分だけで決め、関係者に連絡せずに業務を中止する。"],"a":0,"v":"primary","n":"<b>倫理綱領1(3)は、業務の履行により公衆の安全、健康や福利が損なわれると判断した場合には、関係者に代替案を提案し、適切な解決を図ると定めます</b>。<br>1(1)は公衆の安全、健康及び福利の最優先、1(2)は、損なう可能性がある場合にリスクを評価し、履行の妥当性を客観的に検証することを求めます。<br><br>【出典】技術士倫理綱領 1(1)〜(3)（IPEJ 02-01-2023）"},
+  {"f":"適性:倫理綱領","q":"業務の履行が公衆の安全、健康や福利を損なう可能性がある場合に、技術士倫理綱領（1(2)）が求める行動として、最も適切なものはどれか。","h":"「リスクの評価」と「客観的な検証」が組み合わさっています。","c":["適切にリスクを評価し、履行の妥当性を客観的に検証する。","可能性が現実になるまで、対応を保留して状況を観察する。","依頼者との契約内容を確認し、契約に定めがなければ対応しない。","業務を最後まで履行し、結果に問題があった場合に責任を負う。"],"a":0,"v":"primary","n":"<b>倫理綱領1(2)は、業務の履行が公衆の安全、健康や福利を損なう可能性がある場合には、適切にリスクを評価し、履行の妥当性を客観的に検証すると定めます</b>。損害が生じてからではなく、可能性の段階で行動する点が要点です。<br><br>【出典】技術士倫理綱領 1(2)（IPEJ 02-01-2023）"},
+  {"f":"適性:倫理綱領","q":"持続可能な社会の実現について、技術士倫理綱領（項目2）が技術士に求めていることとして、最も適切なものはどれか。","h":"環境・経済・社会の3つの側面が挙げられています。","c":["業務の履行が環境・経済・社会に与える負の影響を可能な限り低減する。","業務の履行が環境に与える負の影響をなくすことを、契約の条件とする。","環境保全に関わる業務のみを受任し、他の業務は辞退する。","環境面の課題を優先し、経済・社会面の課題は依頼者に委ねる。"],"a":0,"v":"primary","n":"<b>項目2(2)は、業務の履行が環境・経済・社会に与える負の影響を可能な限り低減すると定めます</b>。(1)は、持続可能な社会の実現に向けて解決すべき環境・経済・社会の諸課題に積極的に取り組むこととしています。3つの側面を一体で扱う点が要点です。<br><br>【出典】技術士倫理綱領 2(1)(2)（IPEJ 02-01-2023）"},
+  {"f":"適性:倫理綱領","q":"技術士の行動のうち、技術士倫理綱領の項目3（信用の保持）の趣旨に照らして、最も不適切なものはどれか。","h":"3(3)は、利害関係者との間の利益の授受について定めています。","c":["契約上の報酬とは別に、受注先の担当者から高価な贈答品を受け取った。","契約に基づく報酬を受け取り、その内訳を依頼者に説明した。","自分の判断や行動が技術士全体の信用に影響しうることを意識して行動した。","業務の記録を、欺瞞的・恣意的な内容を含まないよう作成した。"],"a":0,"v":"primary","n":"<b>倫理綱領3(3)は、技術士は利害関係者との間で契約に基づく報酬以外の利益を授受しないと定めます</b>。契約外の高価な贈答品の受領は、この項に反します。<br>3(1)は技術士全体の信用や名誉を傷つけない自覚、3(2)は業務において欺瞞的・恣意的な行為をしないことを求めます。<br><br>【出典】技術士倫理綱領 3(1)〜(3)（IPEJ 02-01-2023）"},
+  {"f":"適性:倫理綱領","q":"自分の専門外の分野を含む案件を依頼された技術士の対応として、技術士倫理綱領（項目4）に最も沿うものはどれか。","h":"項目4は、自分や協業者の力量が及ぶ範囲を出発点にしています。","c":["適切な力量を有する他の技術士や専門家の助力・協業を求める。","時間をかけて独学し、依頼者には専門外であることを伝えずに受注する。","過去の類似案件の資料を流用して、短期間で報告書をまとめる。","専門外の部分は依頼者側の担当者に判断を任せる前提で、受注する。"],"a":0,"v":"primary","n":"<b>倫理綱領4(3)は、業務の履行に必要な場合、適切な力量を有する他の技術士や専門家の助力・協業を求めると定めます</b>。項目4は、自分や協業者の力量が及ぶ範囲で確信の持てる業務に携わること、(2)は事前に必要な調査・学習・研究を行うことを求めています。<br><br>【出典】技術士倫理綱領 4(1)〜(3)（IPEJ 02-01-2023）"},
+  {"f":"適性:倫理綱領","q":"研究成果や調査結果の報告に関する行為のうち、技術士倫理綱領（項目5）に照らして、最も不適切なものはどれか。","h":"項目5(2)は、成果の報告で行ってはならない行為を挙げています。","c":["仮説に合わないデータを除外し、残ったデータだけで報告書をまとめた。","測定条件と使用した機器の情報を、報告書の末尾に資料として添付しておいた。","得られた結果の適用範囲と限界について、報告書の本文の中で説明を加えた。","他者の成果を自分の報告書の中で利用する際に、その出典を明記して示した。"],"a":0,"v":"primary","n":"<b>倫理綱領5(2)は、論文、報告書、発表等で成果を報告する際に、捏造・改ざん・盗用や誇張した表現等をしないと定めます</b>。都合の悪いデータを恣意的に除外する行為は、改ざんにあたります。<br>項目5は、報告、説明又は発表を、客観的で事実に基づいた情報を用いて行うことを求めています。<br><br>【出典】技術士倫理綱領 5(1)〜(3)（IPEJ 02-01-2023）"},
+  {"f":"適性:倫理綱領","q":"業務の履行において利益相反の事態が予想される場合の対応として、技術士倫理綱領（6(3)）に最も沿うものはどれか。","h":"「回避に努める」と「関係者への情報開示・説明」がセットです。","c":["予想される利益相反は回避に努め、関係者にその情報を開示し、説明する。","利益相反が現実のものとなったことを確認できた段階で、はじめて関係者に情報を報告する。","利益相反の事態を、自分自身の判断だけで解消し、関係者には知らせないでおく。","依頼者の利益に反する事態のみを利益相反として扱い、その情報を関係者に開示する。"],"a":0,"v":"primary","n":"<b>倫理綱領6(3)は、業務の履行において予想される利益相反の事態については、回避に努めるとともに、関係者にその情報を開示、説明すると定めます</b>。「予想される」段階で対応する点と、開示・説明をセットで行う点が要点です。<br><br>【出典】技術士倫理綱領 6(3)（IPEJ 02-01-2023）"},
+  {"f":"適性:倫理綱領","q":"秘密情報の扱いに関する技術士の行動のうち、技術士倫理綱領（項目7）に照らして、最も不適切なものはどれか。","h":"7(2)は、使用できる範囲を「法令及び契約に定められた範囲」に限っています。","c":["以前の依頼者のデータを、その同意なく別の新しい案件の検討に使った。","預かったデータへのアクセス権限を、業務に必要な担当者だけに限定して管理した。","秘密情報を保存する端末に、漏洩や改ざんを防止するための対策を講じておいた。","契約に定められた範囲で、預かった情報を、当該業務の遂行のために使用した。"],"a":0,"v":"primary","n":"<b>倫理綱領7(2)は、秘密情報を法令及び契約に定められた範囲でのみ使用し、正当な理由なく開示又は転用しないと定めます</b>。同意のない別案件への転用は「転用」にあたります。<br>7(1)は、漏洩や改ざん等が生じないよう適切に管理することを求めます。なお法的にも、技術士法第45条が秘密の漏示・盗用を禁じています。<br><br>【出典】技術士倫理綱領 7(1)(2)（IPEJ 02-01-2023）／技術士法 第45条"},
+  {"f":"適性:倫理綱領","q":"海外で業務を行う技術士の対応として、技術士倫理綱領（項目8）に最も沿うものはどれか。","h":"項目8は法令だけでなく、社会慣行・生活様式・宗教等の文化にも触れています。","c":["国・地域の法令や規格を遵守し、社会慣行や宗教などの文化を尊重する。","日本の法令と規格を適用して業務を行い、現地の社会慣行への対応は依頼者に委ねる。","現地の法令が日本より緩い場合に限り、日本の法令の基準を適用して業務を行う。","現地の法令の遵守を最優先とし、国際規格や国際条約は参考にとどめて業務を行う。"],"a":0,"v":"primary","n":"<b>倫理綱領8(1)は、業務に関わる国・地域の法令や各種基準・規格、及び国際条約や議定書、国際規格等を遵守すること、8(2)は、社会慣行、生活様式、宗教等の文化を尊重することを定めます</b>。国際条約・国際規格も遵守の対象に含まれる点が要点です。<br><br>【出典】技術士倫理綱領 8(1)(2)（IPEJ 02-01-2023）"},
+  {"f":"適性:倫理綱領","q":"複数の企業が入札の前に落札者や価格を調整する行為は、技術士倫理綱領のどの項目に最も直接に反するか。","h":"項目9には、3つの下位項目があります。","c":["9(2) 公正かつ自由な競争の維持に努める","9(1) 共に働く者の安全、健康及び人権を守る","10(3) 社会に貢献する技術者の育成に努める","4(2) 業務の履行前に必要な調査、学習、研究を行う"],"a":0,"v":"primary","n":"<b>倫理綱領9(2)は、技術士は公正かつ自由な競争の維持に努めると定めます</b>。談合（入札前の落札者・価格の調整）は、競争を制限する行為であり、この項に直接反します。<br>また、倫理綱領3(2)の欺瞞的な行為の禁止、8(1)の法令の遵守にも関わります。<br><br>【出典】技術士倫理綱領 9(1)〜(3)（IPEJ 02-01-2023）"},
+  {"f":"適性:倫理綱領","q":"共に働く者との関係について、技術士倫理綱領（項目9）が定めていることとして、最も適切なものはどれか。","h":"9(1)と9(3)の主語と対象を見分けてください。","c":["共に働く者の安全、健康及び人権を守り、多様性を尊重する。","共に働く者の職務上の判断には、原則として立ち入らない。","業務上の権利を守るため、他の技術者の名誉に関わる情報を公表する。","協力する相手を、同じ技術部門の技術士に限る。"],"a":0,"v":"primary","n":"<b>倫理綱領9(1)は、共に働く者の安全、健康及び人権を守り、多様性を尊重すると定めます</b>。9(3)は、他の技術士又は技術者の名誉を傷つけ、業務上の権利を侵害したり、業務を妨げたりしないことを求めます。<br><br>【出典】技術士倫理綱領 9(1)(3)（IPEJ 02-01-2023）"},
+  {"f":"適性:倫理綱領","q":"技術士倫理綱領（項目10）が技術士に求めていることとして、最も適切なものはどれか。","h":"項目10は、自分の力量の向上と、他者の育成の両方に触れています。","c":["専門分野と、技術と社会が接する領域の知識を常に高め、人材育成にも努める。","登録した技術部門の知識の維持に努め、他の分野の知識の習得までは求められていない。","人材育成は雇用主が行うものであり、技術士個人の努力事項としては定められていない。","継続研鑽は、日本技術士会が定める研修を受講することによってのみ果たされるとされる。"],"a":0,"v":"primary","n":"<b>項目10は、専門分野の力量及び技術と社会が接する領域の知識を常に高めるとともに、人材育成に努めると定めます</b>。(2)は専門分野以外の領域への理解を深めること、(3)は社会に貢献する技術者の育成に努めることを求めます。<br>なお法律上の資質向上の責務は、技術士法第47条の2（努力義務）です。<br><br>【出典】技術士倫理綱領 10(1)〜(3)（IPEJ 02-01-2023）／技術士法 第47条の2"},
+  {"f":"適性:倫理綱領","q":"依頼者への説明・報告に関する技術士の行動として、技術士倫理綱領（項目5・6）に最も沿うものはどれか。","h":"項目5(1)と6(1)は、業務の実施内容・結果と進捗の説明を求めています。","c":["業務の目的、計画、進捗、想定される結果を適宜説明し、実施内容と結果を的確に伝える。","業務が完了した時点で、成果物とあわせて、結果を一度にまとめて依頼者に報告する。","依頼者の理解を得られそうな部分に絞って、業務の結果を分かりやすく説明する。","業務の実施中に問題が生じた場合に限り、その原因と対策を依頼者に報告する。"],"a":0,"v":"primary","n":"<b>倫理綱領5(1)は、雇用者又は依頼者に対して業務の実施内容・結果を的確に説明すること、6(1)は、履行している業務の目的、実施計画、進捗、想定される結果等について適宜説明するとともに応分の責任をもつことを定めます</b>。完了後の一括報告や、都合のよい部分だけの説明では足りません。<br><br>【出典】技術士倫理綱領 5(1)、6(1)（IPEJ 02-01-2023）"},
+  {"f":"適性:製造物責任","q":"製造物責任法における「製造物」の定義として、最も適切なものはどれか。","h":"製造物は「動産」に限られる。","c":["製造又は加工された動産をいう。","製造又は加工された動産及び不動産をいう。","製造された有体物のうち、市場で流通に置かれたものをいう。","製造、加工又は輸入された動産のうち、量産されたものをいう。"],"a":0,"v":"primary","n":"<b>正解：製造又は加工された動産をいう。</b>（第2条第1項）<br>・「不動産を含む」は誤り。定義は動産に限られ、建物などの不動産は製造物に当たらない。<br>・「市場で流通に置かれたもの」という限定は定義にない。<br>・「輸入」「量産」は製造物の定義の要素ではない（輸入は製造業者等の側の定義に出てくる）。<br><br>【出典】製造物責任法 第2条第1項（2020-04-01時点）"},
+  {"f":"適性:製造物責任","q":"製造物責任法上の「欠陥」の定義として、最も適切なものはどれか。","h":"基準は「通常有すべき安全性」。","c":["当該製造物が通常有すべき安全性を欠いていることをいい、その特性や引渡しの時期等の事情を考慮して判断する。","当該製造物が設計図面や仕様書に定められた品質に達していないことをいい、製造上のばらつきの有無で判断する。","当該製造物が購入者の期待した性能を欠いていることをいい、売買契約で合意された内容を考慮して判断する。","当該製造物が製造時点で最高水準の安全性を欠いていることをいい、技術上の到達水準を考慮して判断する。"],"a":0,"v":"primary","n":"<b>正解：通常有すべき安全性を欠いていること</b>（第2条第2項）。判断では、製造物の特性、通常予見される使用形態、製造業者等が引き渡した時期その他の事情を考慮する。<br>・仕様書どおりかどうか（製造上の逸脱だけ）が基準なのではなく、安全性が基準。<br>・購入者の期待や契約内容が基準なのではない。<br>・「最高水準」ではなく「通常有すべき」安全性である。<br><br>【出典】製造物責任法 第2条第2項（2020-04-01時点）"},
+  {"f":"適性:製造物責任","q":"製造物責任法上の「製造業者等」に該当する者に関する次のア〜エの記述のうち、該当するものの個数はどれか。<br>ア　当該製造物を業として輸入した者<br>イ　自ら当該製造物の製造業者として、その製造物に自己の商号を表示した者<br>ウ　当該製造物に、その製造業者と誤認させるような氏名等の表示をした者<br>エ　当該製造物を仕入れて販売しただけで、氏名等の表示をしていない小売業者","h":"第2条第3項の各号を1つずつ当てはめる。","c":["3個","0個","1個","2個","4個"],"a":0,"v":"primary","n":"<b>正解：3個（ア・イ・ウ）</b><br>・ア：業として製造、加工又は輸入した者は製造業者に当たる（第2条第3項第1号）。<br>・イ：自ら製造業者として氏名、商号、商標等を表示した者（同項第2号）。<br>・ウ：製造業者と誤認させるような表示をした者（同項第2号）。<br>・エ：氏名等の表示をしていない単なる販売業者は、各号のいずれにも当たらない（第3号は、実質的な製造業者と認められる表示をした者に限られる）。<br><br>【出典】製造物責任法 第2条第3項（2020-04-01時点）"},
+  {"f":"適性:製造物責任","q":"電気ストーブの欠陥が原因で、そのストーブ自体だけが焼損し、人の生命・身体や他の財産には損害が生じなかった。この場合の製造物責任法上の扱いとして、最も適切なものはどれか。","h":"第3条のただし書を読む。","c":["損害が当該製造物についてのみ生じたときは、第3条の賠償責任は生じない。","損害が当該製造物についてのみ生じた場合でも、製造業者等は第3条に基づき賠償責任を負う。","製造業者等に過失がある場合に限り、当該製造物自体の損害についても第3条の責任を負う。","引渡しから10年以内であれば、損害の範囲にかかわらず第3条の賠償責任を負う。"],"a":0,"v":"primary","n":"<b>正解：損害が当該製造物についてのみ生じたときは第3条の責任は生じない。</b>（第3条ただし書）<br>・「責任を負う」とする選択肢は、ただし書に反する。<br>・第3条は、製造業者等の過失を要件としていない。過失の有無で結論が変わるという記述は条文にない。<br>・10年は第5条第1項第2号の消滅時効の期間であり、責任の範囲を決めるものではない。<br><br>【出典】製造物責任法 第3条、第5条（2020-04-01時点）"},
+  {"f":"適性:製造物責任","q":"製造物責任法に規定する製造業者等の免責事由に関する記述として、最も適切なものはどれか。","h":"第4条の2つの号と「証明」の主体に注意。","c":["製造物を引き渡した時の科学又は技術に関する知見では欠陥を認識できなかったことを、製造業者等が証明したときは、賠償の責めを負わない。","製造物を引き渡した時に欠陥を認識できなかったことは、被害者が製造業者等の過失を立証できないときに限り、免責事由となる。","製造物の引渡し後に得られた科学又は技術に関する知見を基準に、欠陥を認識できなかったことを製造業者等が証明すれば、免責される。","製造物の欠陥が生じないよう製造業者等が通常の注意を尽くしていたことを証明すれば、免責される。"],"a":0,"v":"primary","n":"<b>正解：引渡し時の知見では欠陥を認識できなかったことを製造業者等が証明したとき免責される。</b>（第4条第1号）<br>・証明するのは製造業者等であり、被害者ではない。<br>・基準時は「引き渡した時」であり、引渡し後の知見ではない。<br>・「通常の注意を尽くしたこと」は免責事由として定められていない（第2号の部品・原材料の場合は、設計に関する指示に従ったことのみで生じ、かつ過失がないことが要件）。<br><br>【出典】製造物責任法 第4条（2020-04-01時点）"},
+  {"f":"適性:製造物責任","q":"製造物責任法における損害賠償請求権の消滅時効に関する次のア〜エの記述のうち、正しいものの個数はどれか。<br>ア　被害者等が損害及び賠償義務者を知った時から3年間行使しないときは、時効によって消滅する。<br>イ　人の生命又は身体を侵害した場合は、アの3年間が5年間となる。<br>ウ　製造業者等が製造物を引き渡した時から10年を経過したときも、時効によって消滅する。<br>エ　潜伏期間の経過後に症状が現れる損害についても、ウの10年は引渡しの時から起算する。","h":"第5条第3項は起算点を変えている。","c":["3個","0個","1個","2個","4個"],"a":0,"v":"primary","n":"<b>正解：3個（ア・イ・ウ）</b><br>・ア：第5条第1項第1号。<br>・イ：第5条第2項（生命・身体侵害は3年が5年になる）。<br>・ウ：第5条第1項第2号。<br>・エ：身体に蓄積して健康を害する物質による損害や、一定の潜伏期間後に症状が現れる損害では、10年の期間は損害が生じた時から起算する（第5条第3項）ため誤り。<br><br>【出典】製造物責任法 第5条（2020-04-01時点）"},
+  {"f":"適性:製造物責任","q":"製造物責任法の附則における適用の範囲に関する記述として、最も適切なものはどれか。","h":"基準になるのは「引き渡した時」。","c":["この法律の施行後に製造業者等が引き渡した製造物について適用される。","この法律の施行後に被害者が製造物を購入した場合に適用される。","この法律の施行後に製造物の欠陥による事故が発生した場合に適用される。","この法律の施行後に製造業者等が製造物を製造した場合に適用される。"],"a":0,"v":"primary","n":"<b>正解：施行後に製造業者等が引き渡した製造物について適用される。</b>（附則）<br>適用の基準は、製造業者等が製造物を「引き渡した」時点であり、購入時、事故の発生時、製造時のいずれでもない。<br>技術者の実務では、旧型の製品による事故が施行前の出荷分かどうかで適用関係が変わる、という形で問われる。<br><br>【出典】製造物責任法 附則（施行期日等）（2020-04-01時点）"},
+  {"f":"適性:知的財産","q":"特許法における「発明」の定義として、最も適切なものはどれか。","h":"「高度」の語が入るのは発明だけ。","c":["自然法則を利用した技術的思想の創作のうち高度のものをいう。","自然法則を利用した技術的思想の創作であって、新規性を有するものをいう。","産業上利用することができる技術的思想の創作のうち高度のものをいう。","自然法則を利用した物品の形状、構造又は組合せに係る技術的思想の創作をいう。"],"a":0,"v":"primary","n":"<b>正解：自然法則を利用した技術的思想の創作のうち高度のもの</b>（特許法第2条第1項）<br>・「新規性を有するもの」は発明の定義ではなく、特許の要件（第29条第1項）の話。<br>・「産業上利用することができる」も定義ではなく、特許の要件（第29条第1項柱書）。<br>・「物品の形状、構造又は組合せに係る」は実用新案法の保護対象（実用新案法第3条第1項）で、考案は「高度」を要しない（実用新案法第2条第1項）。<br><br>【出典】特許法 第2条第1項、第29条第1項（2026-06-24時点）"},
+  {"f":"適性:知的財産","q":"特許法第29条第1項各号に掲げる発明（例外規定の適用は考えないものとする）に関する次のア〜エの記述のうち、特許を受けることができない発明として正しいものの個数はどれか。<br>ア　特許出願前に日本国内において公然知られた発明<br>イ　特許出願前に外国において公然実施をされた発明<br>ウ　特許出願前に外国において頒布された刊行物に記載された発明<br>エ　特許出願前に電気通信回線を通じて公衆に利用可能となった発明","h":"新規性を失う場所は日本国内に限らない。","c":["4個","0個","1個","2個","3個"],"a":0,"v":"primary","n":"<b>正解：4個（ア〜エすべて）</b><br>第29条第1項は、産業上利用できる発明のうち、次の3類型を除いて特許を受けられるとする。<br>・第1号：出願前に日本国内又は外国において公然知られた発明（ア）。<br>・第2号：出願前に日本国内又は外国において公然実施をされた発明（イ）。<br>・第3号：出願前に日本国内又は外国において頒布された刊行物に記載された発明、又は電気通信回線を通じて公衆に利用可能となった発明（ウ・エ）。<br>外国での公知・公用・刊行物も、インターネット上の公開も対象になる。<br><br>【出典】特許法 第29条第1項（2026-06-24時点）"},
+  {"f":"適性:知的財産","q":"同一の発明について、A社とB社が同じ日にそれぞれ特許出願をした。両社の協議が成立しなかった場合の特許法上の扱いとして、最も適切なものはどれか。","h":"第39条第2項の後段。","c":["いずれの出願人も、その発明について特許を受けることができない。","先に願書を特許庁に提出した出願人のみが、その発明について特許を受けることができる。","特許庁長官が抽選で定めた一の出願人のみが、その発明について特許を受けることができる。","両社が持分を等しくして、その発明について特許を受けることができる。"],"a":0,"v":"primary","n":"<b>正解：いずれの出願人も特許を受けることができない。</b>（第39条第2項）<br>・異なる日の出願なら最先の出願人のみが特許を受けられる（同条第1項、先願主義）が、同日の場合は出願人の協議で一の出願人を定め、協議が成立せず、又は協議ができないときは、いずれも特許を受けられない。<br>・時刻の先後や抽選で決める定めはない。<br>・共有の特許を受けられるとする規定でもない。<br><br>【出典】特許法 第39条第1項・第2項（2026-06-24時点）"},
+  {"f":"適性:知的財産","q":"特許法第35条（職務発明）に関する次のア〜エの記述のうち、正しいものの個数はどれか。<br>ア　従業者等がした職務発明について、従業者等が特許を受けたときは、使用者等はその特許権について通常実施権を有する。<br>イ　職務発明に当たらない従業者等の発明について、あらかじめ使用者等に特許を受ける権利を取得させる旨を定めた勤務規則の条項は、無効とされる。<br>ウ　職務発明について、勤務規則等にあらかじめ使用者等に特許を受ける権利を取得させると定めたときは、その権利は発生した時から使用者等に帰属する。<br>エ　相当の利益の内容を決める基準は、従業者等との協議や意見聴取の状況にかかわらず、使用者等が自由に定めてよい。","h":"第5項は「不合理であってはならない」。","c":["3個","0個","1個","2個","4個"],"a":0,"v":"primary","n":"<b>正解：3個（ア・イ・ウ）</b><br>・ア：第35条第1項。使用者等は職務発明について通常実施権を有する。<br>・イ：第35条第2項。職務発明以外の発明について、あらかじめ承継等を定める条項は無効。<br>・ウ：第35条第3項。職務発明は、あらかじめ定めれば発生時から使用者等に帰属する。<br>・エ：第35条第5項。基準の策定に際しての協議の状況、基準の開示の状況、従業者等からの意見聴取の状況等を考慮して、相当の利益を与えることが不合理と認められるものであってはならない。<br><br>【出典】特許法 第35条第1項〜第5項（2026-06-24時点）"},
+  {"f":"適性:知的財産","q":"A社は、B社の特許出願に係る発明の内容を知らないで自らその発明をし、B社の特許出願の際、日本国内で現にその発明の実施である事業をしていた。その後、B社がその特許権を取得した。A社の地位として、特許法上、最も適切なものはどれか。","h":"第79条（先使用による通常実施権）。","c":["実施又は準備をしている発明及び事業の目的の範囲内で、その特許権について通常実施権を有する。","B社の許諾を得ない限り、その発明の実施を続けることはできず、実施すれば特許権の侵害となる。","その特許権について専用実施権を有し、事業の目的の範囲を超えて発明を実施することもできる。","B社に相当の対価を支払った場合に限り、その事業の範囲内で通常実施権を有する。"],"a":0,"v":"primary","n":"<b>正解：事業の目的の範囲内で通常実施権を有する。</b>（第79条）<br>・出願の内容を知らずに自ら発明し（又はそのような者から知得し）、出願の際に日本国内で事業又はその準備をしている者は、その発明及び事業の目的の範囲内で通常実施権を有する。<br>・許諾が必要とする記述は、この規定に反する。<br>・専用実施権ではなく通常実施権である。<br>・第79条には対価の支払を要件とする定めはない。<br>実務では、社内で先行して実施している技術の記録（実施の事実の証拠）を残す意味がある。<br><br>【出典】特許法 第79条（2026-06-24時点）"},
+  {"f":"適性:知的財産","q":"他社との共同開発の成果について取得した特許権が共有に係るとき、特許法上の各共有者の権限に関する記述として、最も適切なものはどれか。","h":"実施と、譲渡・実施許諾とで同意の要否が違う。","c":["契約に別段の定めがなければ、他の共有者の同意を得ないで、その特許発明を自ら実施できる。","その特許発明を自ら実施するときにも、契約の定めにかかわらず、他の共有者の同意を得なければならない。","他人に通常実施権を許諾するときは、持分の割合に応じた過半数の同意があれば、これを許諾できる。","自己の持分を他人に譲渡するときは、他の共有者に通知すれば足り、その同意を得る必要はない。"],"a":0,"v":"primary","n":"<b>正解：別段の契約がなければ、他の共有者の同意なく自ら実施できる。</b>（第73条第2項）<br>・自ら実施するために同意が要るという記述は、第73条第2項に反する。<br>・他人に通常実施権を許諾するには、他の共有者の同意が必要（同条第3項）。持分割合による同意という定めはない。<br>・持分の譲渡にも他の共有者の同意が必要（同条第1項）。通知では足りない。<br>なお、特許を受ける権利が共有のときは、共同でなければ特許出願ができない（第38条）。<br><br>【出典】特許法 第73条、第38条（2026-06-24時点）"},
+  {"f":"適性:知的財産","q":"実用新案法により実用新案登録を受けることができる考案の対象として、最も適切なものはどれか。","h":"特許の「発明」より対象が狭い。","c":["産業上利用することができる考案であって、物品の形状、構造又は組合せに係るもの","産業上利用することができる考案であって、物品の形状、構造、組合せ又は製造方法に係るもの","産業上利用することができる考案であって、物品の形状、模様又は色彩の結合に係るもの","自然法則を利用した技術的思想の創作のうち高度のものであって、物品に係るもの"],"a":0,"v":"primary","n":"<b>正解：物品の形状、構造又は組合せに係る考案</b>（実用新案法第3条第1項柱書）<br>・製造方法は、条文上の対象（物品の形状、構造又は組合せ）に含まれない。<br>・「形状、模様又は色彩」は意匠法の意匠の要素である（意匠法第2条第1項）。<br>・「高度のもの」は特許法の発明の定義（特許法第2条第1項）。実用新案法の考案は「自然法則を利用した技術的思想の創作」で、高度性を要件としない（実用新案法第2条第1項）。<br><br>【出典】実用新案法 第2条第1項、第3条第1項（2026-05-21時点）"},
+  {"f":"適性:知的財産","q":"実用新案権者が、自己の実用新案権の侵害者等に対して権利を行使しようとする場合の実用新案法上の扱いとして、最も適切なものはどれか。","h":"第29条の2（技術評価書の提示）。","c":["登録実用新案に係る実用新案技術評価書を提示して警告をした後でなければ、侵害者等に対し権利を行使できない。","設定の登録がされた後であれば、実用新案技術評価書の提示や警告をしなくても、侵害者等に対し権利を行使できる。","実用新案技術評価書を提示しなくても、警告をした後であれば、侵害者等に対し権利を行使できる。","実用新案技術評価書を提示すれば足り、警告をしなくても、侵害者等に対し権利を行使できる。"],"a":0,"v":"primary","n":"<b>正解：技術評価書を提示して警告した後でなければ権利行使できない。</b>（実用新案法第29条の2）<br>・設定の登録がされていても、それだけでは権利行使できない。実用新案技術評価書は、何人も請求でき（第12条第1項）、権利行使の前提となる。<br>・技術評価書の提示と警告の両方が要る（提示だけ、警告だけでは足りない）。<br>・なお、権利を行使又は警告した後に実用新案登録を無効とする審決が確定したときは、原則として相手方に与えた損害を賠償する責めを負う（第29条の3。ただし書の例外あり）。<br><br>【出典】実用新案法 第12条第1項、第29条の2、第29条の3（2026-05-21時点）"},
+  {"f":"適性:知的財産","q":"意匠法における「意匠」の定義として、最も適切なものはどれか。","h":"視覚を通じて美感を起こさせる、が核心。","c":["物品の形状等、建築物の形状等又は一定の画像であって、視覚を通じて美感を起こさせるもの","物品の形状、構造又は組合せであって、視覚を通じて美感を起こさせるもの","物品の形状、模様又は色彩であって、視覚又は触覚を通じて美感を起こさせるもの","物品の形状等に限られ、建築物の形状等や画像を含まず、視覚を通じて美感を起こさせるもの"],"a":0,"v":"primary","n":"<b>正解：物品・建築物の形状等又は一定の画像で、視覚を通じて美感を起こさせるもの</b>（意匠法第2条第1項）<br>・「構造」「組合せ」は実用新案法の対象の要素。<br>・美感の起こし方は「視覚を通じて」であり、触覚は含まれない。<br>・意匠には、物品の部分、建築物（の部分）、機器の操作の用に供される画像などの画像（一定のものに限る）も含まれるので、物品に限るとする記述は条文に反する。<br><br>【出典】意匠法 第2条第1項（2026-05-21時点）"},
+  {"f":"適性:知的財産","q":"商標法第3条に関する次のア〜エの記述のうち、正しいものの個数はどれか。<br>ア　その商品の普通名称を普通に用いられる方法で表示する標章のみからなる商標は、商標登録を受けることができない。<br>イ　その商品の産地や品質を普通に用いられる方法で表示する標章のみからなる商標でも、使用をされた結果、需要者が何人かの業務に係る商品であることを認識できるものは、商標登録を受けることができる。<br>ウ　その商品について慣用されている商標は、使用をされた結果、需要者が何人かの業務に係る商品であることを認識できるようになれば、商標登録を受けることができる。<br>エ　ありふれた氏を普通に用いられる方法で表示する標章のみからなる商標は、使用をされた結果、需要者が何人かの業務に係る商品であることを認識できるようになっても、商標登録を受けることができない。","h":"第2項の対象は第1項第3号〜第5号だけ。","c":["2個","0個","1個","3個","4個"],"a":0,"v":"primary","n":"<b>正解：2個（ア・イ）</b><br>・ア：第3条第1項第1号（普通名称のみ）。使用による例外（同条第2項）の対象外なので登録できない。<br>・イ：産地・品質等の表示（同項第3号）は、使用の結果識別できるものは登録を受けられる（同条第2項）。<br>・ウ：慣用商標（第1項第2号）は第2項の救済の対象ではない（対象は第3号から第5号まで）ため誤り。<br>・エ：ありふれた氏又は名称の表示（第1項第4号）は第2項の対象であり、使用の結果識別できるようになれば登録を受けられるため誤り。<br><br>【出典】商標法 第3条第1項・第2項（2026-05-21時点）"},
+  {"f":"適性:知的財産","q":"登録商標を日本国内で使っていない場合に関する商標法上の記述として、最も適切なものはどれか。","h":"第50条（不使用取消審判）。何人もが請求できる。","c":["継続して三年以上、商標権者、専用使用権者又は通常使用権者のいずれもが日本国内で使用をしていないときは、何人も取消しの審判を請求できる。","継続して五年以上、商標権者が日本国内で使用をしていないときは、利害関係を有する者に限り、取消しの審判を請求できる。","継続して三年以上、商標権者が日本国内で使用をしていないときは、専用使用権者や通常使用権者の使用があっても、取消しの審判を請求できる。","継続して三年以上、日本国内で使用がされていないときは、特許庁長官が職権でその商標登録を取り消す。"],"a":0,"v":"primary","n":"<b>正解：継続して三年以上、商標権者・専用使用権者・通常使用権者のいずれもが使用していないときは、何人も取消審判を請求できる。</b>（第50条第1項）<br>・期間は三年で、請求できるのは何人もである（利害関係人に限られない）。<br>・使用権者の使用も「使用」に数えられる。<br>・職権で取り消す定めではなく、審判の請求による。<br>・請求があった場合、請求の登録前三年以内に使用していることを被請求人が証明しない限り、取消しを免れない（同条第2項。使用しないことに正当な理由があることを明らかにしたときは除く）。<br><br>【出典】商標法 第50条第1項・第2項（2026-05-21時点）"},
+  {"f":"適性:知的財産","q":"産業財産権の存続期間に関する次の組合せのうち、最も適切なものはどれか。ただし、特許権の存続期間の延長、商標権の更新などの特例は考えないものとする。","h":"起算点が出願日か設定登録日かを区別する。","c":["特許権：出願の日から20年　実用新案権：出願の日から10年　意匠権：出願の日から25年　商標権：設定の登録の日から10年","特許権：出願の日から25年　実用新案権：出願の日から10年　意匠権：出願の日から20年　商標権：設定の登録の日から10年","特許権：出願の日から20年　実用新案権：設定の登録の日から10年　意匠権：出願の日から25年　商標権：出願の日から10年","特許権：出願の日から20年　実用新案権：出願の日から25年　意匠権：出願の日から10年　商標権：設定の登録の日から20年"],"a":0,"v":"primary","n":"<b>正解：特許＝出願日から20年／実用新案＝出願日から10年／意匠＝出願日から25年／商標＝設定登録日から10年</b><br>・特許権：出願の日から20年（特許法第67条第1項）。<br>・実用新案権：出願の日から10年（実用新案法第15条）。<br>・意匠権：出願の日から25年（意匠法第21条第1項）。<br>・商標権：設定の登録の日から10年で、更新できる（商標法第19条第1項・第2項）。更新登録の申請は、存続期間の満了前六月から満了の日までの間にする（同法第20条第2項）。<br>商標だけ起算点が設定登録の日である点が要注意。<br><br>【出典】特許法 第67条第1項、実用新案法 第15条、意匠法 第21条第1項、商標法 第19条・第20条（各2026-05-21〜2026-06-24時点）"},
+  {"f":"適性:知的財産","q":"不正競争防止法における「営業秘密」の定義として、最も適切なものはどれか。","h":"3要件：秘密管理性・有用性・非公知性。","c":["秘密として管理されている、事業活動に有用な技術上又は営業上の情報であって、公然と知られていないもの","秘密として管理されている、事業活動に有用な技術上の情報であって、特許出願がされていないもの","事業活動に有用な技術上又は営業上の情報であって、従業者との間で秘密保持契約が結ばれているもの","秘密として管理されている、事業活動に有用な営業上の情報であって、他の事業者が保有していないもの"],"a":0,"v":"primary","n":"<b>正解：秘密として管理され、事業活動に有用な技術上又は営業上の情報で、公然と知られていないもの</b>（第2条第6項）<br>・「技術上の情報に限る」「特許出願がされていない」は定義にない（営業上の情報も含む）。<br>・秘密保持契約の有無ではなく、秘密として管理されていること（秘密管理性）が要件。<br>・「他の事業者が保有していない」ではなく、公然と知られていないこと（非公知性）が要件。<br><br>【出典】不正競争防止法 第2条第6項（2026-05-21時点）"},
+  {"f":"適性:知的財産","q":"従業者Aは、勤務先から示された営業秘密である製品図面のデータを、転職先から報酬を得る目的で転職先に開示した。この行為に関する不正競争防止法上の記述として、最も適切なものはどれか。","h":"第2条第1項第7号：「示された」者が不正の利益を得る目的で開示する行為。","c":["営業秘密保有者から示された営業秘密を、不正の利益を得る目的で開示する行為として、不正競争に当たる。","営業秘密の取得が窃取や詐欺などの不正の手段によるものではないため、開示しても不正競争には当たらない。","営業秘密保有者に損害を加える目的がある場合に限り、その開示は不正競争に当たる。","営業秘密が秘密保持契約に基づいて示された場合に限り、その開示は不正競争に当たる。"],"a":0,"v":"primary","n":"<b>正解：示された営業秘密を、不正の利益を得る目的で開示する行為は不正競争に当たる。</b>（第2条第1項第7号）<br>・取得が正当な手段（業務上示された）でも、不正の利益を得る目的で使用又は開示すれば該当する。不正の手段による取得は第4号の類型で、別の類型である。<br>・目的は「不正の利益を得る目的で、又は営業秘密保有者に損害を加える目的で」のいずれかでよく、損害目的に限られない。<br>・秘密保持契約の存在は要件として書かれていない。<br>営業秘密保有者は、侵害の停止又は予防を請求でき（第3条第1項）、故意又は過失があれば損害賠償も請求できる（第4条）。<br><br>【出典】不正競争防止法 第2条第1項第7号、第3条、第4条（2026-05-21時点）"},
+  {"f":"適性:知的財産","q":"他人の商品の形態を模倣した商品を譲渡する行為が不正競争に当たる場合（不正競争防止法第2条第1項第3号）に関する記述として、最も適切なものはどれか。","h":"第1号（周知）・第2号（著名）とは要件が違う。","c":["当該商品の機能を確保するために不可欠な形態は、模倣の対象から除かれている。","他人の商品の形態が需要者の間に広く認識されていることが、不正競争となるための要件である。","他人の商品の形態が著名であることが要件であり、周知にとどまるときは不正競争とならない。","他人の商品の形態について意匠登録がされていることが、不正競争となるための要件である。"],"a":0,"v":"primary","n":"<b>正解：機能を確保するために不可欠な形態は除かれる。</b>（第2条第1項第3号）<br>・第3号は、他人の商品の形態（商品の機能を確保するために不可欠な形態を除く）を模倣した商品を譲渡等する行為で、周知性や著名性を要件としない。<br>・「需要者の間に広く認識されている」商品等表示を対象とするのは第1号（混同を生じさせる行為）。<br>・「著名な」商品等表示を対象とするのは第2号。<br>・意匠登録の有無は要件として書かれていない。<br><br>【出典】不正競争防止法 第2条第1項第1号〜第3号（2026-05-21時点）"},
+  {"f":"適性:知的財産","q":"営業秘密を使用する行為（第2条第1項第4号〜第9号）に対する差止請求権の消滅時効に関する記述として、最も適切なものはどれか。","h":"第15条第1項の2つの号。数字の入れ替えに注意。","c":["行為者を知った時から三年間行わないとき、又は行為の開始の時から二十年を経過したときは、時効によって消滅する。","行為者を知った時から二十年間行わないとき、又は行為の開始の時から三年を経過したときは、時効によって消滅する。","行為者を知った時から三年間行わないときに限り時効によって消滅し、行為の開始の時からの期間の定めはない。","行為の開始の時から二十年を経過したときに限り時効によって消滅し、知った時からの期間の定めはない。"],"a":0,"v":"primary","n":"<b>正解：知った時から3年、行為の開始の時から20年で時効消滅する。</b>（第15条第1項）<br>・第1号：行為が継続する場合に、営業秘密保有者がその事実及び行為者を知った時から三年間行わないとき。<br>・第2号：行為の開始の時から二十年を経過したとき。<br>・両方の期間が定められており、片方だけの記述、数字を入れ替えた記述は条文と合わない。<br><br>【出典】不正競争防止法 第15条第1項（2026-05-21時点）"},
+  {"f":"適性:著作権","q":"著作権法に関する次のア〜エの記述のうち、正しいものの個数はどれか。<br>ア　著作物とは、思想又は感情を創作的に表現したものであって、文芸、学術、美術又は音楽の範囲に属するものをいう。<br>イ　事実の伝達にすぎない雑報及び時事の報道は、言語の著作物に該当しない。<br>ウ　プログラムの著作物に対する保護は、そのプログラムを作成するために用いる解法にも及ぶ。<br>エ　国の機関が発する通達は、著作権の目的となる。","h":"第10条第2項・第3項、第13条を確認。","c":["2個","0個","1個","3個","4個"],"a":0,"v":"primary","n":"<b>正解：2個（ア・イ）</b><br>・ア：第2条第1項第1号。<br>・イ：第10条第2項。事実の伝達にすぎない雑報及び時事の報道は言語の著作物に当たらない。<br>・ウ：第10条第3項。プログラムの著作物の保護は、プログラム言語、規約及び解法には及ばない。アルゴリズム（解法）そのものは対象外。<br>・エ：第13条第2号。国や地方公共団体の機関等が発する告示、訓令、通達などは、著作権の目的となることができない。<br><br>【出典】著作権法 第2条第1項第1号、第10条第2項・第3項、第13条第2号（2026-06-24時点）"},
+  {"f":"適性:著作権","q":"A社の従業員Bは、A社の発意に基づき、業務として社内向けの業務システムのプログラムを作成した。A社は当該プログラムを自己の名義で公表しておらず、契約や勤務規則に別段の定めもない。著作権法上、このプログラムの著作物の著作者として、最も適切なものはどれか。","h":"第15条第2項にはプログラムだけの規定がある。","c":["A社が著作者となる。","Bが著作者となり、A社は利用の許諾を得る。","A社が名義を付して公表するまではBが著作者となる。","A社とBが共同して著作者となる。"],"a":0,"v":"primary","n":"<b>正解：A社（法人等）が著作者となる。</b>（第15条第2項）<br>・法人等の発意に基づき、業務に従事する者が職務上作成するプログラムの著作物は、作成の時における契約、勤務規則その他に別段の定めがない限り、法人等が著作者となる。<br>・通常の著作物は「法人等が自己の著作の名義の下に公表するもの」であることが要件（第15条第1項）だが、プログラムの著作物にはこの名義の要件がない（同条第2項）。したがって公表の有無は結論を左右しない。<br>・共同著作者とする定めもない。<br><br>【出典】著作権法 第15条第1項・第2項（2026-06-24時点）"},
+  {"f":"適性:著作権","q":"外部の事業者にシステム開発を委託し、成果物のプログラムの著作権の譲渡を受ける契約に関する著作権法上の記述として、最も適切なものはどれか。","h":"第61条第2項と第59条。","c":["第27条・第28条の権利は、譲渡の目的として特掲されていなければ、譲渡した者に留保されたものと推定される。","著作権の全部を譲渡する旨を定めれば、第27条や第28条に規定する権利も、特掲がなくても譲受人に移転する。","著作者人格権についても、著作権と併せて譲渡する旨を契約で定めれば、その全部が譲受人に移転する。","著作権は、その一部を譲渡することができず、譲渡できるのは全部を一括して譲渡する場合に限られる。"],"a":0,"v":"primary","n":"<b>正解：第27条・第28条の権利は、特掲がなければ譲渡した者に留保されたものと推定される。</b>（第61条第2項）<br>・単に「著作権を全部譲渡する」と書いただけでは、翻案（改変・派生開発）の権利は受託側に残ると推定される。譲り受ける側は、第27条・第28条の権利を明記する必要がある。<br>・著作者人格権は著作者の一身に専属し、譲渡できない（第59条）。<br>・著作権は、全部又は一部を譲渡できる（第61条第1項）。<br><br>【出典】著作権法 第59条、第61条（2026-06-24時点）"},
+  {"f":"適性:著作権","q":"私的使用のための複製（著作権法第30条第1項）に関する記述として、最も適切なものはどれか。","h":"除外される場合が各号に列挙されている。","c":["技術的保護手段の回避により可能となった複製を、その事実を知りながら行う場合は、私的使用が目的でも許されない。","個人的に使用する目的であれば、公衆の使用に供することを目的として設置された自動複製機器を用いた複製も許される。","私的使用を目的とする複製は、著作権者の許諾を得た場合に限り、使用する者が行うことができる。","私的使用を目的とする複製は、使用する者に限らず、その者から依頼を受けた業者が代わりに行うこともできる。"],"a":0,"v":"primary","n":"<b>正解：技術的保護手段の回避により可能となった複製を、その事実を知りながら行う場合は許されない。</b>（第30条第1項第2号）<br>・公衆の使用に供する自動複製機器（コピー機など）を用いる複製は除外される（同項第1号）。<br>・私的使用の複製は、著作権者の許諾がなくても、その使用する者が複製できるのが原則。<br>・条文上、複製の主体は「その使用する者」とされている。業者が複製の主体となる場合まで当然に含まれるとする定めはない。<br>私的使用は「個人的に又は家庭内その他これに準ずる限られた範囲内において使用する」ことが前提である。<br><br>【出典】著作権法 第30条第1項（2026-06-24時点）"},
+  {"f":"適性:著作権","q":"技術報告書の中で他人の著作物を引用する場合の著作権法第32条第1項に関する記述として、最も適切なものはどれか。","h":"引用の3つの条件を確認する。","c":["引用する著作物が公表されたものであり、引用が公正な慣行に合致し、かつ引用の目的上正当な範囲内で行われることが必要である。","引用する著作物が公表されたものであれば、引用の範囲や分量にかかわらず、報道や研究の目的で自由に利用できる。","引用する著作物が未公表のものであっても、著作者の氏名を表示すれば、公正な慣行に合致する限り引用できる。","引用が認められるのは報道、批評又は研究の目的に限られ、それ以外の目的では公正な慣行に合致しても引用できない。"],"a":0,"v":"primary","n":"<b>正解：公表された著作物で、公正な慣行に合致し、目的上正当な範囲内で行うこと</b>（第32条第1項）<br>・「範囲や分量にかかわらず」は、「引用の目的上正当な範囲内」という要件に反する。<br>・引用できるのは公表された著作物であり、未公表の著作物は対象外。<br>・目的は「報道、批評、研究その他の引用の目的」と例示であり、この3つに限られない。<br><br>【出典】著作権法 第32条第1項（2026-06-24時点）"},
+  {"f":"適性:公益通報","q":"技術者Aは、以前勤務していた会社（すでに退職済み）での通報対象事実について通報しようとしている。公益通報者保護法（2026年7月17日時点の現行法。試験日時点で施行済み）の定義に照らし、Aが公益通報の主体となり得る場合として最も適切なものはどれか。","h":"第2条第1項第1号：「労働者であった者」と「通報の日前一年以内」","c":["退職から通報の日までが一年以内であれば、元の勤務先を役務提供先とする公益通報の主体となり得る。","退職により労働者でなくなるため、在職中に行った通報でなければ公益通報の主体とはならない。","退職後の経過期間の長短にかかわらず、元の勤務先への通報であれば公益通報の主体となり得る。","退職者が公益通報の主体となるのは、派遣労働者であった者が元の派遣先へ通報する場合に限られ、労働者であった者は含まれない。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第2条第1項第1号は、労働者又は労働者であった者について、これを自ら使用し、又は当該通報の日前一年以内に自ら使用していた事業者を役務提供先と定めています。退職者も、通報の日前一年以内に使用していた事業者に対する通報であれば主体になり得ます。<br>・在職中に限るとする記述は、「労働者であった者」を含める規定に反します。<br>・期間を問わないとする記述は、「通報の日前一年以内」の限定を落としています。<br>・派遣労働者であった者に限るとする記述は、第1号（労働者であった者）と第2号（派遣労働者であった者）を別々に定めている構造に反します。<br><br>【出典】公益通報者保護法 第2条第1項第1号（2026年7月17日時点）"},
+  {"f":"適性:公益通報","q":"公益通報者保護法（2026年7月17日時点の現行法）における「通報対象事実」に関する記述として、最も適切なものはどれか。","h":"第2条第3項：罪の犯罪行為の事実と過料の理由とされている事実","c":["この法律及び別表に掲げる法律に規定する罪の犯罪行為の事実のほか、その過料の理由とされている事実も含まれる。","この法律及び別表に掲げる法律に規定する罪の犯罪行為の事実に限られ、過料の理由とされている事実は通報対象事実に含まれない。","事業者の社内規程に違反する事実であれば、法令違反を伴わないものであっても通報対象事実に含まれる。","法令に違反する事実であれば、別表に掲げる法律以外の法律に基づくものであってもすべて含まれる。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第2条第3項第1号は、この法律及び別表に掲げる法律に規定する罪の犯罪行為の事実と、これらの法律に規定する過料の理由とされている事実を通報対象事実としています（第2号は、別表に掲げる法律の規定に基づく処分に違反することが第1号の事実となる場合の、処分の理由とされている事実）。<br>・過料の理由とされている事実を除く記述は、第1号後段に反します。<br>・社内規程違反を含めるとする記述は、法律に規定する罪・過料という枠を外しています。<br>・別表以外の法律まで広げる記述は、「別表に掲げる法律」という限定に反します。<br><br>【出典】公益通報者保護法 第2条第3項（2026年7月17日時点）"},
+  {"f":"適性:公益通報","q":"労働者が事業者内部・行政機関・その他の外部へ公益通報をする場合の保護要件について、公益通報者保護法（2026年7月17日時点の現行法）第3条に照らしたア〜ウの正誤の組合せとして、最も適切なものはどれか。<br>ア　役務提供先等への通報は、通報対象事実が生じ又はまさに生じようとしていると思料する場合であれば足りる。<br>イ　行政機関等への通報は、通報対象事実が生じ又はまさに生じようとしていると信ずるに足りる相当の理由がある場合のほか、思料し、かつ所定事項を記載した書面を提出する場合でも保護される。<br>ウ　その他の外部への通報は、事業者内部への通報と同じく、思料する場合であれば足りる。","h":"第3条第1〜3号：通報先が外に向かうほど要件が重くなる","c":["ア○　イ○　ウ×","ア○　イ×　ウ○","ア×　イ○　ウ○","ア×　イ×　ウ○"],"a":0,"v":"primary","n":"<b>正解の要点</b>：アは第3条第1号（思料する場合の役務提供先等への通報）、イは同条第2号（信ずるに足りる相当の理由がある場合、又は思料し、かつ氏名・通報対象事実の内容・思料する理由・措置がとられるべきと思料する理由を記載した書面を提出する場合の行政機関等への通報）のとおりで、いずれも正しい記述です。ウは、同条第3号が「信ずるに足りる相当の理由があり、かつ」所定のイ〜ヘのいずれかに該当することを要求しており、思料するだけでは足りないため誤りです。<br><br>【出典】公益通報者保護法 第3条第1号〜第3号（2026年7月17日時点）"},
+  {"f":"適性:公益通報","q":"労働者が事業者の外部（報道機関や被害拡大の防止に必要と認められる者など）へ通報する場合について、公益通報者保護法（2026年7月17日時点の現行法）第3条第3号に照らし、保護要件を満たし得る事情として正しい記述の個数はどれか。<br>ア　事業者内部や行政機関へ通報すれば解雇その他不利益な取扱いを受けると信ずるに足りる相当の理由がある。<br>イ　書面で事業者内部へ通報した日から二十日を経過しても、調査を行う旨の通知がない。<br>ウ　個人の生命又は身体に対する危害が発生する急迫した危険があると信ずるに足りる相当の理由がある。<br>エ　事業者の競争上の地位その他正当な利益を害するおそれがある者であっても、被害拡大の防止に必要と認められる者であれば通報先に含まれる。","h":"第2条第1項の通報先の定義と第3条第3号イ〜ヘ","c":["3個","1個","2個","4個","0個"],"a":0,"v":"primary","n":"<b>正解の要点</b>：ア（第3条第3号イ）、イ（同号ホ：書面により通報した日から二十日を経過しても調査を行う旨の通知がない場合）、ウ（同号ヘ）は、いずれも外部通報が保護され得る事情です。エは、第2条第1項が通報先から「当該役務提供先の競争上の地位その他正当な利益を害するおそれがある者」を除いているため誤りです。したがって正しいのはア・イ・ウの3個です。<br><br>【出典】公益通報者保護法 第2条第1項、第3条第3号イ・ホ・ヘ（2026年7月17日時点）"},
+  {"f":"適性:公益通報","q":"技術者Bは、要件を満たす内部通報をした。その後、Bの通報が発端となって取引先から契約を解除され、会社に損害が生じた。公益通報者保護法（2026年7月17日時点の現行法）に照らし、会社の対応として最も適切なものはどれか。","h":"第7条：損害賠償の制限","c":["会社は、当該通報によって損害を受けたことを理由として、Bに賠償を請求することができない。","会社は、通報によって実際に生じた損害の範囲に限り、Bに賠償を請求することができる。","会社は、Bが通報した先が行政機関である場合に限り、Bへの賠償請求をすることができない。","会社は、Bの解雇が無効となる場合であっても、通報によって生じた損害の賠償はBに請求することができる。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第7条は、第2条第1項各号に定める事業者は、第3条各号及び第6条各号に定める公益通報によって損害を受けたことを理由として、当該公益通報者に賠償を請求することができないと定めています。<br>・損害の範囲で請求できるとする記述は、賠償請求そのものを禁じる第7条に反します。<br>・行政機関への通報に限る記述は、要件を満たす公益通報全般を対象とする第7条に反します。<br>・解雇の無効（第3条）と賠償請求の制限（第7条）は別に規定されているため、賠償請求ができるとする記述は誤りです。<br><br>【出典】公益通報者保護法 第7条（2026年7月17日時点）"},
+  {"f":"適性:公益通報","q":"公益通報者保護法（2026年7月17日時点の現行法）第11条に基づく、事業者の内部体制の整備に関する記述として最も適切なものはどれか。","h":"第11条第1項〜第3項：従事者の指定と体制整備、三百人以下の読替え","c":["常時使用する労働者の数が三百人以下の事業者では、従事者を定めることも体制整備その他の措置も、努力義務となる。","常時使用する労働者の数が三百人以下の事業者には、従事者を定める規定も体制整備その他の措置の規定も適用されない。","従事者を定める義務は三百人を超える事業者に限られ、体制整備その他の措置は規模を問わず義務となる。","常時使用する労働者の数が三百人以下の事業者では、従事者を定める義務は残り、体制整備のみが努力義務となる。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第11条第1項は、事業者に公益通報対応業務従事者を定める義務を、同条第2項は、適切に対応するために必要な体制の整備その他の必要な措置をとる義務を課しています。同条第3項により、常時使用する労働者の数が三百人以下の事業者については、両者とも「定めるように努めなければ」「とるように努めなければ」と読み替えられ、努力義務となります。<br>・適用されないとする記述は、読替えによる努力義務の規定に反します。<br>・従事者を定める義務を三百人を超える事業者に限る記述や、従事者を定める義務のみ残るとする記述は、第1項も読替えの対象である点に反します。<br><br>【出典】公益通報者保護法 第11条第1項〜第3項（2026年7月17日時点）"},
+  {"f":"適性:公益通報","q":"公益通報対応業務従事者の守秘義務とその違反に対する罰則について、公益通報者保護法（2026年7月17日時点の現行法）に照らして最も適切なものはどれか。","h":"第12条と第21条：従事者であった者も対象","c":["従事者であった者も、正当な理由なく通報者を特定させる事項を漏らしてはならず、違反者は三十万円以下の罰金に処される。","現に従事している者に限り、正当な理由なく通報者を特定させる事項を漏らしてはならず、違反者は三十万円以下の罰金に処される。","従事者であった者も、正当な理由なく通報者を特定させる事項を漏らしてはならないが、違反しても罰則は定められていない。","従事者であった者も、正当な理由なく通報者を特定させる事項を漏らしてはならず、違反者は二十万円以下の過料に処される。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第12条は、公益通報対応業務従事者又は従事者であった者が、正当な理由がなく、公益通報対応業務に関して知り得た事項であって公益通報者を特定させるものを漏らしてはならないと定め、第21条は、これに違反して漏らした者を三十万円以下の罰金に処すると定めます。<br>・現に従事している者に限る記述は、「従事者であった者」を含める点に反します。<br>・罰則なしとする記述は、第21条に反します。<br>・二十万円以下の過料は、第15条による報告をせず又は虚偽の報告をした場合（第22条）の制裁で、守秘義務違反のものではありません。<br><br>【出典】公益通報者保護法 第12条、第21条、第22条（2026年7月17日時点）"},
+  {"f":"適性:公益通報","q":"令和7年改正後の公益通報者保護法（2026年12月1日施行）は、試験日である2026年11月22日の時点では未施行であり、現行法が適用される。次のうち、改正後の規定に新たに置かれる内容（試験日時点では未施行）として最も適切なものはどれか。","h":"改正後の第11条の2と第11条の3：通報の妨害と通報者の探索","c":["事業者は、正当な理由なく公益通報をしない旨の合意を求めるなどして公益通報を妨げてはならず、これに反する合意は無効とされる。","公益通報対応業務従事者又は従事者であった者は、正当な理由なく、業務に関して知り得た公益通報者を特定させる事項を漏らしてはならない。","事業者は、要件を満たす公益通報によって損害を受けたことを理由に、当該公益通報者へ賠償を請求することができない。","常時使用する労働者の数が三百人以下の事業者については、従事者を定める義務は、努力義務として扱われる。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：2026年12月1日施行の改正後の条文には、通報妨害の禁止（第11条の2：正当な理由なく公益通報をしない旨の合意を求めること等による妨害の禁止、これに反する合意等は無効）と、通報者探索の禁止（第11条の3）が置かれています。現行法（2026年7月17日時点）の第3章には第11条〜第14条しかなく、これらの規定はありません。<br>・従事者の守秘義務は現行法の第12条にすでにあります。<br>・損害賠償の制限は現行法の第7条にすでにあります。<br>・三百人以下の事業者の努力義務は現行法の第11条第3項にすでにあります。<br>試験日時点で施行済みなのは現行法の内容です。<br><br>【出典】公益通報者保護法 改正後 第11条の2・第11条の3（2026年12月1日施行）、現行 第7条・第11条・第12条（2026年7月17日時点）"},
+  {"f":"適性:公益通報","q":"令和7年改正後の公益通報者保護法（2026年12月1日施行）は、試験日（2026年11月22日）の時点では未施行である。改正後の同法で、公益通報をしたことを理由に「解雇等特定不利益取扱い」をした者に対して定められている刑事罰として、最も適切なものはどれか。","h":"改正後の第21条第1項：拘禁刑と罰金","c":["六月以下の拘禁刑又は三十万円以下の罰金に処される。","三十万円以下の罰金に処されるにとどまり、拘禁刑は科されない。","二十万円以下の過料に処されるにとどまり、拘禁刑は科されない。","三千万円以下の罰金に処され、行為者本人には刑が科されない。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：改正後の第21条第1項は、第3条第1項の規定に違反して解雇等特定不利益取扱いをしたときは、当該違反行為をした者は六月以下の拘禁刑又は三十万円以下の罰金に処すると定めています。なお、同法第23条は、法人の代表者や従業者が業務に関して違反行為をした場合に、行為者を罰するほか、法人に三千万円以下の罰金刑を科すと定めています（行為者が罰されなくなるわけではありません）。二十万円以下の過料は、第16条第2項の報告をしない等の場合（第24条）の制裁です。現行法（2026年7月17日時点）の罰則は、第12条違反（第21条）と報告義務違反（第22条）にとどまります。<br><br>【出典】公益通報者保護法 改正後 第21条第1項・第23条・第24条（2026年12月1日施行）、現行 第21条・第22条（2026年7月17日時点）"},
+  {"f":"適性:ハラスメント・下請","q":"技術者の職場で、上司の言動が問題となっている。労働施策総合推進法（2026年10月1日施行版）第31条第1項が、事業主に雇用管理上の措置を求める対象として定める言動の要件として、最も適切なものはどれか。","h":"第31条第1項：優越的な関係・業務上必要かつ相当な範囲・就業環境","c":["職場において行われる優越的な関係を背景とした言動で、業務上必要かつ相当な範囲を超え、労働者の就業環境が害されるもの","職場において行われる上司から部下への言動で、業務上必要かつ相当な範囲を超え、労働者の就業環境が害されるもの","職場において行われる優越的な関係を背景とした言動で、業務上必要かつ相当な範囲を超え、労働者が疾病を発症したもの","職場において行われる優越的な関係を背景とした言動で、業務上必要かつ相当な範囲を超え、事業主の指導後も改善しなかったもの"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第31条第1項の対象は、(1)職場において行われる優越的な関係を背景とした言動であって、(2)業務上必要かつ相当な範囲を超えたものにより、(3)その雇用する労働者の就業環境が害されること、という3つの要素で構成されます。<br>・「上司から部下への言動」に限る記述は、条文が「優越的な関係を背景とした」と定めており上司部下に限定していない点に反します。<br>・疾病の発症を要件とする記述は、「就業環境が害される」ことで足りる点に反します。<br>・改善しなかったことを要件とする記述は、条文にない要件を加えています。<br><br>【出典】労働施策総合推進法 第31条第1項（2026年10月1日施行版）"},
+  {"f":"適性:ハラスメント・下請","q":"労働施策総合推進法（2026年10月1日施行版）第31条の第1項・第2項に関する次の記述のうち、正しいものの個数はどれか。<br>ア　事業主は、相談に応じ適切に対応するために必要な体制の整備その他の雇用管理上必要な措置を講じなければならない。<br>イ　事業主は、労働者が相談を行ったことを理由として、当該労働者に解雇その他不利益な取扱いをしてはならない。<br>ウ　第1項の雇用管理上の措置は、努力義務にとどまる。<br>エ　不利益な取扱いの禁止は、相談を行った労働者に限られ、事業主による相談への対応に協力して事実を述べた労働者は対象外である。","h":"第31条第1項の措置義務と第2項の不利益取扱いの禁止","c":["2個","1個","3個","4個","0個"],"a":0,"v":"primary","n":"<b>正解の要点</b>：アは第1項のとおり（「講じなければならない」＝義務）、イは第2項のとおりで、正しい記述です。ウは、第1項が「講じなければならない」と義務を定めているため誤りです。エは、第2項が、相談を行ったこと又は事業主による相談への対応に協力した際に事実を述べたことを理由とする不利益な取扱いを禁じているため誤りです。正しいのはア・イの2個です。<br><br>【出典】労働施策総合推進法 第31条第1項・第2項（2026年10月1日施行版）"},
+  {"f":"適性:ハラスメント・下請","q":"労働施策総合推進法（2026年10月1日施行版）第32条が定める、優越的言動問題に対する事業主・労働者の責務として、最も適切なものはどれか。","h":"第32条：事業主（法人ならその役員）・労働者の努力規定","c":["事業主は、法人ならその役員も含め、自らも優越的言動問題への関心と理解を深め、労働者への言動に必要な注意を払うよう努めなければならない。","事業主は自らの言動についての責務を負わず、雇用する労働者に対する研修の実施のみが、法律上の事業主の責務とされており、役員の責務も定められていない。","優越的言動問題への関心と理解を深める責務は事業主にのみ課され、労働者は事業主の講ずる措置に協力するよう求められていない。","事業主のうち法人の役員は、労働者への言動に必要な注意を払う責務の対象から除かれ、従業員だけがその対象とされている。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第32条第3項は、事業主（その者が法人である場合にあっては、その役員）は、自らも優越的言動問題に対する関心と理解を深め、労働者に対する言動に必要な注意を払うように努めなければならないと定めています。同条第4項は、労働者にも関心と理解を深め、他の労働者への言動に必要な注意を払い、事業主の措置に協力するよう努めることを求めています。<br>・事業主自身の責務がないとする記述は、第3項に反します。<br>・労働者に責務がないとする記述は、第4項に反します。<br>・役員を除外する記述は、第3項の括弧書に反します。<br><br>【出典】労働施策総合推進法 第32条第3項・第4項（2026年10月1日施行版）"},
+  {"f":"適性:ハラスメント・下請","q":"職場のハラスメントについて、労働者と事業主の間に紛争が生じた場合の援助について、労働施策総合推進法（2026年10月1日施行版）第36条に照らし、最も適切なものはどれか。","h":"第35条・第36条：都道府県労働局長による援助","c":["都道府県労働局長は、当事者の双方又は一方から解決の援助を求められた場合、必要な助言、指導又は勧告をすることができる。","都道府県労働局長は、当事者の双方が共に援助を求めた場合に限り、当該紛争に関し必要な助言、指導又は勧告をすることができる。","厚生労働大臣は、当事者の一方から求められた場合、事業主に対し紛争の解決を命ずる決定をすることができる。","都道府県労働局長は、労働者から求められた場合に限り援助でき、事業主から求められた場合には援助できない。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第36条第1項は、第35条に規定する紛争に関し、当事者の双方又は一方からその解決につき援助を求められた場合に、都道府県労働局長が、当事者に対し必要な助言、指導又は勧告をすることができると定めています。<br>・双方の求めに限る記述は「双方又は一方」に反します。<br>・厚生労働大臣が命ずる決定をするとする記述は、条文にない権限です。<br>・労働者の求めに限る記述は、「当事者の双方又は一方」に反します。<br><br>【出典】労働施策総合推進法 第35条・第36条第1項（2026年10月1日施行版）"},
+  {"f":"適性:ハラスメント・下請","q":"労働施策総合推進法（2026年10月1日施行版）の第35条〜第37条に関する次の記述のうち、正しいものの個数はどれか。<br>ア　労働者が都道府県労働局長に紛争解決の援助を求めたことを理由とする解雇その他不利益な取扱いは、禁止される。<br>イ　労働者が調停を申請したことを理由とする解雇その他不利益な取扱いは、禁止される。<br>ウ　都道府県労働局長は、調停の申請があり、解決のために必要があると認めるときは、紛争調整委員会に調停を行わせるものとされている。<br>エ　第31条第1項・第2項に定める事項の紛争には、個別労働関係紛争の解決の促進に関する法律の規定がそのまま適用され、第36条以下は適用されない。","h":"第35条の特例と第36条・第37条","c":["3個","2個","1個","4個","0個"],"a":0,"v":"primary","n":"<b>正解の要点</b>：アは第36条第2項、イは第37条第2項のとおりです。ウは第37条第1項のとおりです。エは、第35条が、この紛争について個別労働関係紛争の解決の促進に関する法律の第4条・第5条・第12条〜第19条を適用せず、次条から第39条までによると定めているため誤りです。正しいのはア・イ・ウの3個です。<br><br>【出典】労働施策総合推進法 第35条、第36条第2項、第37条（2026年10月1日施行版）"},
+  {"f":"適性:ハラスメント・下請","q":"顧客等の言動に起因する問題について、労働施策総合推進法（2026年10月1日施行版）第33条第1項に照らし、事業主が講じなければならない措置として、最も適切なものはどれか。","h":"第33条第1項：顧客等言動への相談体制の整備と抑止のための措置","c":["労働者からの相談に応じ適切に対応するために必要な体制の整備、就業環境を害する顧客等言動への対応の実効性を確保するために必要なその抑止のための措置その他の雇用管理上必要な措置","労働者に対する顧客等言動を行った顧客等に対し、取引の停止その他の制裁を科すことを内容とする措置を、事業主は自らの判断で講じなければならないものとされている","顧客等言動により就業環境が害された労働者から相談があった場合に限り、事業主はその都度、事案に応じて必要な対応を講じるように努めるものとされている","雇用管理上必要な措置の対象となる言動は事業主と直接の契約関係にある顧客の言動に限られ、施設の利用者その他の関係者の言動は対象に含まれない"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第33条第1項は、顧客、取引の相手方、施設の利用者その他の事業に関係を有する者（顧客等）の言動であって、業務の性質その他の事情に照らして社会通念上許容される範囲を超えたもの（顧客等言動）により労働者の就業環境が害されないよう、相談に応じ適切に対応するために必要な体制の整備、対応の実効性を確保するために必要なその抑止のための措置その他の雇用管理上必要な措置を講じなければならないと定めています。<br>・取引停止などの制裁を内容とする措置を求める記述は、条文にない内容です。<br>・相談があった場合の努力にとどまるとする記述は、「講じなければならない」という義務、および体制整備・抑止措置を含む点に反します。<br>・直接の契約関係にある顧客に限る記述は、施設の利用者その他の関係者も含む点に反します。<br><br>【出典】労働施策総合推進法 第33条第1項（2026年10月1日施行版。試験日時点で施行済み）"},
+  {"f":"適性:ハラスメント・下請","q":"労働施策総合推進法（2026年10月1日施行版）の第33条・第34条に関する次の記述のうち、正しいものの個数はどれか。<br>ア　事業主は、労働者が顧客等言動に関する相談を行ったことを理由として、当該労働者に対して解雇その他不利益な取扱いをしてはならない。<br>イ　事業主は、他の事業主から、その講ずる第33条第1項の措置の実施に関し必要な協力を求められた場合には、これに応ずるように努めなければならない。<br>ウ　顧客等は、顧客等言動問題に対する関心と理解を深めるとともに、労働者に対する言動が就業環境を害することのないよう、必要な注意を払うように努めなければならない。<br>エ　第33条第1項の措置は、事業主の努力義務として定められている。","h":"第33条第2項・第3項と第34条第5項","c":["3個","2個","4個","1個","0個"],"a":0,"v":"primary","n":"<b>正解の要点</b>：アは第33条第2項のとおりです。イは第33条第3項のとおり（「応ずるように努めなければならない」）です。ウは第34条第5項のとおりで、顧客等にも努力義務が課されています。エは、第33条第1項が「講じなければならない」と義務を定めているため誤りです。正しいのはア・イ・ウの3個です。<br><br>【出典】労働施策総合推進法 第33条第1項〜第3項、第34条第5項（2026年10月1日施行版。試験日時点で施行済み）"},
+  {"f":"適性:ハラスメント・下請","q":"労働施策総合推進法（2026年10月1日施行版）第42条第2項の公表に関する記述として、最も適切なものはどれか。","h":"第42条第2項：勧告に従わない場合の公表（第31条・第33条の措置義務違反）","c":["厚生労働大臣は、第31条第1項・第2項や第33条第1項・第2項の規定に違反する事業主が勧告に従わなかったときは、その旨を公表できる。","厚生労働大臣は、第31条第1項の規定に違反している事業主については、勧告を経ることなく、その事実を直ちに公表することができるものとされている。","厚生労働大臣は、第33条第1項の規定に違反している事業主に限り公表でき、第31条第1項の違反については公表の対象とはされていない。","厚生労働大臣は、勧告に従わなかった事業主について、事業所の閉鎖を命ずることができるものとされており、公表はできない。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第42条第2項は、第31条第1項及び第2項、第33条第1項及び第2項、第36条第2項並びに第37条第2項の規定に違反している事業主に対し、同条第1項の規定による勧告をした場合において、勧告を受けた者がこれに従わなかったときは、その旨を公表することができると定めています。<br>・勧告を経ずに直ちに公表できるとする記述は、勧告に従わなかったときという要件に反します。<br>・第33条第1項の違反に限るとする記述は、第31条第1項も対象に含まれる点に反します。<br>・事業所の閉鎖命令は、条文にない措置です。<br><br>【出典】労働施策総合推進法 第42条第1項・第2項（2026年10月1日施行版。試験日時点で施行済み）"},
+  {"f":"適性:ハラスメント・下請","q":"製造委託等に係る中小受託事業者に対する代金の支払の遅延等の防止に関する法律（取適法・2026年1月1日施行）第2条第8項・第9項に照らし、次の製造委託の取引のうち、発注側が「委託事業者」に当たるものの個数はどれか（いずれも常時使用する従業員は百人以下とし、従業員数の基準は考えない）。<br>ア　資本金4億円の法人が、資本金2億円の法人に製造委託をする。<br>イ　資本金2億円の法人が、資本金800万円の法人に製造委託をする。<br>ウ　資本金2億円の法人が、資本金2000万円の法人に製造委託をする。<br>エ　資本金800万円の法人が、個人事業者に製造委託をする。","h":"第2条第8項第1号・第2号：三億円・千万円の資本金基準","c":["2個","1個","3個","4個","0個"],"a":0,"v":"primary","n":"<b>正解の要点</b>：アは第2条第8項第1号（資本金三億円超の法人が、個人又は三億円以下の法人に製造委託等をする）に当たります。イは同項第2号（資本金千万円超三億円以下の法人が、個人又は資本金千万円以下の法人に製造委託等をする）に当たります。ウは、受託側の資本金が千万円を超えるため第2号に当たらず、発注側も三億円以下で第1号にも当たりません。エは、発注側の資本金が千万円以下で、第1号・第2号のいずれにも当たりません。したがって当たるのはア・イの2個です。<br><br>【出典】取適法（製造委託等に係る中小受託事業者に対する代金の支払の遅延等の防止に関する法律）第2条第8項第1号・第2号、第9項（2026年1月1日施行）"},
+  {"f":"適性:ハラスメント・下請","q":"取適法（2026年1月1日施行）第2条が定める製造委託等の類型に関する次のア〜エのうち、その類型に当たる（同条の定義に含まれる）ものの個数はどれか。<br>ア　事業者が業として請け負う物品の修理の行為の一部を、他の事業者に委託すること。<br>イ　事業者が業として請け負う情報成果物（プログラム等）の作成の行為の一部を、他の事業者に委託すること。<br>ウ　事業者が業として行う販売の目的物である物品の、取引の相手方への運送の行為を、他の事業者に委託すること。<br>エ　建設業を営む者が業として請け負う建設工事の一部を、他の建設業を営む者に請け負わせること。","h":"第2条第2項〜第6項：修理委託・情報成果物作成委託・役務提供委託・特定運送委託","c":["3個","2個","1個","4個","0個"],"a":0,"v":"primary","n":"<b>正解の要点</b>：アは修理委託（第2条第2項）、イは情報成果物作成委託（同条第3項）、ウは特定運送委託（同条第5項）に当たります。エは、同条第4項の役務提供委託の定義が、建設業を営む者が請け負う建設工事の全部又は一部を他の建設業を営む者に請け負わせることを括弧書で除いているため、当たりません。第6項は、製造委託等を製造委託、修理委託、情報成果物作成委託、役務提供委託及び特定運送委託と定めます。したがって当たるのはア・イ・ウの3個です。<br><br>【出典】取適法 第2条第2項〜第6項（2026年1月1日施行）"},
+  {"f":"適性:ハラスメント・下請","q":"技術者が所属する会社が、中小受託事業者に製造委託等をした。取適法（2026年1月1日施行）第3条に基づく製造委託等代金の支払期日の定め方として、最も適切なものはどれか。","h":"第3条：起算点は受領日・検査の有無を問わない","c":["給付を受領した日から起算して六十日の期間内で、かつ、できる限り短い期間内に定めなければならず、検査の有無は問われない。","給付の内容の検査を完了した日から起算して六十日の期間内で、かつ、できる限り短い期間内に定めなければならず、受領日は問われない。","給付を受領した日から起算して六十日の期間内であれば足り、できる限り短い期間内に定める必要まではない。","支払期日が定められなかったときは、委託事業者が代金を実際に支払った日が支払期日と定められたものとみなされる。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第3条第1項は、支払期日を、検査をするかどうかを問わず、給付を受領した日（役務提供委託・特定運送委託では役務の提供を受けた日）から起算して六十日の期間内で、かつ、できる限り短い期間内に定めなければならないと定めています。<br>・検査完了日を起算点とする記述は、「検査をするかどうかを問わず」受領日を起算点とする点に反します。<br>・「できる限り短い期間内」を不要とする記述は、条文に反します。<br>・支払期日を定めなかったときは、同条第2項により給付を受領した日が支払期日とみなされます。<br><br>【出典】取適法 第3条第1項・第2項（2026年1月1日施行）"},
+  {"f":"適性:ハラスメント・下請","q":"取適法（2026年1月1日施行）第4条が定める、委託事業者の明示（書面又は電磁的方法）の義務に関する記述として、最も適切なものはどれか。","h":"第4条：直ちに明示・電磁的方法でも可・書面交付の求め","c":["製造委託等をしたら直ちに、給付の内容、代金の額、支払期日、支払方法などを、書面又は電磁的方法で明示しなければならない。","製造委託等をした場合の明示は、書面によらなければならず、電磁的方法により明示することは認められていないものとされている。","代金の額が定められないことに正当な理由がある場合は、後にその額が定まっても、その額を明示する必要はない。","電磁的方法で明示した場合、中小受託事業者から書面の交付を求められても、書面を交付する義務は生じない。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第4条第1項は、委託事業者が製造委託等をした場合は、直ちに、中小受託事業者の給付の内容、製造委託等代金の額、支払期日及び支払方法その他の事項を、書面又は電磁的方法により明示しなければならないと定めています。<br>・書面に限るとする記述は「書面又は電磁的方法」に反します。<br>・内容が定められない正当な理由がある事項は、その内容が定められた後直ちに明示しなければなりません（第1項ただし書）。<br>・電磁的方法で明示した場合に中小受託事業者から書面の交付を求められたときは、原則として遅滞なく交付しなければなりません（第2項。中小受託事業者の保護に支障を生じない場合として公正取引委員会規則で定める場合を除く）。<br><br>【出典】取適法 第4条第1項・第2項（2026年1月1日施行）"},
+  {"f":"適性:ハラスメント・下請","q":"取適法（2026年1月1日施行）第5条第1項が委託事業者に禁じる行為に関する次のア〜エのうち、同項の禁止行為に当たるものの個数はどれか。<br>ア　中小受託事業者の責めに帰すべき理由がないのに、製造委託等代金の額を減ずること。<br>イ　同種又は類似の給付に対し通常支払われる対価に比し著しく低い代金の額を、不当に定めること。<br>ウ　製造委託等代金を、支払期日の経過後なお支払わないこと。<br>エ　中小受託事業者の責めに帰すべき理由により納期に遅れた給付について、その分の代金を減ずること。","h":"第5条第1項第2号・第3号・第5号：支払遅延・減額・買いたたき","c":["3個","2個","1個","4個","0個"],"a":0,"v":"primary","n":"<b>正解の要点</b>：アは第5条第1項第3号（減額）、イは同項第5号（買いたたき）、ウは同項第2号（支払期日経過後の不払い）に当たります。エは、第3号が「中小受託事業者の責めに帰すべき理由がないのに」減額することを禁止するもので、責めに帰すべき理由がある場合の減額は、同号の禁止行為に当たりません。したがって当たるのはア・イ・ウの3個です。<br><br>【出典】取適法 第5条第1項第2号・第3号・第5号（2026年1月1日施行）"},
+  {"f":"適性:ハラスメント・下請","q":"中小受託事業者が、原材料費の高騰を理由に製造委託等代金の額に関する協議を求めたにもかかわらず、委託事業者が協議に応じず、一方的に代金の額を決定した。取適法（2026年1月1日施行）第5条第2項に照らし、最も適切なものはどれか。","h":"第5条第2項第4号：協議に応じない一方的な代金決定","c":["協議に応じず、又は必要な説明・情報の提供をせず、一方的に代金の額を決定することは、同項第4号により禁止される。","協議を求められても応じる義務はなく、一方的に代金の額を決定しても、同項の禁止行為には当たらない。","協議に応じた以上は、求められた事項について必要な説明や情報の提供をしなくても、同項第4号の禁止行為には当たらない。","同項第4号は製造委託にのみ適用され、役務提供委託や特定運送委託には適用されない。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第5条第2項第4号は、給付に関する費用の変動その他の事情が生じた場合に、中小受託事業者が代金の額に関する協議を求めたにもかかわらず、協議に応じず、又は協議において求めた事項について必要な説明若しくは情報の提供をせず、一方的に代金の額を決定することによって、中小受託事業者の利益を不当に害してはならないと定めています。<br>・協議に応じる義務がないとする記述は、同号に反します。<br>・協議に応じても必要な説明・情報提供をしなければ同号の対象となります。<br>・第2項の括弧書は、役務提供委託・特定運送委託の場合に第1号のみを除いており、第4号は役務提供委託・特定運送委託にも適用されます。<br><br>【出典】取適法 第5条第2項第4号（2026年1月1日施行）"},
+  {"f":"適性:個人情報","q":"技術者が、電子的に検索できるよう体系的に構成した顧客名簿（顧客の氏名・連絡先を含む）を業務で管理している。個人情報の保護に関する法律（2026年7月17日時点）第16条に照らし、「個人データ」「保有個人データ」の定義として最も適切なものはどれか。","h":"第16条第3項・第4項：個人データと保有個人データ","c":["個人データとは個人情報データベース等を構成する個人情報をいい、保有個人データとは、開示や訂正・利用停止等を行う権限を事業者が有する個人データ（政令で定めるものを除く）をいう。","個人データとは生存する個人に関する情報のうち、氏名等により特定の個人を識別できるものをいい、保有個人データとは、その個人データのうち電子的な形で保存されているものであって、事業者が取得したものをいう。","個人データとは個人情報データベース等を構成する個人情報をいい、保有個人データとは、個人データのうち要配慮個人情報を含むものをいう。","個人データとは個人情報データベース等を構成する個人情報をいい、保有個人データとは、事業者が取得した個人情報のすべてをいう。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第16条第3項は、個人データを個人情報データベース等を構成する個人情報と定め、同条第4項は、保有個人データを、個人情報取扱事業者が、開示、内容の訂正・追加・削除、利用の停止、消去及び第三者への提供の停止を行うことのできる権限を有する個人データ（その存否が明らかになることにより公益その他の利益が害されるものとして政令で定めるものを除く）と定めています。<br>・特定の個人を識別できる生存する個人の情報という記述は、第2条第1項の「個人情報」の定義です。<br>・保有個人データを要配慮個人情報を含むものとする記述や、取得した個人情報すべてとする記述は、第4項の「権限を有する」という要件に反します。<br><br>【出典】個人情報の保護に関する法律 第16条第3項・第4項（2026年7月17日時点）"},
+  {"f":"適性:個人情報","q":"顧客の病歴に関する情報を取得する場面について、個人情報の保護に関する法律（2026年7月17日時点）の要配慮個人情報に関する記述として、最も適切なものはどれか。","h":"第2条第3項と第20条第2項：要配慮個人情報の定義と取得","c":["本人の人種、信条、社会的身分、病歴、犯罪の経歴などが含まれる個人情報であり、法令に基づく場合などを除き、取得にはあらかじめ本人の同意が必要である。","本人の人種、信条、社会的身分、病歴、犯罪の経歴などが含まれる個人情報であり、取得後に速やかに利用目的を通知すれば、本人の同意なく取得できる。","本人の人種、信条、社会的身分、病歴、犯罪の経歴などが含まれる個人情報であり、本人が自ら公開している場合でも、本人の同意なくして取得できない。","法律に列挙された人種、信条、社会的身分、病歴、犯罪の経歴などに限られ、政令で追加して定める記述等は含まれない個人情報であり、取得には本人の同意を要する。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第2条第3項は、要配慮個人情報を、本人の人種、信条、社会的身分、病歴、犯罪の経歴、犯罪により害を被った事実その他不当な差別・偏見その他の不利益が生じないよう取扱いに特に配慮を要するものとして政令で定める記述等が含まれる個人情報と定めます。第20条第2項は、法令に基づく場合など各号に掲げる場合を除き、あらかじめ本人の同意を得ないで取得してはならないと定めます。<br>・取得後の通知で足りるとする記述は、「あらかじめ」同意を得る要件に反します。<br>・本人により公開されている場合は、第20条第2項第7号により、同意なく取得できる例外に当たります。<br>・政令で定める記述等を含まないとする記述は、第2条第3項に反します。<br><br>【出典】個人情報の保護に関する法律 第2条第3項、第20条第2項（2026年7月17日時点）"},
+  {"f":"適性:個人情報","q":"個人情報取扱事業者が個人情報を取り扱うに当たっての「利用目的」について、個人情報の保護に関する法律（2026年7月17日時点）第17条・第18条に照らし、最も適切なものはどれか。","h":"第17条：できる限り特定・変更は関連性の範囲内／第18条：目的外利用は同意","c":["利用目的を変更する場合は、変更前の利用目的と関連性を有すると合理的に認められる範囲を超えて行ってはならない。","利用目的を変更する場合は、変更後の利用目的を本人に通知すれば、変更前との関連性を問わず自由に変更することができる。","利用目的は、できる限り特定するよう努めればよく、特定することそのものは事業者の義務とはされていない。","特定した利用目的の達成に必要な範囲を超えて取り扱う場合でも、目的を公表していれば、本人の同意は要しない。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第17条第2項は、利用目的を変更する場合には、変更前の利用目的と関連性を有すると合理的に認められる範囲を超えて行ってはならないと定めています。<br>・関連性を問わず変更できるとする記述は、第17条第2項に反します（変更後の通知・公表は第21条第3項の別の義務です）。<br>・特定を努力義務とする記述は、第17条第1項が「できる限り特定しなければならない」と定める点に反します。<br>・利用目的の達成に必要な範囲を超える取扱いには、原則としてあらかじめ本人の同意が必要です（第18条第1項）。公表しているだけでは足りません。<br><br>【出典】個人情報の保護に関する法律 第17条、第18条第1項（2026年7月17日時点）"},
+  {"f":"適性:個人情報","q":"技術者が、顧客との契約締結に伴い、顧客が契約書に記載した氏名・連絡先を取得した。個人情報の保護に関する法律（2026年7月17日時点）第21条に照らし、個人情報取扱事業者の対応として最も適切なものはどれか（人の生命・身体・財産の保護のために緊急に必要がある場合は除く）。","h":"第21条第2項：書面で直接取得する場合は、あらかじめ利用目的を明示","c":["本人との契約に伴い契約書に記載された個人情報を取得する場合は、あらかじめ、本人に利用目的を明示しなければならない。","取得後速やかに、利用目的を本人に通知し、又は公表すれば足り、取得前に本人へ明示する必要はない。","利用目的をあらかじめ公表している場合は、契約書で直接取得するときも、本人への明示は不要である。","契約書で直接取得する場合は、取得の状況からみて利用目的が明らかであっても、事前に本人へ利用目的を明示しなければならない。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第21条第2項は、本人との間で契約を締結することに伴って契約書その他の書面に記載された当該本人の個人情報を取得する場合その他本人から直接書面に記載された個人情報を取得する場合は、あらかじめ、本人に対し利用目的を明示しなければならないと定めます（人の生命・身体・財産の保護のために緊急に必要がある場合を除く）。<br>・取得後の通知・公表で足りるとするのは、直接書面取得以外の場合の第1項の扱いです。<br>・あらかじめ公表していれば足りるという定めは第1項のもので、第2項の明示義務は別に課されます。<br>・第21条第4項第4号は、取得の状況からみて利用目的が明らかであると認められる場合に、前三項の規定を適用しないと定めています。<br><br>【出典】個人情報の保護に関する法律 第21条第1項・第2項・第4項第4号（2026年7月17日時点）"},
+  {"f":"適性:個人情報","q":"個人データの第三者提供について、個人情報の保護に関する法律（2026年7月17日時点）第27条に照らし、最も適切なものはどれか。","h":"第27条第1項・第2項・第5項：同意の原則とオプトアウトの限界","c":["提供される個人データが要配慮個人情報である場合は、本人の求めに応じて提供を停止する旨を届け出ても、オプトアウトによる提供はできない。","本人の求めに応じて提供を停止することとし、その旨を本人に通知又は容易に知り得る状態に置けば、個人情報保護委員会への届出は要しない。","個人データの取扱いの全部又は一部を委託することに伴って提供される場合も、その提供を受ける者は第三者に当たり、あらかじめ本人の同意が必要である。","法令に基づく場合であっても、あらかじめ本人の同意を得なければ、個人データを第三者に提供することはできない。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第27条第2項は、本人の求めに応じて第三者への提供を停止することとしている場合に、所定の事項を本人に通知し又は容易に知り得る状態に置くとともに、個人情報保護委員会に届け出ることで同意なく提供できるとしますが、ただし書で、第三者に提供される個人データが要配慮個人情報である場合などを除いています。<br>・個人情報保護委員会への届出を不要とする記述は、第2項本文に反します。<br>・委託に伴う提供の相手は、第5項第1号により第三者に該当しません。<br>・法令に基づく場合は、第1項第1号により、本人の同意なしに提供できる例外の一つです。<br><br>【出典】個人情報の保護に関する法律 第27条第1項・第2項・第5項（2026年7月17日時点）"},
+  {"f":"適性:個人情報","q":"個人データの漏えい等が生じた場合の報告等について、個人情報の保護に関する法律（2026年7月17日時点）第26条に照らし、個人情報取扱事業者の義務として最も適切なものはどれか。","h":"第26条第1項・第2項：委員会への報告と本人への通知","c":["権利利益を害するおそれが大きいものとして規則で定める事態が生じたときは、委員会への報告のほか、原則として本人への通知も要する。","漏えい等が生じたときは、その規模にかかわらず個人情報保護委員会へ報告しなければならないが、本人への通知は努力義務にとどまるとされる。","個人情報保護委員会への報告義務を負うのは、他の個人情報取扱事業者から個人データの取扱いの委託を受けた事業者に限られる。","本人への通知が困難な場合には、本人の権利利益を保護するための代替措置をとる必要もなくなり、通知の義務は免除される。"],"a":0,"v":"primary","n":"<b>正解の要点</b>：第26条第1項は、個人データの漏えい、滅失、毀損その他の安全の確保に係る事態であって個人の権利利益を害するおそれが大きいものとして個人情報保護委員会規則で定めるものが生じたときに、同委員会へ報告しなければならないと定め、同条第2項は、その場合に本人へも通知しなければならないと定めます（通知が困難な場合であって、本人の権利利益を保護するため必要なこれに代わるべき措置をとるときは、この限りでない）。<br>・すべての漏えい等を報告対象とする記述や、本人通知を努力義務とする記述は、条文に反します。<br>・報告義務を委託を受けた事業者に限る記述は反します（委託を受けた者が委託元に規則に従って通知したときは報告が不要となる、というただし書があるにとどまります）。<br>・通知が困難な場合は、通知に代わる措置をとることが必要です。<br>（注）報告の期限は、この本文には規則委任としか書かれていないため、問題にしていません。<br><br>【出典】個人情報の保護に関する法律 第26条第1項・第2項（2026年7月17日時点）"}
+];
+</script>
+<script>
+const SUBJECT = {"id":"tekisei","name":"適性科目","title":"技術士一次試験 適性科目クイズ","description":"技術士第一次試験・適性科目（技術者倫理）の学習ツール。","eyebrow":"技術士第一次試験｜適性科目","h1":"適性科目クイズ","intro":"適性科目の予想問題（技術士法第4章・技術士倫理綱領・製造物責任・知的財産・公益通報・ハラスメント・個人情報。すべて自作で、条文・原文に当たって作成）を4択と組合せ形式にしました。選ぶと即座に正誤と解説が出ます。キーボードの 1〜4 と Enter でも進められます。問題ごとに\u003cb>ブックマーク\u003c/b>と\u003cb>メモ\u003c/b>を残せます（この端末に保存）。","ver":"版 2026-09-29","storagePrefix":"tekisei_","sets":[{"key":"tekisei","label":"適性科目","data":"TEKISEI_DATA","default":true}],"allSetLabel":"まとめて","examDayDefault":"2026-11-22","emptyMessage":"適性科目の問題は準備中です。","topics":false};
+const SUBJECT_DATA = { TEKISEI_DATA: TEKISEI_DATA };
+</script>
+<script>
+/* SUBJECT（科目ごとの設定）と SUBJECT_DATA（問題データの束）は build.js が先に埋め込む */
+const SPFX = "gq_" + (SUBJECT.storagePrefix || "");   // localStorage キーの接頭辞
+const HAS_TOPICS = !!SUBJECT.topics;
+const FIELD_WEIGHTS = SUBJECT.fieldWeights || null;
+const DEFAULT_SET = (SUBJECT.sets.filter(function (d) { return d.default; })[0] || SUBJECT.sets[0]).key;
+const Q = [];
+
+const LETTERS = ["1","2","3","4","5"];
+/* 解説の根拠の質。誤った知識を覚えないよう、どこまで裏を取ったかを明示する */
+const VLABEL = {
+  primary:   "◎ 白書・法令・告示など一次資料で確認",
+  answer:    "○ 公開正答表との突合により確定",
+  knowledge: "△ 教科書的知識にもとづく記述（一次資料は未確認。テキストでの確認を推奨）"
+};
+let i = 0, correct = 0, answered = false;
+const log = [];
+const answers = [];
+
+const stage = document.getElementById("stage");
+const elField = document.getElementById("field");
+const elCount = document.getElementById("count");
+const elScore = document.getElementById("score");
+const elBar = document.getElementById("bar");
+
+function shuffle(n, seed) {
+  // 決定論的シャッフル（問題ごとに選択肢の並びを変える）
+  // 掛け算は Math.imul で32bitに収める。普通の * だと2^53を超えて下位ビットが消え、
+  // 4択の正答がすべて④に固定されていた（2026-09-25 修正）
+  const idx = [...Array(n).keys()];
+  for (let k = n - 1; k > 0; k--) {
+    seed = (Math.imul(seed, 1103515245) + 12345) >>> 0;
+    const j = Math.floor(seed / 4294967296 * (k + 1));
+    [idx[k], idx[j]] = [idx[j], idx[k]];
+  }
+  return idx;
+}
+
+function render() {
+  AT_HOME = false;
+  setQuizChrome(true);
+  document.body.classList.remove("home-mode");
+  const hb = document.getElementById("homeBottom");
+  if (hb) hb.innerHTML = "";
+  if (i >= Q.length) return renderResult();
+  const q = Q[i];
+  let seed = 0;
+  for (let k = 0; k < q.q.length; k++) seed = (seed * 31 + q.q.charCodeAt(k)) & 0x7fffffff;
+  const order = shuffle(q.c.length, seed);
+  const prev = answers[i];
+  answered = !!prev;
+
+  elField.textContent = q.f;
+  elCount.textContent = (i + 1) + " / " + Q.length;
+  elScore.innerHTML = "正解 <b>" + correct + "</b>";
+  elBar.style.width = (i / Q.length * 100) + "%";
+
+  const card = document.createElement("div");
+  card.className = "card";
+  const h = histOf(q);
+  let badge = '';
+  if (h) {
+    badge = '<span class="hist">これまで ' + h.n + '回中 ' + h.ok + '回正解</span>';
+    if (h.last === 0) badge += '<span class="flagmark">前回まちがえた</span>';
+    else badge += '<span class="mst m' + mastery(q) + '">' + MASTERY[mastery(q)] + '</span>';
+  }
+  const bm = isBookmarked(q);
+  card.innerHTML =
+    '<div class="qmeta"><span class="qn">Q' + (i + 1) + '</span>' + badge +
+      '<span class="qtools">' +
+        '<button type="button" class="qtool" id="bmTog" aria-pressed="' + bm + '">' + bmLabel(bm) + '</button>' +
+        '<button type="button" class="qtool" id="memoTog" aria-expanded="false" aria-controls="memoBox"></button>' +
+      '</span></div>' +
+    whyChips(whyOf(q)) +
+    '<p class="qt"></p><p class="qh"></p><div class="choices"></div>' +
+    '<div class="memo" id="memoBox" hidden>' +
+      '<label for="memoTa">メモ（この端末に自動で保存されます）</label>' +
+      '<textarea id="memoTa" rows="3" placeholder="覚え方、間違えた理由など"></textarea>' +
+      '<div class="saved" aria-live="polite"></div>' +
+    '</div>';
+  card.querySelector(".qt").textContent = q.q;
+  card.querySelector(".qh").textContent = q.h;
+  wireNoteTools(card, q);
+
+  const box = card.querySelector(".choices");
+  order.forEach((origIdx, pos) => {
+    const b = document.createElement("button");
+    b.className = "ch";
+    b.type = "button";
+    b.innerHTML = '<span class="key">' + LETTERS[pos] + '</span><span></span>';
+    b.lastChild.textContent = q.c[origIdx];
+    b.dataset.orig = origIdx;
+    b.addEventListener("click", () => choose(card, b, origIdx));
+    box.appendChild(b);
+  });
+
+  stage.replaceChildren(card);
+
+  if (prev) {
+    // 解答済みの問題に戻ってきた場合は、そのときの状態を復元する
+    const btn = Array.prototype.find.call(card.querySelectorAll(".ch"),
+      b => Number(b.dataset.orig) === prev.pick);
+    showVerdict(card, btn, prev.hit, false);
+  } else {
+    renderNav(card);
+  }
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+/* 前へ／次へのナビゲーション。解答前でも「前へ」で戻れる */
+/* 解答前も解答後も「← 前の問題／ホーム／次の問題 →」を同じ位置に出す */
+/* 解答前は「とばす」扱い（控えめな見た目・Enterでは押されない）、解答後は通常の「次へ」 */
+function navHtml(answeredNow) {
+  const label = i + 1 < Q.length ? "次の問題 →" : "結果を見る";
+  return '<div class="navrow one">' +
+      (answeredNow
+        ? '<button class="btn" id="next">' + label + '</button>'
+        : '<button class="btn ghost" id="skip">' + label + '</button>') +
+    '</div>' +
+    '<div class="navrow two">' +
+      '<button class="btn ghost" id="prev"' + (i > 0 ? '' : ' disabled') + '>← 前の問題</button>' +
+      '<button class="btn ghost" id="home">ホーム</button>' +
+    '</div>';
+}
+function wireNav(el) {
+  el.querySelector("#prev").addEventListener("click", goPrev);
+  el.querySelector("#home").addEventListener("click", goHome);
+  const nb = el.querySelector("#next");
+  if (nb) nb.addEventListener("click", goNext);
+  const sk = el.querySelector("#skip");
+  if (sk) sk.addEventListener("click", goNext);
+  return nb;
+}
+function renderNav(card) {
+  const old = card.querySelector(".nav");
+  if (old) old.remove();
+  const nav = document.createElement("div");
+  nav.className = "qnav nav";
+  nav.innerHTML = navHtml(false);
+  card.insertBefore(nav, card.querySelector(".memo"));
+  wireNav(nav);
+}
+function goPrev() { if (i > 0) { i--; saveSession(); render(); } }
+function goNext() { i++; saveSession(); render(); }
+/* 科目が resultJudge を持たないときの結果コメント（正答率の下限ごと） */
+const DEFAULT_JUDGE = [
+  { min: 90, text: "仕上がっています。間違えた問題だけ見直して、定着させてください。" },
+  { min: 70, text: "あと一歩です。間違えた問題だけ回し直せば固まります。" },
+  { min: 50, text: "曖昧なところが残っています。解説を読み直してから、もう一度解いてください。" },
+  { min: 0,  text: "まず解説を読んで、正解の根拠を確認してから解き直しましょう。" }
+];
+/* ---------- 合格までの道のり（本番日と期日の目安） ---------- */
+/* 受験日はホーム画面から変更でき、この端末に保存する。未設定・壊れた値は既定日にフォールバック */
+const EKEY = SPFX + "exam_day";
+function pad2(x) { return String(x).padStart(2, "0"); }
+function ymd(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function mdLabel(d) { return (d.getMonth() + 1) + "/" + d.getDate(); }
+function mdJp(d) { return (d.getMonth() + 1) + "月" + d.getDate() + "日"; }
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+/* "YYYY-MM-DD" 以外・2/30のような存在しない日付はnullを返す（new Dateは繰り上げて解釈してしまうため） */
+function parseYmd(s) {
+  if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  const parts = s.split("-").map(Number);
+  const y = parts[0], m = parts[1], dd = parts[2];
+  const d = new Date(y, m - 1, dd);
+  if (d.getFullYear() !== y || d.getMonth() !== m - 1 || d.getDate() !== dd) return null;
+  return d;
+}
+const EXAM_DAY_DEFAULT = parseYmd(SUBJECT.examDayDefault);
+function loadExamDay() {
+  try {
+    const d = parseYmd(localStorage.getItem(EKEY));
+    if (d) return d;
+  } catch (e) {}
+  return new Date(EXAM_DAY_DEFAULT);
+}
+let EXAM_DAY = loadExamDay();
+let RM_ROUND1, RM_RATE, RM_FINAL;
+function computeRoadmapDates() {
+  RM_ROUND1 = addDays(EXAM_DAY, -38);  // 全問1周
+  RM_RATE = addDays(EXAM_DAY, -21);    // 正答率70%・測定分析の見直し
+  RM_FINAL = addDays(EXAM_DAY, -14);   // 以降は苦手とブックマークだけ
+}
+computeRoadmapDates();
+function setExamDay(s) {
+  const d = parseYmd(s);
+  if (!d) return false;
+  EXAM_DAY = d;
+  computeRoadmapDates();
+  try { localStorage.setItem(EKEY, s); } catch (e) {}
+  return true;
+}
+function todayMid() { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function daysLeft() { return Math.round((EXAM_DAY - todayMid()) / 86400000); }
+/* 正答率は「直近の解答で正解している問題の割合」。累計だと最初の失点をいつまでも引きずるため */
+function progressNow() {
+  const all = verifiedOnly(SETS.all);
+  let done = 0, ok = 0, md = 0, mo = 0;
+  all.forEach(function (q) {
+    const h = histOf(q);
+    if (!h) return;
+    done++; if (h.last === 1) ok++;
+    if (SUBJECT.focusField && q.f === SUBJECT.focusField) { md++; if (h.last === 1) mo++; }
+  });
+  return { total: all.length, done: done, rate: done ? ok / done : null, mRate: md ? mo / md : null };
+}
+function pct(x) { return x === null ? "—" : Math.round(x * 100) + "%"; }
+let RM_ACTIONS = [];
+/* 科目ごとの「迷ったときの絞り込み方」。設定がない科目には出さない */
+function renderRoadmapTips() {
+  const T = SUBJECT.roadmapTips;
+  if (!T) return "";
+  let steps = "";
+  T.steps.forEach(function (x) {
+    steps += '<li class=""><span class="d">' + x[0] + '</span><span class="t">' + x[1] + '</span><span class="v">' + x[2] + '</span></li>';
+  });
+  return '<details><summary>' + T.summary + '</summary><ol class="rm-steps">' + steps + '</ol>' +
+    (T.note ? '<p class="rm-note">' + T.note + '</p>' : '') + '</details>';
+}
+function renderRoadmap() {
+  const today = todayMid(), p = progressNow(), left = daysLeft();
+  if (left < 0) return "";
+  const allDone = p.done >= p.total;
+  const st = function (cls, word) { return { c: cls, w: word }; };
+  const s1 = allDone ? st("done", "達成") : today > RM_ROUND1 ? st("late", "遅れ") : st("now", "いまここ");
+  const s2 = (allDone && p.rate >= 0.7) ? st("done", "達成") : today > RM_RATE ? st("late", "遅れ") : allDone ? st("now", "いまここ") : st("todo", "");
+  const s3 = today < RM_RATE ? st("todo", "")
+    : (p.mRate !== null && p.mRate < 0.5) ? st("now", "絞る") : st("done", "不要");
+  const s4 = today >= RM_FINAL ? st("now", "いまここ") : st("todo", "");
+  const li = function (s, d, t, v) {
+    return '<li class="' + s.c + '"><span class="d">' + d + '</span><span class="t">' + t +
+      (s.w ? '<span class="st">' + s.w + '</span>' : '') + '</span>' + (v ? '<span class="v">' + v + '</span>' : '') + '</li>';
+  };
+  const tip = function (d, t, v) { return li({ c: "", w: "" }, d, t, v); };
+
+  // 次にやること
+  const weak = weakList(), freq = verifiedOnly(SETS.all).filter(function (q) { return whyOf(q).tier >= 2; });
+  RM_ACTIONS = [];
+  if (today >= RM_FINAL && weak.length) {
+    RM_ACTIONS.push({ label: "苦手を解く", sub: weak.length + "問・直近でまちがえた／正答率6割未満", list: weak });
+  } else if (!allDone) {
+    const un = verifiedOnly(SETS.all).filter(function (q) { return !histOf(q); });
+    RM_ACTIONS.push({ label: "まだ解いていない問題を解く", sub: "残り " + un.length + "問（頻出論点から先に出します）", list: un, limit: 20 });
+  } else if (p.rate < 0.7) {
+    const top = fieldStats().filter(function (r) { return r.loss !== null; })[0];
+    if (top) RM_ACTIONS.push({ label: top.f + " を解く", sub: "いちばん点を落としている分野（正答率" + pct(top.rate) + "・" + (FIELD_WEIGHTS ? "本番で年" + top.weight + "問" : "収録の" + Math.round(top.weight * 100) + "%") + "）",
+      list: verifiedOnly(SETS.all).filter(function (q) { return q.f === top.f; }) });
+  } else if (weak.length) {
+    RM_ACTIONS.push({ label: "苦手を解く", sub: weak.length + "問", list: weak });
+  }
+  RM_ACTIONS.push({ label: "★ 頻出論点だけ解く", sub: freq.length + "問・過去7年で2回以上出た論点。まずここを固める", list: freq, ghost: true });
+
+  let btns = "";
+  RM_ACTIONS.forEach(function (a, k) {
+    btns += '<button class="btn' + (a.ghost ? ' ghost' : '') + '" data-rm="' + k + '">' + a.label + '<span class="sub">' + a.sub + '</span></button>';
+  });
+
+  return '<div class="roadmap"><h3>合格までの道のり</h3>' +
+    '<p class="rm-lead">本番まであと<b>' + left + '日</b>。' + (SUBJECT.roadmapLead || "") + '</p>' +
+    '<details><summary>期日ごとの目安を見る</summary><ol class="rm-steps">' +
+      li(s1, "〜" + mdLabel(RM_ROUND1), "全問を1周する", "解いた問題 " + p.done + " / " + p.total) +
+      li(s2, "〜" + mdLabel(RM_RATE), "正答率を70%以上にする", "いま " + pct(p.rate) + "（直近の解答で正解している割合）") +
+      (SUBJECT.focusField ? li(s3, mdLabel(RM_RATE), SUBJECT.focusField + "が50%未満なら、頻出論点だけに絞る", SUBJECT.focusField + " いま " + pct(p.mRate)) : "") +
+      li(s4, mdLabel(RM_FINAL) + "〜", "新しい範囲は増やさず、苦手とブックマークだけを回す", "") +
+      li(st(left === 0 ? "now" : "todo", left === 0 ? "今日" : ""), mdLabel(EXAM_DAY), "本番", "") +
+    '</ol></details>' +
+    renderRoadmapTips() +
+    '<div class="rm-next"><p class="lab">次にやること</p>' + btns + '</div></div>';
+}
+function wireRoadmap(card) {
+  card.querySelectorAll("[data-rm]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      const a = RM_ACTIONS[Number(b.dataset.rm)];
+      if (!a || !a.list.length) return;
+      // 頻出論点から先に出す（同じ段の中は毎回シャッフル）
+      const byTier = [5, 4, 3, 2, 1].map(function (r) { return shuffled(a.list.filter(function (q) { return whyOf(q).rank === r; })); });
+      let list = [].concat.apply([], byTier);
+      if (a.limit) list = list.slice(0, a.limit);
+      Q.length = 0; list.forEach(function (q) { Q.push(q); });
+      CUSTOM_LIST = list.slice(); CURRENT_SET = "custom";
+      i = 0; correct = 0; log.length = 0; answers.length = 0;
+      applySetButtons("__none__");
+      document.getElementById("pickinfo").textContent = "";
+      saveSession(); render();
+    });
+  });
+}
+function passLineHtml() {
+  return SUBJECT.passLine ? '<br><span class="cd2">合格ライン：' + SUBJECT.passLine + '</span>' : "";
+}
+function renderCountdown() {
+  const el = document.getElementById("countdown");
+  if (!el) return;
+  const left = daysLeft();
+  const editBtn =
+    '<button type="button" class="examEditBtn" id="examEditBtn" aria-expanded="false">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>' +
+      '変更' +
+    '</button>';
+  let textHtml;
+  if (left > 0) {
+    textHtml = '本番（' + mdJp(EXAM_DAY) + '）まで あと <span class="cd-days"><b>' + left + '</b>日</span>' + passLineHtml();
+  } else if (left === 0) {
+    textHtml = '<b>本番は今日です</b>' + passLineHtml();
+  } else {
+    textHtml = '<b>試験日を過ぎました</b>';
+  }
+  el.innerHTML =
+    '<div class="countdown-row"><div class="countdown-text">' + textHtml + '</div>' + editBtn + '</div>' +
+    '<div class="examEdit" id="examEdit" hidden>' +
+      '<input type="date" id="examDate" value="' + ymd(EXAM_DAY) + '">' +
+      '<button type="button" class="btn" id="examSave">保存</button>' +
+      '<button type="button" class="btn ghost" id="examCancel">キャンセル</button>' +
+    '</div>';
+  wireExamEdit(el);
+}
+function wireExamEdit(el) {
+  const editBtn = el.querySelector("#examEditBtn");
+  const editRow = el.querySelector("#examEdit");
+  const dateInput = el.querySelector("#examDate");
+  const saveBtn = el.querySelector("#examSave");
+  const cancelBtn = el.querySelector("#examCancel");
+  editBtn.addEventListener("click", function () {
+    const opening = editRow.hidden;
+    editRow.hidden = !opening;
+    editBtn.setAttribute("aria-expanded", String(opening));
+    if (opening) dateInput.focus();
+  });
+  cancelBtn.addEventListener("click", function () {
+    editRow.hidden = true;
+    editBtn.setAttribute("aria-expanded", "false");
+    dateInput.value = ymd(EXAM_DAY);
+  });
+  saveBtn.addEventListener("click", function () {
+    const v = dateInput.value;
+    if (!v || !setExamDay(v)) return;
+    renderCountdown();
+    if (AT_HOME) goHome();   // ホーム表示中は道のりの期日も描き直す（回を中断するだけなので壊れない）
+  });
+}
+
+/* ---------- ホーム（出題範囲を選ぶ画面） ---------- */
+/* いまの回は中断するだけで消さない。「続きから」で同じ問題に戻れる */
+let AT_HOME = false;
+const SET_LABEL = { all: SUBJECT.allSetLabel || "まとめて", imported: "過去問", weak: "苦手", bm: "ブックマーク", custom: "選んだ問題", auto: "おまかせ" };
+SUBJECT.sets.forEach(function (d) { SET_LABEL[d.key] = d.short || d.label; });
+/* 問題が1問もない科目（準備中）では、出題操作を隠して案内だけを出す */
+function isEmptyApp() { return SETS.all.length === 0; }
+function setQuizChrome(show) {
+  document.querySelector(".status").hidden = !show;
+  document.querySelector(".bar").hidden = !show;
+}
+function goHome() {
+  const inProgress = Q.length > 0 && i < Q.length;
+  if (inProgress) saveSession();
+  AT_HOME = true;
+  setQuizChrome(false);
+  document.getElementById("resumeHost").innerHTML = "";
+  applySetButtons("__none__");
+  const pi = document.getElementById("pickinfo");
+  if (pi) pi.textContent = "";
+
+  const L = lifetimeStats();
+  const card = document.createElement("div");
+  card.className = "card homecard";
+  const EMPTY = isEmptyApp();
+  document.body.classList.toggle("empty-mode", EMPTY);
+  card.innerHTML = EMPTY ? '<p class="empty-note"></p>' :
+    renderAutoBlock() +
+    (inProgress
+      ? '<button class="btn wide" id="cont">続きから解く<span class="sub">' +
+          (SET_LABEL[CURRENT_SET] || "前回の回") + '　' + (i + 1) + ' / ' + Q.length + '問目・正解 ' + correct + '</span></button>'
+      : '') +
+    renderTiles();
+  const hb = document.getElementById("homeBottom");
+  hb.innerHTML = EMPTY ? "" : '<div class="card homecard">' + renderRoadmap() + '</div>';
+  stage.replaceChildren(card);
+  if (EMPTY) card.querySelector(".empty-note").textContent = SUBJECT.emptyMessage || "問題を準備中です。";
+  document.body.classList.add("home-mode");
+  if (!EMPTY) {
+    wireAutoBlock(card);
+    wireRoadmap(hb);
+  }
+  const tw = card.querySelector("#tileWeak"), tb = card.querySelector("#tileBm");
+  if (tw) tw.addEventListener("click", function () { document.getElementById("weakBtn").click(); });
+  if (tb) tb.addEventListener("click", function () { document.getElementById("bmBtn").click(); });
+  const c = card.querySelector("#cont");
+  if (c) c.addEventListener("click", function () {
+    applySetButtons(SETS[CURRENT_SET] || CURRENT_SET === "weak" || CURRENT_SET === "bm" || CURRENT_SET === "auto" ? CURRENT_SET : "__none__");
+    updatePickInfo();
+    render();
+  });
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function choose(card, btn, origIdx) {
+  if (answered) return;
+  answered = true;
+  const q = Q[i];
+  const hit = origIdx === q.a;
+  if (hit) correct++;
+  recordAnswer(q, hit);
+  log.push({ f: q.f, hit: hit, q: q.q, a: q.c[q.a] });
+  answers[i] = { pick: origIdx, hit: hit };
+  saveSession();
+  showVerdict(card, btn, hit, true);
+}
+
+function showVerdict(card, btn, hit, focusNext) {
+  const q = Q[i];
+  card.querySelectorAll(".ch").forEach(b => {
+    b.disabled = true;
+    const oi = Number(b.dataset.orig);
+    if (oi === q.a) b.classList.add("ok");
+    else if (b === btn) b.classList.add("ng");
+    else b.classList.add("dim");
+  });
+
+  const oldNav = card.querySelector(".nav");
+  if (oldNav) oldNav.remove();
+
+  const v = document.createElement("div");
+  v.className = "verdict";
+  v.innerHTML =
+    '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (hit ? "正解" : "不正解") + '</div>' +
+    '<p class="vnote">' + q.n + '</p>' +
+    whyBox(q, whyOf(q)) +
+    (q.v ? '<p class="vsrc' + (q.v === "knowledge" ? " k" : "") + '">' + VLABEL[q.v] + '</p>' : '') +
+    '<div class="qnav">' + navHtml(true) + '</div>' +
+    '<p class="hintkey">← → キーでも移動できます</p>';
+  card.insertBefore(v, card.querySelector(".memo"));
+  // 解答前はメモを閉じておく（答えを書いたメモが先に見えないように）。解答後に開く
+  if (memoOf(q)) showMemo(card, true);
+  const nb = wireNav(v);
+  if (focusNext) nb.focus();
+  elScore.innerHTML = "正解 <b>" + correct + "</b>";
+}
+
+function renderResult() {
+  clearSession();
+  elField.textContent = "結果";
+  elCount.textContent = Q.length + " / " + Q.length;
+  elBar.style.width = "100%";
+
+  const pct = Math.round(correct / Q.length * 100);
+  const byField = {};
+  log.forEach(r => {
+    byField[r.f] = byField[r.f] || { n: 0, ok: 0 };
+    byField[r.f].n++;
+    if (r.hit) byField[r.f].ok++;
+  });
+
+  let judge = "";
+  (SUBJECT.resultJudge || DEFAULT_JUDGE).some(function (r) { if (pct >= r.min) { judge = r.text; return true; } return false; });
+
+  let rows = "";
+  Object.keys(byField).forEach(f => {
+    const d = byField[f];
+    const p = Math.round(d.ok / d.n * 100);
+    rows += '<tr><td>' + f + '</td><td>' + d.ok + ' / ' + d.n +
+      '<span class="mini"><i style="width:' + p + '%"></i></span></td><td>' + p + '%</td></tr>';
+  });
+
+  const missed = log.filter(r => !r.hit);
+  const skipped = Q.filter((q, k) => !answers[k]);
+  let missedHtml = "";
+  if (missed.length) {
+    missedHtml = '<div class="missed"><h3>間違えた ' + missed.length + ' 問</h3><ol>';
+    missed.forEach(r => { missedHtml += '<li>' + r.q + ' → <b>' + r.a + '</b></li>'; });
+    missedHtml += '</ol></div>';
+  }
+
+  const card = document.createElement("div");
+  card.className = "card result";
+  card.innerHTML =
+    '<h2>採点結果</h2>' +
+    '<div class="big">' + correct + '<small> / ' + Q.length + '　（' + pct + '%）</small></div>' +
+    '<p class="judge">' + judge + '</p>' +
+    (skipped.length ? '<p class="judge">とばして答えていない問題が <b>' + skipped.length + '問</b> あります（未解答は不正解として計算）。</p>' : '') +
+    '<table><thead><tr><th>分野</th><th>正答</th><th>率</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    missedHtml +
+    (function () {
+      const L = lifetimeStats();
+      if (!L.answers) return '';
+      return '<div class="lifetime"><span>累計 <b>' + L.answers + '</b>回解答・正答率 <b>' +
+        Math.round(L.correct / L.answers * 100) + '%</b></span><span>苦手 <b>' + weakList().length +
+        '</b>問</span><button class="reset" id="resetHist">履歴をリセット</button></div>';
+    })() +
+    '<div class="actions">' +
+      (LIMIT && baseList().length > Q.length ? '<button class="btn" id="nextBatch">次の ' + LIMIT + '問へ</button>' : '') +
+      (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をやり直す</button>' : '') +
+      (skipped.length ? '<button class="btn ghost" id="doSkipped">とばした ' + skipped.length + ' 問を解く</button>' : '') +
+      '<button class="btn ghost" id="home">ホーム</button>' +
+    '</div>';
+  stage.replaceChildren(card);
+
+  const ag = card.querySelector("#again");
+  if (ag) ag.addEventListener("click", () => {
+    const keep = new Set(missed.map(m => m.q));
+    const subset = Q.filter(q => keep.has(q.q));
+    Q.length = 0; subset.forEach(q => Q.push(q));
+    i = 0; correct = 0; log.length = 0; answers.length = 0; render();
+  });
+  const ds = card.querySelector("#doSkipped");
+  if (ds) ds.addEventListener("click", () => {
+    Q.length = 0; skipped.forEach(q => Q.push(q));
+    i = 0; correct = 0; log.length = 0; answers.length = 0; saveSession(); render();
+  });
+  const nb2 = card.querySelector("#nextBatch");
+  if (nb2) nb2.addEventListener("click", function () { rebuild(); });
+  card.querySelector("#home").addEventListener("click", goHome);
+  const rh = card.querySelector("#resetHist");
+  if (rh) rh.addEventListener("click", function () {
+    if (!confirm("これまでの解答履歴をすべて削除します。よろしいですか。")) return;
+    HIST = {}; saveHist(); refreshWeakBtn(); location.reload();
+  });
+  refreshWeakBtn();
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+document.addEventListener("keydown", e => {
+  if (document.getElementById("pane-quiz").hidden) return;
+  if (AT_HOME) return;
+  const tg = e.target;
+  // メモ入力中の矢印・数字・Enterで問題が進んだり選択肢が押されたりしないように
+  if (tg && (tg.tagName === "TEXTAREA" || tg.tagName === "INPUT")) return;
+  // フォーカス中のボタン（ホーム・前の問題・ブックマーク等）は Enter でそのボタン自身を押す
+  if (tg && tg.tagName === "BUTTON" && tg.id !== "next" && (e.key === "Enter" || e.key === " ")) return;
+  if (e.key === "ArrowLeft") { if (i > 0) { e.preventDefault(); goPrev(); } return; }
+  if (e.key === "ArrowRight") { if (i < Q.length) { e.preventDefault(); goNext(); } return; }
+  if (e.key === "Enter") {
+    const n = document.getElementById("next");
+    if (n) { e.preventDefault(); n.click(); }
+    return;
+  }
+  const k = LETTERS.indexOf(e.key);
+  if (k >= 0 && !answered) {
+    const btns = stage.querySelectorAll(".ch");
+    if (btns[k]) { e.preventDefault(); btns[k].click(); }
+  }
+});
+
+/* ---------- 解答履歴（localStorage） ---------- */
+const HKEY = SPFX + "history_v1";
+let HIST = {};
+try { HIST = JSON.parse(localStorage.getItem(HKEY) || "{}") || {}; } catch (e) { HIST = {}; }
+/* 問題文を書き直した問題は、古い問題文で保存された記録を新しい問題文へ付け替える */
+const KEY_RENAMES = {
+  "その2013年度比の削減率は？": "2024年度の日本の温室効果ガス純排出量（排出−吸収）は、2013年度比で何%減った？",
+  "同じく2040年度の削減目標は？（2013年度比）": "日本のNDC（2025年2月提出）における2040年度の削減目標は？（2013年度比）"
+};
+function renameKeys(obj) {
+  let changed = false;
+  Object.keys(KEY_RENAMES).forEach(function (o) {
+    if (obj[o] && !obj[KEY_RENAMES[o]]) { obj[KEY_RENAMES[o]] = obj[o]; delete obj[o]; changed = true; }
+  });
+  return changed;
+}
+if (renameKeys(HIST)) { try { localStorage.setItem(HKEY, JSON.stringify(HIST)); } catch (e) {} }
+function saveHist() { try { localStorage.setItem(HKEY, JSON.stringify(HIST)); } catch (e) {} }
+function hkey(q) { return q.q; }
+function histOf(q) { return HIST[hkey(q)] || null; }
+function recordAnswer(q, hit) {
+  const k = hkey(q);
+  const h = HIST[k] || { n: 0, ok: 0, last: null };
+  h.n++; if (hit) h.ok++;
+  h.last = hit ? 1 : 0;
+  h.st = hit ? (h.st || 0) + 1 : 0;
+  srSchedule(h, Date.now());
+  HIST[k] = h; saveHist();
+  refreshWeakBtn();   // 結果画面まで待たずに「苦手 N問」を更新する
+}
+
+/* ---------- おまかせ出題（忘却曲線にもとづく復習日の管理） ---------- */
+const DAY = 86400000;
+// 連続正解数ごとの、次の復習までの日数。まちがえたら翌日。本番まで約2か月なので最長30日
+const SR_DAYS = [1, 2, 4, 7, 14, 30];
+const MASTERY = ["未学習", "要復習", "学習中", "定着", "完璧"];
+function dayStart(t) { const d = new Date(t); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
+function srSchedule(h, now) {
+  h.ts = now;
+  h.due = dayStart(now) + SR_DAYS[Math.min(h.st || 0, SR_DAYS.length - 1)] * DAY;
+}
+/* 解いた日時を持たない古い履歴：まちがえた問題は今日が復習日、正解した問題は今日解いたものとして扱う */
+function migrateSR() {
+  let changed = false;
+  const now = Date.now();
+  Object.keys(HIST).forEach(function (k) {
+    const h = HIST[k];
+    if (typeof h.due === "number") return;
+    h.st = h.last === 1 ? (h.ok === h.n ? Math.min(h.ok, 2) : 1) : 0;
+    if (h.last === 1) srSchedule(h, now); else { h.ts = now; h.due = dayStart(now); }
+    changed = true;
+  });
+  if (changed) saveHist();
+}
+migrateSR();
+function isDue(h, today) { return !!h && typeof h.due === "number" && h.due <= today; }
+function dueList() {
+  const t = dayStart(Date.now());
+  return verifiedOnly(SETS.all).filter(function (q) { return isDue(histOf(q), t); });
+}
+/* 習熟度：0未学習 1要復習（直近まちがえた／正答率6割未満） 2学習中 3定着（3回連続正解） 4完璧（5回連続正解） */
+function mastery(q) {
+  const h = histOf(q);
+  if (!h) return 0;
+  if (h.last === 0 || h.ok / h.n < 0.6) return 1;
+  const st = h.st || 0;
+  return st >= 5 ? 4 : st >= 3 ? 3 : 2;
+}
+/* 出題の順：①復習日を過ぎた問題（古い順・習熟度の低い順） ②まだ解いていない問題（頻出論点から） ③期限前でも習熟度の低い問題 */
+function autoPick(n) {
+  const today = dayStart(Date.now());
+  const all = verifiedOnly(SETS.all);
+  let pick = all.filter(function (q) { return isDue(histOf(q), today); }).sort(function (a, b) {
+    return histOf(a).due - histOf(b).due || mastery(a) - mastery(b) || whyOf(b).rank - whyOf(a).rank;
+  }).slice(0, n);
+  if (pick.length < n) {
+    const fresh = [];
+    [5, 4, 3, 2, 1].forEach(function (r) {
+      fresh.push.apply(fresh, shuffled(all.filter(function (q) { return !histOf(q) && whyOf(q).rank === r; })));
+    });
+    pick = pick.concat(fresh.slice(0, n - pick.length));
+  }
+  if (pick.length < n) {
+    const ahead = all.filter(function (q) { const h = histOf(q); return h && !isDue(h, today); }).sort(function (a, b) {
+      return mastery(a) - mastery(b) || histOf(a).due - histOf(b).due;
+    });
+    pick = pick.concat(ahead.slice(0, n - pick.length));
+  }
+  return shuffled(pick);
+}
+let AUTO_N = 20;
+try { AUTO_N = Number(localStorage.getItem(SPFX + "auto_n")) || 20; } catch (e) {}
+function startAuto() {
+  const list = autoPick(AUTO_N);
+  if (!list.length) return;
+  Q.length = 0; list.forEach(function (q) { Q.push(q); });
+  CUSTOM_LIST = list.slice(); CURRENT_SET = "auto";
+  i = 0; correct = 0; log.length = 0; answers.length = 0;
+  applySetButtons("auto");
+  const pi = document.getElementById("pickinfo");
+  if (pi) pi.textContent = "";
+  saveSession(); render();
+}
+function refreshAutoBtn() {
+  const b = document.getElementById("autoBtn");
+  if (!b) return;
+  const n = dueList().length;
+  b.innerHTML = "おまかせ" + (n ? '<span class="badge">' + n + '</span>' : "");
+  const nb = document.getElementById("navBadge");
+  if (nb) { nb.textContent = n > 99 ? "99+" : String(n); nb.hidden = !n; }
+}
+function renderAutoBlock() {
+  const due = dueList().length;
+  const m = [0, 0, 0, 0, 0];
+  verifiedOnly(SETS.all).forEach(function (q) { m[mastery(q)]++; });
+  return '<div class="auto hero"><h3>おまかせ出題</h3>' +
+    '<p class="due">' + (due ? '今日の復習 <b>' + due + '</b>問' : '今日の復習はありません。<br>まだ解いていない頻出論点から出します') + '</p>' +
+    '<div class="auto-n"><label for="autoN">出題数</label><output id="autoNv">' + AUTO_N + '問</output></div>' +
+    '<input type="range" id="autoN" min="5" max="100" step="5" value="' + AUTO_N + '">' +
+    '<div class="auto-scale"><span>5問</span><span>100問</span></div>' +
+    '<button class="btn wide" id="autoGo">スタート</button>' +
+    '<details><summary>おまかせ出題とは</summary>' +
+      '<p>忘れかけたころに復習が回ってくるよう、問題ごとに次の復習日を決めて出題します。' +
+      'まちがえた問題は翌日、続けて正解するほど間隔を空けます（2日→4日→7日→14日→30日）。' +
+      '復習日の問題が足りないときは、まだ解いていない頻出論点から出します。</p>' +
+      '<div class="mastery">' + MASTERY.map(function (l, k) { return '<span class="m' + k + '">' + l + ' <b>' + m[k] + '</b></span>'; }).join("") + '</div>' +
+    '</details>' +
+  '</div>';
+}
+function renderTiles() {
+  const p = progressNow(), weak = weakList().length, bm = bookmarkList().length;
+  return '<div class="tiles">' +
+    '<div class="tile">解いた問題<b>' + p.done + '<small>/ ' + p.total + '</small></b></div>' +
+    '<div class="tile">直近の正答率<b>' + pct(p.rate) + '</b></div>' +
+    '<button type="button" class="tile' + (weak ? ' warn' : '') + '" id="tileWeak"' + (weak ? '' : ' disabled') + '>苦手<b>' + weak + '<small>問</small></b></button>' +
+    '<button type="button" class="tile" id="tileBm"' + (bm ? '' : ' disabled') + '>ブックマーク<b>' + bm + '<small>問</small></b></button>' +
+  '</div>';
+}
+function wireAutoBlock(card) {
+  const r = card.querySelector("#autoN"), v = card.querySelector("#autoNv"), go = card.querySelector("#autoGo");
+  if (!r) return;
+  r.addEventListener("input", function () {
+    AUTO_N = Number(r.value);
+    v.textContent = AUTO_N + "問";
+    try { localStorage.setItem(SPFX + "auto_n", String(AUTO_N)); } catch (e) {}
+  });
+  go.addEventListener("click", startAuto);
+}
+/* 苦手＝直近で誤答した問題、または正答率6割未満の問題 */
+function weakList() {
+  return SETS.all.filter(function (q) {
+    if (!INCLUDE_UNVERIFIED && q.v === "knowledge") return false;
+    return true;
+  }).filter(function (q) {
+    const h = histOf(q);
+    return h && (h.last === 0 || h.ok / h.n < 0.6);
+  });
+}
+function refreshWeakBtn() {
+  const b = document.getElementById("weakBtn");
+  const n = weakList().length;
+  b.textContent = "苦手 " + n + "問";
+  b.disabled = n === 0;
+  if (n === 0 && b.getAttribute("aria-pressed") === "true") b.setAttribute("aria-pressed", "false");
+  refreshBmBtn();
+  refreshAutoBtn();
+}
+function lifetimeStats() {
+  let n = 0, ok = 0, q = 0;
+  Object.keys(HIST).forEach(function (k) { n += HIST[k].n; ok += HIST[k].ok; q++; });
+  return { answers: n, correct: ok, questions: q };
+}
+
+/* ---------- ブックマーク・メモ（localStorage） ---------- */
+const NKEY = SPFX + "notes_v1";
+let NOTES = {};
+try { NOTES = JSON.parse(localStorage.getItem(NKEY) || "{}") || {}; } catch (e) { NOTES = {}; }
+if (renameKeys(NOTES)) { try { localStorage.setItem(NKEY, JSON.stringify(NOTES)); } catch (e) {} }
+function saveNotes() { try { localStorage.setItem(NKEY, JSON.stringify(NOTES)); } catch (e) {} }
+function noteOf(q) { return NOTES[hkey(q)] || null; }
+function setNote(q, patch) {
+  const k = hkey(q);
+  const n = Object.assign({ bm: false, memo: "" }, NOTES[k] || {}, patch, { t: Date.now() });
+  if (!n.bm && !n.memo) delete NOTES[k]; else NOTES[k] = n;
+  saveNotes();
+}
+function isBookmarked(q) { const n = noteOf(q); return !!(n && n.bm); }
+function memoOf(q) { const n = noteOf(q); return (n && n.memo) || ""; }
+function bmLabel(on) { return on ? "★ ブックマーク済み" : "☆ ブックマーク"; }
+function bookmarkList() {
+  return verifiedOnly(SETS.all.filter(isBookmarked));
+}
+function refreshBmBtn() {
+  const b = document.getElementById("bmBtn");
+  if (!b) return;
+  const n = bookmarkList().length;
+  b.textContent = "★ ブックマーク " + n + "問";
+  b.disabled = n === 0;
+  if (n === 0 && b.getAttribute("aria-pressed") === "true") b.setAttribute("aria-pressed", "false");
+}
+function showMemo(card, open) {
+  card.querySelector(".memo").hidden = !open;
+  card.querySelector("#memoTog").setAttribute("aria-expanded", String(open));
+}
+function wireNoteTools(card, q) {
+  const bt = card.querySelector("#bmTog");
+  bt.addEventListener("click", function () {
+    const on = !isBookmarked(q);
+    setNote(q, { bm: on });
+    bt.setAttribute("aria-pressed", String(on));
+    bt.textContent = bmLabel(on);
+    refreshBmBtn();
+  });
+
+  const mt = card.querySelector("#memoTog");
+  const ta = card.querySelector("#memoTa");
+  const saved = card.querySelector(".memo .saved");
+  function labelMemo() {
+    const has = !!ta.value.trim();
+    mt.textContent = has ? "メモあり" : "メモ";
+    mt.classList.toggle("has", has);
+  }
+  ta.value = memoOf(q);
+  labelMemo();
+
+  let timer = null;
+  function commit() {
+    clearTimeout(timer); timer = null;
+    setNote(q, { memo: ta.value.trim() ? ta.value : "" });
+    labelMemo();
+    saved.textContent = "保存しました";
+  }
+  ta.addEventListener("input", function () {
+    saved.textContent = "";
+    clearTimeout(timer); timer = setTimeout(commit, 600);
+  });
+  ta.addEventListener("blur", function () { if (timer) commit(); });
+  mt.addEventListener("click", function () {
+    const open = card.querySelector(".memo").hidden;
+    showMemo(card, open);
+    if (open) ta.focus();
+  });
+}
+
+/* ---------- 過去問データの読み込み（端末内のみ） ---------- */
+/* 著作権のため、過去問本文はリポジトリに置かず利用者の端末にだけ保存する */
+const IKEY = SPFX + "imported_v1";
+let IMPORTED = {};
+try { IMPORTED = JSON.parse(localStorage.getItem(IKEY) || "{}") || {}; } catch (e) { IMPORTED = {}; }
+function saveImported() {
+  try { localStorage.setItem(IKEY, JSON.stringify(IMPORTED)); return true; }
+  catch (e) { return false; }
+}
+function importedQuestions() {
+  const out = [];
+  Object.keys(IMPORTED).sort().forEach(function (k) {
+    (IMPORTED[k].questions || []).forEach(function (q) { out.push(q); });
+  });
+  return out;
+}
+function validateImport(d) {
+  if (!d || typeof d !== "object") return "JSONとして読めません";
+  if (!d.id || !d.label) return "id / label がありません";
+  if (!Array.isArray(d.questions) || !d.questions.length) return "questions が空です";
+  for (let i = 0; i < d.questions.length; i++) {
+    const q = d.questions[i];
+    if (!q.q || !Array.isArray(q.c) || q.c.length < 2 || typeof q.a !== "number") {
+      return (i + 1) + "問目の形式が不正です（q / c / a が必要）";
+    }
+    if (q.a < 0 || q.a >= q.c.length) return (i + 1) + "問目の正答番号が範囲外です";
+  }
+  return null;
+}
+function applyImport(d) {
+  IMPORTED[d.id] = { label: d.label, count: d.questions.length, questions: d.questions };
+  if (!saveImported()) return "端末の保存領域が足りません";
+  refreshImportedSet();
+  return null;
+}
+function refreshImportedSet() {
+  const list = importedQuestions();
+  SETS.imported = list;
+  SETS.all = baseAll().concat(list);
+  const btn = document.getElementById("impBtn");
+  if (btn) {
+    btn.textContent = "過去問 " + list.length + "問";
+    btn.hidden = list.length === 0;
+  }
+  refreshWeakBtn();
+}
+
+/* ---------- 出題数の絞り込み ---------- */
+let LIMIT = 0;              // 0 = 全問
+let CUSTOM_LIST = null;     // 履歴タブから渡された任意の問題群
+
+/* 未検証（確度△）の問題は既定で出題しない。誤った知識を覚えないための安全側の既定値 */
+let INCLUDE_UNVERIFIED = false;
+try { INCLUDE_UNVERIFIED = localStorage.getItem(SPFX + "inc_unverified") === "1"; } catch (e) {}
+function verifiedOnly(list) {
+  return INCLUDE_UNVERIFIED ? list : list.filter(function (q) { return q.v !== "knowledge"; });
+}
+function baseList() {
+  if (CURRENT_SET === "weak") return verifiedOnly(weakList());
+  if (CURRENT_SET === "bm") return bookmarkList();
+  if (CURRENT_SET === "auto") return verifiedOnly(CUSTOM_LIST || []);
+  if (CURRENT_SET === "custom") return verifiedOnly(CUSTOM_LIST || []);
+  return verifiedOnly(SETS[CURRENT_SET] || SETS[DEFAULT_SET]);
+}
+function updateUnvUI() {
+  const all = SETS.all;
+  const unv = all.filter(function (q) { return q.v === "knowledge"; }).length;
+  const cnt = document.getElementById("unvCnt");
+  const note = document.getElementById("unvNote");
+  if (cnt) cnt.textContent = "（" + unv + "問）";
+  const wrap = document.querySelector(".unvwrap");
+  if (wrap) wrap.hidden = (unv === 0);
+  if (note) {
+    note.hidden = (unv === 0);
+    note.className = "unvnote" + (INCLUDE_UNVERIFIED ? " on" : "");
+    note.innerHTML = INCLUDE_UNVERIFIED
+      ? "<b>未検証の" + unv + "問を含めて出題しています。</b>解説末尾が△の問題は一次資料での裏取りが済んでいません。これまでの検証で実際に5問の誤りが見つかっているため、△の内容はテキストで確認してから覚えてください。"
+      : "一次資料または公開正答表で裏を取った <b>" + (all.length - unv) + "問</b> だけを出題しています（未検証の" + unv + "問は除外）。";
+  }
+}
+/* その場でシャッフル（Fisher-Yates）。同じ並びで覚えてしまうのを防ぐ */
+function shuffled(list) {
+  const a = list.slice();
+  for (let k = a.length - 1; k > 0; k--) {
+    const j = Math.floor(Math.random() * (k + 1));
+    const t = a[k]; a[k] = a[j]; a[j] = t;
+  }
+  return a;
+}
+/* 絞り込むときは「未回答 → 直近誤答 → 正答率が低い順」で拾い、拾ったあとに順番を混ぜる */
+function pickQuestions(list) {
+  if (!LIMIT || list.length <= LIMIT) return shuffled(list);
+  const base = shuffled(list);                     // 同点のときの並びも毎回変える
+  const scored = base.map(function (q, idx) {
+    const h = histOf(q);
+    let s;
+    if (!h) s = 0;
+    else if (h.last === 0) s = 1;
+    else s = 2 + (h.ok / h.n);
+    return { q: q, s: s, idx: idx };
+  });
+  // 同じ優先度（未回答どうし等）なら、出題実績のある論点から拾う
+  scored.sort(function (a, b) { return a.s - b.s || whyOf(b.q).rank - whyOf(a.q).rank || a.idx - b.idx; });
+  return shuffled(scored.slice(0, LIMIT).map(function (x) { return x.q; }));
+}
+function rebuild() {
+  const picked = pickQuestions(baseList());
+  if (!picked.length) return false;
+  Q.length = 0; picked.forEach(function (q) { Q.push(q); });
+  i = 0; correct = 0; log.length = 0; answers.length = 0;
+  const host = document.getElementById("resumeHost");
+  if (host) host.innerHTML = "";
+  clearSession();
+  updatePickInfo();
+  updateUnvUI();
+  render();
+  return true;
+}
+function updatePickInfo() {
+  const el = document.getElementById("pickinfo");
+  if (!el) return;
+  const total = baseList().length;
+  el.textContent = (LIMIT && total > LIMIT)
+    ? "（" + total + "問中、未回答と苦手を優先して" + LIMIT + "問）" : "";
+}
+
+/* ---------- 進捗の保存と再開 ---------- */
+const SKEY = SPFX + "session_v1";
+let CURRENT_SET = DEFAULT_SET;
+let STORAGE_OK = true;
+try {
+  localStorage.setItem("__gq_test", "1");
+  localStorage.removeItem("__gq_test");
+} catch (e) { STORAGE_OK = false; }
+
+function saveSession() {
+  if (!STORAGE_OK) return;
+  try {
+    localStorage.setItem(SKEY, JSON.stringify({
+      set: CURRENT_SET, limit: LIMIT,
+      keys: Q.map(function (q) { return q.q; }),
+      i: i, correct: correct, answers: answers
+    }));
+  } catch (e) {}
+}
+function clearSession() { try { localStorage.removeItem(SKEY); } catch (e) {} }
+function loadSession() {
+  if (!STORAGE_OK) return null;
+  try {
+    const d = JSON.parse(localStorage.getItem(SKEY) || "null");
+    if (!d || !d.keys || !d.keys.length) return null;
+    if (typeof d.i !== "number" || d.i >= d.keys.length) return null;
+    if (!d.i) return null;                                   // 1問目なら再開扱いにしない
+    const byKey = {};
+    SETS.all.forEach(function (q) { byKey[q.q] = q; });
+    const list = d.keys.map(function (k) { return byKey[k]; });
+    if (list.some(function (q) { return !q; })) return null;  // 問題が入れ替わっていたら破棄
+    return { set: d.set, limit: d.limit || 0, list: list, i: d.i, correct: d.correct || 0, answers: d.answers || [] };
+  } catch (e) { return null; }
+}
+function applySetButtons(key) {
+  document.querySelectorAll(".set").forEach(function (o) {
+    o.setAttribute("aria-pressed", String(o.dataset.set === key));
+  });
+}
+function showResume(n, total) {
+  const host = document.getElementById("resumeHost");
+  host.innerHTML = '<div class="resume">前回の続き（<b>' + (n + 1) + ' / ' + total +
+    '問目</b>）から再開しました<button id="restart">最初から解き直す</button></div>';
+  host.querySelector("#restart").addEventListener("click", function () {
+    i = 0; correct = 0; log.length = 0; answers.length = 0;
+    clearSession(); host.innerHTML = ""; render();
+  });
+}
+
+/* ---------- 出題範囲の切替 ---------- */
+
+const SETS = {};
+SUBJECT.sets.forEach(function (d) { SETS[d.key] = SUBJECT_DATA[d.data]; });
+SETS.imported = [];
+function baseAll() {
+  return [].concat.apply([], SUBJECT.sets.map(function (d) { return SETS[d.key]; }));
+}
+SETS.all = baseAll();
+/* 集合ボタンは SUBJECT.sets から作る。問題数はデータから数える（HTMLに書いた数字は追加のたびに古くなるため） */
+(function buildSetButtons() {
+  const box = document.getElementById("setsBox");
+  const multi = SUBJECT.sets.length > 1;
+  function add(cls, key, text, attrs) {
+    const b = document.createElement("button");
+    b.className = cls;
+    b.dataset.set = key;
+    b.setAttribute("aria-pressed", String(key === DEFAULT_SET));
+    b.textContent = text;
+    Object.keys(attrs || {}).forEach(function (k) { b[k] = attrs[k]; });
+    box.appendChild(b);
+  }
+  add("set auto", "auto", "おまかせ", { id: "autoBtn" });
+  SUBJECT.sets.forEach(function (d) {
+    const n = SETS[d.key].length;
+    // 複数セットのうち問題がまだ0件のもの（準備中の科目）はボタンを出さない
+    add("set", d.key, d.label + " " + n + "問", { hidden: multi && n === 0 });
+  });
+  if (multi) add("set", "all", (SUBJECT.allSetLabel || "まとめて") + " 全問");
+  add("set", "imported", "過去問 0問", { id: "impBtn", hidden: true });
+  add("set weak", "weak", "苦手 0問", { id: "weakBtn" });
+  add("set bm", "bm", "★ ブックマーク 0問", { id: "bmBtn" });
+})();
+document.querySelectorAll(".set").forEach(function (b) {
+  b.addEventListener("click", function () {
+    if (b.dataset.set === "auto") { startAuto(); return; }
+    document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
+    const prevSet = CURRENT_SET;
+    CURRENT_SET = b.dataset.set;
+    if (!rebuild()) { CURRENT_SET = prevSet; return; }
+  });
+});
+
+
+
+(function () {
+  const cb = document.getElementById("incUnv");
+  cb.checked = INCLUDE_UNVERIFIED;
+  cb.addEventListener("change", function () {
+    INCLUDE_UNVERIFIED = cb.checked;
+    try { localStorage.setItem(SPFX + "inc_unverified", cb.checked ? "1" : "0"); } catch (e) {}
+    updateUnvUI(); refreshWeakBtn();
+    if (!AT_HOME) rebuild();
+  });
+})();
+
+document.querySelectorAll(".lim").forEach(function (b) {
+  b.addEventListener("click", function () {
+    document.querySelectorAll(".lim").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
+    LIMIT = Number(b.dataset.lim);
+    if (!AT_HOME) rebuild();   // ホームでは出題範囲を選んだときに始める
+  });
+});
+
+/* ---------- 学習診断 ---------- */
+/* ---------- 覚える理由：過去問の出題実績から自動で付ける ---------- */
+/* 「頻出」は出題年が2年以上ある論点だけ。同じ年に2問出ただけのものは数えない */
+function yearsOf(t) {
+  const s = {};
+  t.cites.forEach(function (c) { s[c.split("-")[0]] = 1; });
+  return Object.keys(s).length;
+}
+/* 頻出テーマ（topics.js）を持たない科目では空のまま。過去問番号による「覚える理由」も付かない */
+const TOPIC_LIST = HAS_TOPICS ? TOPICS : [];
+const TOPIC_BY_CITE = {};
+TOPIC_LIST.forEach(function (t) {
+  if (yearsOf(t) < 2) return;
+  t.cites.forEach(function (c) {
+    if (!TOPIC_BY_CITE[c] || yearsOf(TOPIC_BY_CITE[c]) < yearsOf(t)) TOPIC_BY_CITE[c] = t;
+  });
+});
+// 白書・統計の数値問題は解説に過去問番号を持たないので、分野名で毎年出る廃棄物テーマに結びつける
+const WASTE_TOPIC = {};
+TOPIC_LIST.forEach(function (t) {
+  const m = SUBJECT.wasteTopics || {};
+  Object.keys(m).forEach(function (f) { if (t.t === m[f]) WASTE_TOPIC[f] = t; });
+});
+const WHY_CACHE = new Map();
+function whyOf(q) {
+  if (WHY_CACHE.has(q)) return WHY_CACHE.get(q);
+  const cs = ((q.n || "") + " " + (q.h || "")).match(/R[1-7]-Ⅲ-\d+/g) || [];
+  let t = null;
+  cs.forEach(function (c) {
+    const x = TOPIC_BY_CITE[c];
+    if (x && (!t || yearsOf(x) > yearsOf(t))) t = x;
+  });
+  if (!t && SUBJECT.wasteSet && SETS[SUBJECT.wasteSet].indexOf(q) >= 0 && WASTE_TOPIC[q.f]) t = WASTE_TOPIC[q.f];
+  // rank：出題の確かさで並べる順（頻出3回以上 > 2回 > 1回出た > 今年の予想 > 実績なし）
+  let w;
+  if (t) {
+    const y = yearsOf(t);
+    w = { tier: y >= 3 ? 3 : 2, rank: y >= 3 ? 5 : 4, years: y, topic: t, same: t.flag === "選択肢が同一", label: "過去7年で" + y + "回出題" };
+  } else if (cs.length) {
+    const uniq = cs.filter(function (c, k) { return cs.indexOf(c) === k; });
+    w = { tier: 0, rank: 3, once: uniq, label: "" };
+  } else if (SUBJECT.forecastField && q.f === SUBJECT.forecastField) {
+    w = { tier: 1, rank: 2, label: "今年の新論点（出題実績なし・予想）" };
+  } else {
+    w = { tier: 0, rank: 1, label: "" };
+  }
+  WHY_CACHE.set(q, w);
+  return w;
+}
+function whyChips(w) {
+  let s = "";
+  if (w.tier >= 2) s += '<span class="why t' + w.tier + '">★ ' + w.label + '</span>';
+  if (w.same) s += '<span class="why same">選択肢まで同じ再出題</span>';
+  if (w.tier === 1) s += '<span class="why t1">' + w.label + '</span>';
+  return s ? '<div class="whys">' + s + '</div>' : "";
+}
+function whyBox(q, w) {
+  let body;
+  if (w.tier >= 2) {
+    body = '過去7年で<b>' + w.years + '回</b>出題（' + w.topic.cites.join("・") + '）。' +
+      (w.same ? '過去問では、<b>同じ内容の選択肢が並び順だけ変えて繰り返し出ています</b>。' : '') + w.topic.note;
+  } else if (w.tier === 1) {
+    // 予想の根拠が問題ごとに違うものは、データ側の y に理由を書く
+    body = q.y || SUBJECT.forecastNote || "";
+  } else {
+    const head = w.once
+      ? '過去問で<b>1回</b>出題（' + w.once.join("・") + '）。同じ論点が繰り返し出た記録はまだありません。'
+      : 'この論点そのものの出題実績は確認できていません。';
+    const wt = FIELD_WEIGHTS && FIELD_WEIGHTS[q.f];
+    const fnote = (SUBJECT.fieldNotes || {})[q.f];
+    body = head + (fnote
+      ? fnote
+      : (wt ? q.f + 'の分野全体では年' + wt + '問前後出ます。' : '') + '頻出論点を優先し、余力で押さえる問題です。');
+  }
+  return '<div class="whybox t' + (w.tier >= 2 ? 3 : w.tier) + '"><span class="wh">' +
+    (w.tier >= 2 ? '★ 絶対に覚える理由' : w.tier === 1 ? '覚える理由（予想）' : 'この問題の位置づけ') + '</span>' + body + '</div>';
+}
+
+function fieldStats() {
+  const m = {};
+  const totalQ = SETS.all.length;
+  SETS.all.forEach(function (q) {
+    const h = histOf(q);
+    if (!m[q.f]) m[q.f] = { n: 0, ok: 0, q: 0, done: 0 };
+    m[q.f].q++;
+    if (h) { m[q.f].n += h.n; m[q.f].ok += h.ok; m[q.f].done++; }
+  });
+  return Object.keys(m).map(function (f) {
+    const d = m[f];
+    const rate = d.n ? d.ok / d.n : null;
+    // 年間出題数の設定がない科目は、収録に占める割合（0〜1）を重みにする
+    const w = FIELD_WEIGHTS ? (FIELD_WEIGHTS[f] || 1) : d.q / totalQ;
+    return { f: f, rate: rate, n: d.n, done: d.done, total: d.q, weight: w,
+             loss: (rate === null || w === 0) ? null : w * (1 - rate) };
+  }).sort(function (a, b) {
+    if (a.loss === null && b.loss === null) return b.weight - a.weight;
+    if (a.loss === null) return 1;
+    if (b.loss === null) return -1;
+    return b.loss - a.loss;
+  });
+}
+function lossText(loss) { return FIELD_WEIGHTS ? loss.toFixed(1) : (loss * 100).toFixed(1); }
+function weightText(r) {
+  if (!FIELD_WEIGHTS) return '収録の ' + Math.round(r.weight * 100) + '%';
+  return r.weight ? '本試験で年 ' + r.weight + '問前後' : '専門科目とは別の科目';
+}
+function renderDiagnosis() {
+  const fs = fieldStats();
+  const scored = fs.filter(function (r) { return r.loss !== null; });
+  if (!scored.length) {
+    return '<div class="diag"><h3>学習診断</h3><p class="note2">何問か解くと、分野ごとの正答率から' + (FIELD_WEIGHTS ? '「本番で何問落とす計算になるか」' : '「どの分野が全体の正答率を押し下げているか」') + 'を出します。</p></div>';
+  }
+  let rows = "";
+  fs.forEach(function (r, idx) {
+    const cls = r.loss === null ? "p3" : (idx === 0 ? "p1" : idx <= 2 ? "p2" : "p3");
+    rows += '<div class="drow ' + cls + '">' +
+      '<div class="dn">' + r.f + '</div>' +
+      '<div class="dv">' + (r.rate === null ? '未着手' : Math.round(r.rate * 100) + '%') + '</div>' +
+      '<div class="dloss">' + (r.loss === null ? '—' : '▲' + lossText(r.loss)) + '</div>' +
+      '<div class="dsub">' + weightText(r) + ' ／ 収録 ' + r.total + '問中 ' + r.done + '問に解答' +
+        (r.n ? '（延べ' + r.n + '回）' : '') + '</div>' +
+    '</div>';
+  });
+  const top = scored.slice(0, 3);
+  const totalLoss = scored.reduce(function (a, r) { return a + r.loss; }, 0);
+  let rx = '<div class="rx"><b>いまの正答率のままなら、' + (FIELD_WEIGHTS && SUBJECT.diagLoss
+    ? SUBJECT.diagLoss.replace("{n}", totalLoss.toFixed(1))
+    : '全体の正答率は約' + Math.round((1 - totalLoss) * 100) + '%の見込み</b>') + '。効く順に並べるとこうなります。<ol>';
+  top.forEach(function (r) {
+    rx += '<li><b>' + r.f + '</b>（正答率' + Math.round(r.rate * 100) + '%・' + (FIELD_WEIGHTS ? '年' + r.weight + '問' : '収録の' + Math.round(r.weight * 100) + '%') + '）— ' +
+      (r.rate < 0.5 ? '基礎から。用語の定義と数値をまず1周' :
+       r.rate < 0.75 ? '取りこぼしを潰す段階。間違えた問題だけ回す' :
+       '仕上がりつつある。維持で十分') + '</li>';
+  });
+  rx += '</ol></div>';
+  return '<div class="diag"><h3>学習診断</h3>' +
+    (FIELD_WEIGHTS
+      ? '<p class="note2">▲は「本試験でその分野から落とす問題数の見込み」＝ 年間出題数 ×（1 − 正答率）。出題が多い分野ほど、同じ正答率でも損失が大きくなります。</p>'
+      : '<p class="note2">▲は「その分野が全体の正答率を押し下げている分（％ポイント）」＝ 収録に占める割合 ×（1 − 正答率）。収録が多い分野ほど、同じ正答率でも影響が大きくなります。</p>') +
+    rows + rx +
+    '<div class="exp"><button class="btn ghost" id="copyDiag">診断結果をコピー</button>' +
+    '<span class="msg" id="copyMsg"></span></div></div>';
+}
+function diagnosisText() {
+  const fs = fieldStats(), L = lifetimeStats();
+  let t = "【" + (SUBJECT.shareTitle || "技術士一次試験 学習状況") + "】\n";
+  t += "累計 " + L.answers + "回解答／正答率 " + (L.answers ? Math.round(L.correct / L.answers * 100) : 0) + "%／苦手 " + weakList().length + "問\n\n";
+  t += FIELD_WEIGHTS ? "分野別（正答率 / 本試験の年間出題数 / 落とす見込み）\n" : "分野別（正答率 / 収録に占める割合 / 全体を押し下げる分）\n";
+  fs.forEach(function (r) {
+    t += "- " + r.f + "：" + (r.rate === null ? "未着手" : Math.round(r.rate * 100) + "%") +
+      " / " + (FIELD_WEIGHTS ? "年" + r.weight + "問" : Math.round(r.weight * 100) + "%") + " / " + (r.loss === null ? "—" : "▲" + lossText(r.loss)) +
+      "（収録" + r.total + "問中" + r.done + "問に解答）\n";
+  });
+  const miss = SETS.all.filter(function (q) { const h = histOf(q); return h && h.last === 0; });
+  if (miss.length) {
+    t += "\n直近で間違えた問題（" + miss.length + "問）\n";
+    miss.forEach(function (q) { t += "- [" + q.f + "] " + q.q + "\n"; });
+  }
+  t += "\n※このテキストをClaudeに貼ると、次に何をやるべきか分析してもらえます。";
+  return t;
+}
+
+
+/* ---------- 学習データのバックアップ（機種変更・URL移行用） ---------- */
+function exportStudyData() {
+  const nh = Object.keys(HIST).length, nn = Object.keys(NOTES).length;
+  if (!nh && !nn) return null;
+  const d = { app: "gijutsushi-quiz", kind: "study-data", v: 1,
+              exported: new Date().toISOString(), history: HIST, notes: NOTES, examDay: ymd(EXAM_DAY) };
+  const t = new Date();
+  const pad = function (x) { return String(x).padStart(2, "0"); };
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(d)], { type: "application/json" }));
+  a.download = "gijutsushi-study-" + t.getFullYear() + pad(t.getMonth() + 1) + pad(t.getDate()) + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 10000);
+  return { h: nh, n: nn };
+}
+function mergeStudyData(d) {
+  if (!d || d.app !== "gijutsushi-quiz" || d.kind !== "study-data" ||
+      !d.history || typeof d.history !== "object" || !d.notes || typeof d.notes !== "object") {
+    return { err: "このアプリの学習データのファイルではありません" };
+  }
+  let h = 0, n = 0;
+  Object.keys(d.history).forEach(function (k) {
+    const r = d.history[k];
+    if (!r || typeof r.n !== "number" || typeof r.ok !== "number" || r.n < 1 || r.ok < 0 || r.ok > r.n) return;
+    const cur = HIST[k];
+    // 合算すると同じファイルを2回読んだとき回数が倍になるので、解答回数の多い方を残す
+    if (!cur || r.n > cur.n) {
+      HIST[k] = { n: r.n, ok: r.ok, last: (r.last === 0 || r.last === 1) ? r.last : null };
+      if (typeof r.st === "number" && r.st >= 0) HIST[k].st = r.st;
+      if (typeof r.ts === "number") HIST[k].ts = r.ts;
+      if (typeof r.due === "number") HIST[k].due = r.due;
+      h++;
+    }
+  });
+  Object.keys(d.notes).forEach(function (k) {
+    const r = d.notes[k];
+    if (!r || typeof r !== "object") return;
+    const memo = typeof r.memo === "string" ? r.memo : "";
+    const bm = r.bm === true;
+    if (!memo && !bm) return;
+    const t = typeof r.t === "number" ? r.t : 0;
+    const cur = NOTES[k];
+    if (!cur || t > (cur.t || 0)) { NOTES[k] = { bm: bm, memo: memo, t: t || Date.now() }; n++; }
+  });
+  saveHist(); saveNotes();
+  migrateSR();   // 復習日を持たない古い形式のファイルにも復習日を付ける
+  // 受験日はこの端末が既定日のままのときだけ取り込む（すでに変更済みの設定を上書きしないため）
+  let examTaken = false;
+  if (typeof d.examDay === "string" && ymd(EXAM_DAY) === ymd(EXAM_DAY_DEFAULT) && setExamDay(d.examDay)) {
+    examTaken = true;
+  }
+  return { h: h, n: n, e: examTaken };
+}
+function renderBackup() {
+  return '<div class="datamgr"><h3>学習データのバックアップ</h3>' +
+    '<p>解答履歴・ブックマーク・メモは<b>この端末の、このURLにだけ</b>保存されています。' +
+    '機種変更や、アプリのURLが変わる前に書き出し、新しい方で読み込んでください。</p>' +
+    '<div class="imp">' +
+      '<button class="impfile" id="expStudy" type="button">書き出す</button>' +
+      '<label class="impfile ghost" for="impStudy">読み込む</label>' +
+      '<input type="file" id="impStudy" accept="application/json,.json">' +
+      '<span class="impmsg" id="studyMsg"></span>' +
+    '</div>' +
+    '<p class="privacy">同じ問題の記録が両方にあるときは、解答回数の多い方と、あとから書いたメモの方を残します。' +
+    '同じファイルを2回読み込んでも回数は増えません。</p></div>';
+}
+function wireBackup(p) {
+  function say(cls, text) {
+    const m = document.getElementById("studyMsg");
+    if (m) { m.className = "impmsg " + cls; m.textContent = text; }
+  }
+  const ex = p.querySelector("#expStudy");
+  if (ex) ex.addEventListener("click", function () {
+    const r = exportStudyData();
+    if (!r) say("ng", "まだ保存された学習データがありません");
+    else say("ok", "書き出しました（履歴 " + r.h + "問・ブックマーク/メモ " + r.n + "問）");
+  });
+  const f = p.querySelector("#impStudy");
+  if (f) f.addEventListener("change", function () {
+    const file = f.files && f.files[0];
+    if (!file) return;
+    const rd = new FileReader();
+    rd.onload = function () {
+      let d = null;
+      try { d = JSON.parse(rd.result); } catch (e) { say("ng", "JSONとして読めませんでした"); return; }
+      const res = mergeStudyData(d);
+      if (res.err) { say("ng", res.err); return; }
+      refreshWeakBtn();
+      if (res.e) { renderCountdown(); if (AT_HOME) goHome(); }
+      renderHistory();   // 画面を描き直してから結果を出す（先に出すと描き直しで消える）
+      say("ok", "読み込みました（履歴 " + res.h + "問・ブックマーク/メモ " + res.n + "問を反映" + (res.e ? "・受験日も反映" : "") + "）");
+    };
+    rd.readAsText(file);
+    f.value = "";
+  });
+}
+
+function renderDataManager() {
+  let items = "";
+  Object.keys(IMPORTED).sort().forEach(function (k) {
+    const d = IMPORTED[k];
+    items += '<div class="impitem"><span>' + d.label + '</span><span class="n2">' +
+      (d.questions ? d.questions.length : 0) + '問</span>' +
+      '<button data-del="' + k + '">削除</button></div>';
+  });
+  return '<div class="datamgr"><h3>過去問データの読み込み</h3>' +
+    '<p>過去問の本文は<b>この端末の中だけ</b>に保存されます。' +
+    'アプリを置いているGitHubには問題文を一切含めていないため、' +
+    '読み込みは端末ごとに1回だけ必要です。</p>' +
+    '<div class="imp">' +
+      '<label class="impfile" for="impFile">JSONファイルを選ぶ</label>' +
+      '<input type="file" id="impFile" accept="application/json,.json">' +
+      '<span class="impmsg" id="impMsg"></span>' +
+    '</div>' +
+    (items ? '<div style="margin-top:1rem">' + items + '</div>' : '') +
+    '<p class="privacy">保存先はブラウザのローカル領域です。他人には見えません。' +
+    'ブラウザのデータを消すと再読み込みが必要になります。</p></div>';
+}
+function wireDataManager(p) {
+  const f = p.querySelector("#impFile");
+  const msg = p.querySelector("#impMsg");
+  if (f) f.addEventListener("change", function () {
+    const file = f.files && f.files[0];
+    if (!file) return;
+    const r = new FileReader();
+    r.onload = function () {
+      let d = null;
+      try { d = JSON.parse(r.result); } catch (e) {
+        msg.className = "impmsg ng"; msg.textContent = "JSONとして読めませんでした"; return;
+      }
+      const err = validateImport(d) || applyImport(d);
+      if (err) { msg.className = "impmsg ng"; msg.textContent = err; return; }
+      renderHistory();   // 描き直しで古いメッセージ欄は消えるので、新しい方に出す
+      const m2 = document.getElementById("impMsg");
+      if (m2) { m2.className = "impmsg ok"; m2.textContent = d.label + " を " + d.questions.length + "問 読み込みました"; }
+    };
+    r.readAsText(file);
+  });
+  p.querySelectorAll("[data-del]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (!confirm(IMPORTED[b.dataset.del].label + " を削除します。よろしいですか。")) return;
+      delete IMPORTED[b.dataset.del];
+      saveImported(); refreshImportedSet(); renderHistory();
+    });
+  });
+}
+
+/* ---------- 履歴タブ ---------- */
+let HFILTER = "miss";
+function renderHistory() {
+  const p = document.getElementById("pane-hist");
+  const all = SETS.all;
+  const L = lifetimeStats();
+  const answered = all.filter(function (q) { return histOf(q); });
+  const weak = weakList();
+
+  let list = all.map(function (q) { return { q: q, h: histOf(q) }; });
+  if (HFILTER === "miss") list = list.filter(function (r) { return r.h && (r.h.last === 0 || r.h.ok / r.h.n < 0.6); });
+  else if (HFILTER === "none") list = list.filter(function (r) { return !r.h; });
+  else if (HFILTER === "bm") list = list.filter(function (r) { return isBookmarked(r.q); });
+  else if (HFILTER === "memo") list = list.filter(function (r) { return !!memoOf(r.q); });
+  const nBm = all.filter(isBookmarked).length;
+  const nMemo = all.filter(function (q) { return !!memoOf(q); }).length;
+  // 正答率が低い順、未回答は末尾
+  list.sort(function (a, b) {
+    if (!a.h && !b.h) return 0;
+    if (!a.h) return 1;
+    if (!b.h) return -1;
+    return (a.h.ok / a.h.n) - (b.h.ok / b.h.n);
+  });
+
+  let rows = "";
+  list.forEach(function (r) {
+    const h = r.h;
+    const cls = !h ? "none" : (h.last === 0 ? "miss" : "");
+    const pct = h ? Math.round(h.ok / h.n * 100) : 0;
+    const bad = h && pct < 60 ? " bad" : "";
+    rows += '<div class="hrow ' + cls + '">' +
+      '<div><div class="hf">' + (isBookmarked(r.q) ? '<span class="bmk" aria-label="ブックマーク">★</span>' : '') +
+        r.q.f + '</div><div class="hq"></div></div>' +
+      '<div class="hn">' + (h ? '<b>' + h.ok + '</b> / ' + h.n + '　' + pct + '%' : '未回答') +
+        (h ? '<span class="hbar' + bad + '"><i style="width:' + pct + '%"></i></span>' : '') + '</div>' +
+      '</div>';
+  });
+
+  p.innerHTML =
+    '<div class="hsum">' +
+      '<div>累計解答<b>' + L.answers + '</b></div>' +
+      '<div>累計正答率<b>' + (L.answers ? Math.round(L.correct / L.answers * 100) + '%' : '—') + '</b></div>' +
+      '<div>着手<b>' + answered.length + ' / ' + all.length + '</b></div>' +
+      '<div class="warn">苦手<b>' + weak.length + '</b></div>' +
+    '</div>' +
+    '<div class="filters">' +
+      '<button class="flt" data-f="miss" aria-pressed="' + (HFILTER === "miss") + '">間違えた問題</button>' +
+      '<button class="flt" data-f="all" aria-pressed="' + (HFILTER === "all") + '">すべて</button>' +
+      '<button class="flt" data-f="none" aria-pressed="' + (HFILTER === "none") + '">未回答</button>' +
+      '<button class="flt" data-f="bm" aria-pressed="' + (HFILTER === "bm") + '">★ ブックマーク ' + nBm + '</button>' +
+      '<button class="flt" data-f="memo" aria-pressed="' + (HFILTER === "memo") + '">メモあり ' + nMemo + '</button>' +
+    '</div>' +
+    (list.length
+      ? '<div class="hact"><button class="btn" id="solveThese">この ' + list.length + '問を解く</button>' +
+        (L.answers ? '<button class="reset" id="resetHist2">履歴をリセット</button>' : '') + '</div>' + rows
+      : '<p class="empty">' + (HFILTER === "miss"
+          ? "間違えた問題はありません。まだ解いていない場合は「未回答」から始めてください。"
+          : HFILTER === "none" ? "すべての問題に一度は解答済みです。"
+          : HFILTER === "bm" ? "ブックマークした問題はありません。クイズ画面で問題の右上の「☆ ブックマーク」を押すと、ここに集まります。"
+          : HFILTER === "memo" ? "メモを書いた問題はありません。クイズ画面で問題の右上の「メモ」から書けます。"
+          : "履歴がありません。") + '</p>')
+    + renderDiagnosis() + renderBackup() + renderDataManager();
+
+  // 問題文・メモは利用者の入力を含むので textContent で入れる
+  p.querySelectorAll(".hrow").forEach(function (row, idx) {
+    const r = list[idx];
+    if (!r) return;
+    row.querySelector(".hq").textContent = r.q.q;
+    const m = memoOf(r.q);
+    if (m) {
+      const d = document.createElement("div");
+      d.className = "hmemo";
+      d.textContent = m;
+      row.appendChild(d);
+    }
+  });
+
+  p.querySelectorAll(".flt").forEach(function (b) {
+    b.addEventListener("click", function () { HFILTER = b.dataset.f; renderHistory(); });
+  });
+  const st = p.querySelector("#solveThese");
+  if (st) st.addEventListener("click", function () {
+    CUSTOM_LIST = list.map(function (r) { return r.q; });
+    CURRENT_SET = "custom";
+    document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
+    selectTab("quiz");
+    rebuild();
+  });
+  wireBackup(p);
+  wireDataManager(p);
+  const cd = p.querySelector("#copyDiag");
+  if (cd) cd.addEventListener("click", function () {
+    const txt = diagnosisText();
+    const msg = p.querySelector("#copyMsg");
+    function done() { msg.textContent = "コピーしました。Claudeに貼れます"; setTimeout(function () { msg.textContent = ""; }, 4000); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(done, function () { fallback(); });
+    } else { fallback(); }
+    function fallback() {
+      const ta = document.createElement("textarea");
+      ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); done(); } catch (e) { msg.textContent = "コピーできませんでした"; }
+      document.body.removeChild(ta);
+    }
+  });
+  const rh2 = p.querySelector("#resetHist2");
+  if (rh2) rh2.addEventListener("click", function () {
+    if (!confirm("これまでの解答履歴をすべて削除します。よろしいですか。")) return;
+    HIST = {}; saveHist(); refreshWeakBtn(); renderHistory();
+  });
+}
+
+/* ---------- 頻出テーマ ---------- */
+const YEARS = ["R1","R2","R3","R4","R5","R6","R7"];
+function renderTopics() {
+  const p = document.getElementById("pane-topics");
+  if (p.dataset.done) return;
+  const TP = SUBJECT.topicsPane;
+
+  let stats = '<div class="scroll"><table class="stats"><thead><tr><th>出典・分野</th>' +
+    YEARS.map(y => '<th>' + y + '</th>').join('') + '<th>7年計</th><th>比率</th></tr></thead><tbody>';
+  FIELD_STATS.forEach(f => {
+    const hi = TP.highlight.indexOf(f.name) >= 0 ? ' class="hi"' : '';
+    stats += '<tr' + hi + '><td><span class="nm">' + f.name + '</span><span class="sb">' + f.sub + '</span></td>' +
+      f.y.map(v => '<td>' + v + '</td>').join('') +
+      '<td><b>' + f.total + '</b></td><td>' + Math.round(f.total / TP.total * 100) + '%</td></tr>';
+  });
+  stats += '</tbody></table></div>';
+
+  let list = '';
+  TOPIC_LIST.forEach(t => {
+    list += '<div class="topic">' +
+      '<div class="cnt">' + t.n + '<small>回</small></div>' +
+      '<div class="ti">' + t.t + '</div>' +
+      '<div class="meta"><span class="f">' + t.f + '</span>　' + t.cites.join('・') +
+      (t.flag ? '　<span class="flag">' + t.flag + '</span>' : '') + '</div>' +
+      '<div class="nt">' + t.note + '</div>' +
+    '</div>';
+  });
+
+  p.innerHTML =
+    '<p class="lede">' + TP.lede + '</p>' +
+    stats +
+    '<p class="lede">' + TP.passNote + '</p>' +
+    '<h2 style="font-family:\'Hiragino Mincho ProN\',\'Yu Mincho\',serif;font-size:1.05rem;margin:1.6rem 0 .2rem">' + TP.listHead + '</h2>' +
+    '<p class="lede" style="margin-top:.2rem">' + TP.listLede + '</p>' +
+    list +
+    '<div class="foot">' + TP.foot + '</div>';
+  p.dataset.done = "1";
+}
+
+/* ---------- タブ ---------- */
+const PANES = { quiz: "pane-quiz", topics: "pane-topics", hist: "pane-hist" };
+const TABS  = { quiz: "tab-quiz",  topics: "tab-topics",  hist: "tab-hist"  };
+if (!HAS_TOPICS) {
+  document.getElementById(TABS.topics).remove();
+  document.getElementById(PANES.topics).remove();
+  delete PANES.topics; delete TABS.topics;
+}
+function selectTab(which) {
+  Object.keys(PANES).forEach(function (k) {
+    document.getElementById(PANES[k]).hidden = (k !== which);
+    document.getElementById(TABS[k]).setAttribute("aria-selected", String(k === which));
+  });
+  if (which === "topics") renderTopics();
+  if (which === "hist") renderHistory();
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+Object.keys(TABS).forEach(function (k) {
+  document.getElementById(TABS[k]).addEventListener("click", function () {
+    if (k === "quiz" && !document.getElementById("pane-quiz").hidden && !AT_HOME) { goHome(); return; }
+    selectTab(k);
+  });
+});
+
+refreshImportedSet();
+renderCountdown();
+updateUnvUI();
+refreshWeakBtn();
+(function boot() {
+  if (!STORAGE_OK) {
+    document.getElementById("resumeHost").innerHTML =
+      '<div class="nostore"><b>この端末では学習履歴を保存できません。</b>' +
+      'プライベートブラウズを使っている場合は通常のウィンドウで開いてください。' +
+      '履歴・進捗ともにページを閉じると消えます。</div>';
+  }
+  const sv = loadSession();
+  if (sv) {
+    CURRENT_SET = sv.set;
+    LIMIT = sv.limit;
+    document.querySelectorAll(".lim").forEach(function (o) {
+      o.setAttribute("aria-pressed", String(Number(o.dataset.lim) === LIMIT));
+    });
+    Q.length = 0; sv.list.forEach(function (q) { Q.push(q); });
+    i = sv.i; correct = sv.correct;
+    answers.length = 0; sv.answers.forEach(function (a, idx) { answers[idx] = a; });
+    if (SETS[sv.set] || sv.set === "weak" || sv.set === "bm" || sv.set === "auto") applySetButtons(sv.set); else applySetButtons("__none__");
+    updatePickInfo();
+    showResume(sv.i, Q.length);
+    render();
+  } else {
+    Q.length = 0;   // 初期値のまま「続きから」が出ないように
+    goHome();       // 解きかけの回がないときは、道のりと出題範囲を選ぶ画面から始める
+  }
+})();
+</script>
+
+</body>
+</html>
