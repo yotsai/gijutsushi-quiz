@@ -77,7 +77,7 @@ function render() {
       '<textarea id="memoTa" rows="3" placeholder="覚え方、間違えた理由など"></textarea>' +
       '<div class="saved" aria-live="polite"></div>' +
     '</div>';
-  card.querySelector(".qt").textContent = q.q;
+  card.querySelector(".qt").textContent = q.q.replace(/<br>/g, "\n");
   card.querySelector(".qh").textContent = q.h;
   wireNoteTools(card, q);
 
@@ -1178,7 +1178,7 @@ function diagnosisText() {
   const miss = SETS.all.filter(function (q) { const h = histOf(q); return h && h.last === 0; });
   if (miss.length) {
     t += "\n直近で間違えた問題（" + miss.length + "問）\n";
-    miss.forEach(function (q) { t += "- [" + q.f + "] " + q.q + "\n"; });
+    miss.forEach(function (q) { t += "- [" + q.f + "] " + q.q.replace(/<br>/g, " ") + "\n"; });
   }
   t += "\n※このテキストをClaudeに貼ると、次に何をやるべきか分析してもらえます。";
   return t;
@@ -1399,7 +1399,7 @@ function renderHistory() {
   p.querySelectorAll(".hrow").forEach(function (row, idx) {
     const r = list[idx];
     if (!r) return;
-    row.querySelector(".hq").textContent = r.q.q;
+    row.querySelector(".hq").textContent = r.q.q.replace(/<br>/g, "\n");
     const m = memoOf(r.q);
     if (m) {
       const d = document.createElement("div");

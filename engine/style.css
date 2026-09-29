@@ -147,7 +147,7 @@
     box-shadow: var(--shadow); padding: 1.15rem 1.1rem 1.25rem; margin-top: 1.1rem;
   }
   .qn { font-size: .75rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-  .qt { font-size: 1.03rem; font-weight: 600; margin: .25rem 0 .1rem; line-height: 1.6; text-wrap: pretty; }
+  .qt { font-size: 1.03rem; font-weight: 600; margin: .25rem 0 .1rem; line-height: 1.6; text-wrap: pretty; white-space: pre-line; }
   .qh { font-size: .82rem; color: var(--ink-3); margin: 0 0 .9rem; line-height: 1.6; }
 
   .choices { display: flex; flex-direction: column; gap: .45rem; }
@@ -323,7 +323,7 @@
     display: grid; grid-template-columns: 1fr auto; gap: .1rem .8rem;
     padding: .62rem 0; border-bottom: 1px solid var(--rule); align-items: baseline;
   }
-  .hrow .hq { font-size: .87rem; line-height: 1.55; }
+  .hrow .hq { font-size: .87rem; line-height: 1.55; white-space: pre-line; }
   .hrow .hf { font-size: .7rem; color: var(--accent); letter-spacing: .03em; }
   .hrow .hn { font-size: .8rem; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
   .hrow .hn b { color: var(--ink); }
