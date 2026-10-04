@@ -10,6 +10,8 @@ const LETTERS = ["1","2","3","4","5"];
 const VLABEL = {
   primary:   "◎ 白書・法令・告示など一次資料で確認",
   answer:    "○ 公開正答表との突合により確定",
+  calc:      "○ 計算で検算済み（式・定義は教科書・規格どおり）",
+  textbook:  "△ 教科書の基本事項（独立した解き直しで正解を確認。規格・一次資料の本文は未確認）",
   knowledge: "△ 教科書的知識にもとづく記述（一次資料は未確認。テキストでの確認を推奨）"
 };
 let i = 0, correct = 0, answered = false;
@@ -247,7 +249,7 @@ function renderRoadmap() {
   } else if (weak.length) {
     RM_ACTIONS.push({ label: "苦手を解く", sub: weak.length + "問", list: weak });
   }
-  RM_ACTIONS.push({ label: "★ 頻出論点だけ解く", sub: freq.length + "問・過去7年で2回以上出た論点。まずここを固める", list: freq, ghost: true });
+  if (freq.length) RM_ACTIONS.push({ label: "★ 頻出論点だけ解く", sub: freq.length + "問・過去7年で2回以上出た論点。まずここを固める", list: freq, ghost: true });
 
   let btns = "";
   RM_ACTIONS.forEach(function (a, k) {
@@ -1055,6 +1057,8 @@ function whyOf(q) {
     if (x && (!t || yearsOf(x) > yearsOf(t))) t = x;
   });
   if (!t && SUBJECT.wasteSet && SETS[SUBJECT.wasteSet].indexOf(q) >= 0 && WASTE_TOPIC[q.f]) t = WASTE_TOPIC[q.f];
+  const jm = (q.n || "").match(/〔出題実績:\s*([^〕]*)〕/);
+  const jis = jm ? jm[1].split("、").map(function (c) { return c.trim(); }).filter(function (c) { return /^R\d/.test(c); }) : [];
   // rank：出題の確かさで並べる順（頻出3回以上 > 2回 > 1回出た > 今年の予想 > 実績なし）
   let w;
   if (t) {
@@ -1063,6 +1067,12 @@ function whyOf(q) {
   } else if (cs.length) {
     const uniq = cs.filter(function (c, k) { return cs.indexOf(c) === k; });
     w = { tier: 0, rank: 3, once: uniq, label: "" };
+  } else if (jis.length) {
+    const ys = {};
+    jis.forEach(function (c) { ys[c.split(/\s+/)[0]] = 1; });
+    const y = Object.keys(ys).length;
+    if (y >= 2) w = { tier: y >= 3 ? 3 : 2, rank: y >= 3 ? 5 : 4, years: y, topic: { cites: jis, note: "" }, same: false, label: "過去7年で" + y + "回出題" };
+    else w = { tier: 0, rank: 3, once: jis, label: "" };
   } else if (SUBJECT.forecastField && q.f === SUBJECT.forecastField) {
     w = { tier: 1, rank: 2, label: "今年の新論点（出題実績なし・予想）" };
   } else {
