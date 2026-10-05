@@ -7,7 +7,7 @@ const SUBJECT = {
   eyebrow: "技術士第一次試験｜【19】環境部門・専門科目",
   h1: "環境部門 専門科目クイズ",
   intro: "令和元年度〜7年度の過去問245問を1問ずつ分類し、実際に出ている論点を4択にしました。選ぶと即座に正誤と解説が出ます。キーボードの 1〜4 と Enter でも進められます。問題ごとに<b>ブックマーク</b>と<b>メモ</b>を残せます（この端末に保存）。",
-  ver: "版 2026-10-04（基礎科目 群1〜4を追加）",
+  ver: "版 2026-10-05（最新動向・基本事項を追加）",
 
   /* localStorage キーは "gq_" + storagePrefix + 名前。専門は既存の利用者の履歴を守るため空 */
   storagePrefix: "",
@@ -17,7 +17,8 @@ const SUBJECT = {
     { key: "white",   label: "白書・統計",   data: "QUIZ_DATA", default: true },
     { key: "past",    label: "過去問論点",   data: "PASTQ_DATA" },
     { key: "measure", label: "測定・分析",   data: "MEASURE_DATA" },
-    { key: "extra",   label: "5択問題",      data: "EXTRA_DATA" }
+    { key: "extra",   label: "5択問題",      data: "EXTRA_DATA" },
+    { key: "trend",   label: "最新動向・基本", data: "TREND_DATA" }
   ],
   allSetLabel: "まとめて",
   examDayDefault: "2026-11-22",
@@ -78,5 +79,5 @@ const SUBJECT = {
 
   shareTitle: "技術士一次試験 環境部門 学習状況",
 
-  files: ["data.js", "pastq.js", "measure.js", "extra.js"]
+  files: ["data.js", "pastq.js", "measure.js", "extra.js", "trend.js"]
 };
