@@ -2,6 +2,7 @@
 const SUBJECT = {
   id: "tekisei",
   name: "適性科目",
+  groupLabel: "適性",
   title: "技術士一次試験 適性科目クイズ",
   description: "技術士第一次試験・適性科目（技術者倫理）の学習ツール。",
   eyebrow: "技術士第一次試験｜適性科目",

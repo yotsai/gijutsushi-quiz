@@ -33,7 +33,7 @@ function resolveSubject(id) {
   }
   cfg = Object.assign({}, cfg);
   delete cfg.combine; delete cfg.base;
-  cfg.sets = [].concat(...parts.map((p) => p.sets));
+  cfg.sets = [].concat(...parts.map((p) => p.sets.map((d) => (s.combine ? Object.assign({ group: p.groupLabel || p.name }, d) : d))));
   cfg.topics = parts.some((p) => p.topics);
   const files = [];
   parts.forEach((p) => {

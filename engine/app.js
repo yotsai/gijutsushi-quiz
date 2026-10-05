@@ -948,6 +948,7 @@ function loadSession() {
 function applySetButtons(key) {
   document.querySelectorAll(".set").forEach(function (o) {
     o.setAttribute("aria-pressed", String(o.dataset.set === key));
+    if (o.dataset.set === key && o.dataset.grp) showGroup(o.dataset.grp);
   });
 }
 function showResume(n, total) {
@@ -969,29 +970,71 @@ function baseAll() {
   return [].concat.apply([], SUBJECT.sets.map(function (d) { return SETS[d.key]; }));
 }
 SETS.all = baseAll();
+/* 全部入りでは専門・基礎・適性の大項目で絞ってからセットを選ぶ */
+const GROUPS = [];
+SUBJECT.sets.forEach(function (d) { if (d.group && GROUPS.indexOf(d.group) < 0) GROUPS.push(d.group); });
+const GROUPED = GROUPS.length > 1;
+const GROUP_KEY = "gq_" + (SUBJECT.storagePrefix || "") + "homeGroup";
+if (GROUPED) GROUPS.forEach(function (g) {
+  const ds = SUBJECT.sets.filter(function (d) { return d.group === g; });
+  if (ds.length < 2) return;
+  SETS["grp:" + g] = [].concat.apply([], ds.map(function (d) { return SETS[d.key]; }));
+  SET_LABEL["grp:" + g] = g + " まとめて";
+});
+function showGroup(g) {
+  if (!GROUPED) return;
+  document.querySelectorAll(".grp").forEach(function (t) { t.setAttribute("aria-selected", String(t.dataset.grp === g)); });
+  document.querySelectorAll(".set[data-grp]").forEach(function (b) { b.classList.toggle("offgrp", b.dataset.grp !== g); });
+  try { localStorage.setItem(GROUP_KEY, g); } catch (e) {}
+}
 /* 集合ボタンは SUBJECT.sets から作る。問題数はデータから数える（HTMLに書いた数字は追加のたびに古くなるため） */
 (function buildSetButtons() {
   const box = document.getElementById("setsBox");
   const multi = SUBJECT.sets.length > 1;
-  function add(cls, key, text, attrs) {
+  function add(cls, key, text, attrs, grp) {
     const b = document.createElement("button");
     b.className = cls;
     b.dataset.set = key;
+    if (grp) b.dataset.grp = grp;
     b.setAttribute("aria-pressed", String(key === DEFAULT_SET));
     b.textContent = text;
     Object.keys(attrs || {}).forEach(function (k) { b[k] = attrs[k]; });
     box.appendChild(b);
   }
   add("set auto", "auto", "おまかせ", { id: "autoBtn" });
+  if (GROUPED) {
+    const tabs = document.createElement("div");
+    tabs.className = "grptabs";
+    tabs.setAttribute("role", "tablist");
+    GROUPS.forEach(function (g) {
+      const t = document.createElement("button");
+      t.className = "grp";
+      t.dataset.grp = g;
+      t.setAttribute("role", "tab");
+      t.textContent = g;
+      t.addEventListener("click", function () { showGroup(g); });
+      tabs.appendChild(t);
+    });
+    box.appendChild(tabs);
+  }
   SUBJECT.sets.forEach(function (d) {
     const n = SETS[d.key].length;
     // 複数セットのうち問題がまだ0件のもの（準備中の科目）はボタンを出さない
-    add("set", d.key, d.label + " " + n + "問", { hidden: multi && n === 0 });
+    add("set", d.key, d.label + " " + n + "問", { hidden: multi && n === 0 }, GROUPED ? d.group : "");
   });
-  if (multi) add("set", "all", (SUBJECT.allSetLabel || "まとめて") + " 全問");
+  if (GROUPED) GROUPS.forEach(function (g) {
+    if (SETS["grp:" + g]) add("set", "grp:" + g, g + " まとめて " + SETS["grp:" + g].length + "問", {}, g);
+  });
+  else if (multi) add("set", "all", (SUBJECT.allSetLabel || "まとめて") + " 全問");
   add("set", "imported", "過去問 0問", { id: "impBtn", hidden: true });
   add("set weak", "weak", "苦手 0問", { id: "weakBtn" });
   add("set bm", "bm", "★ ブックマーク 0問", { id: "bmBtn" });
+  if (GROUPED) {
+    let g0 = null;
+    try { g0 = localStorage.getItem(GROUP_KEY); } catch (e) {}
+    const def = SUBJECT.sets.filter(function (d) { return d.key === DEFAULT_SET; })[0];
+    showGroup(GROUPS.indexOf(g0) >= 0 ? g0 : (def && def.group) || GROUPS[0]);
+  }
 })();
 document.querySelectorAll(".set").forEach(function (b) {
   b.addEventListener("click", function () {

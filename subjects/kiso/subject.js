@@ -2,6 +2,7 @@
 const SUBJECT = {
   id: "kiso",
   name: "基礎科目",
+  groupLabel: "基礎",
   title: "技術士一次試験 基礎科目（群1〜5）クイズ",
   description: "技術士第一次試験・基礎科目（群1設計・計画／群2情報・論理／群3解析／群4材料・化学・バイオ／群5環境・エネルギー・技術）の学習ツール。過去問の出題論点にもとづく自作の4択クイズ。",
   eyebrow: "技術士第一次試験｜基礎科目",
@@ -12,11 +13,11 @@ const SUBJECT = {
   storagePrefix: "kiso_",
 
   sets: [
-    { key: "kiso1", label: "基礎1 設計・計画", short: "基礎 群1 設計・計画", data: "KISO1_DATA" },
-    { key: "kiso2", label: "基礎2 情報・論理", short: "基礎 群2 情報・論理", data: "KISO2_DATA" },
-    { key: "kiso3", label: "基礎3 解析", short: "基礎 群3 解析", data: "KISO3_DATA" },
-    { key: "kiso4", label: "基礎4 材料・化学・バイオ", short: "基礎 群4 材料・化学・バイオ", data: "KISO4_DATA" },
-    { key: "kiso", label: "基礎5 環境・エネルギー", short: "基礎 群5 環境・エネルギー", data: "KISO_DATA", default: true }
+    { key: "kiso1", label: "群1 設計・計画", short: "基礎 群1 設計・計画", data: "KISO1_DATA" },
+    { key: "kiso2", label: "群2 情報・論理", short: "基礎 群2 情報・論理", data: "KISO2_DATA" },
+    { key: "kiso3", label: "群3 解析", short: "基礎 群3 解析", data: "KISO3_DATA" },
+    { key: "kiso4", label: "群4 材料・化学・バイオ", short: "基礎 群4 材料・化学・バイオ", data: "KISO4_DATA" },
+    { key: "kiso", label: "群5 環境・エネルギー", short: "基礎 群5 環境・エネルギー", data: "KISO_DATA", default: true }
   ],
   allSetLabel: "まとめて",
   examDayDefault: "2026-11-22",
