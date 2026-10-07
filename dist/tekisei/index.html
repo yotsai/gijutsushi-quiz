@@ -610,6 +610,7 @@
   }
   body.home-mode .set[aria-pressed="true"] { background: var(--panel); color: var(--ink); border-color: var(--rule); }
   body.home-mode .set.weak:not(:disabled) { color: var(--ng); border-color: color-mix(in srgb, var(--ng) 45%, var(--rule)); }
+  body.home-mode .set.freq { color: var(--accent); font-weight: 700; }
   body.home-mode .set.bm:not(:disabled) { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--rule)); }
   body.home-mode .limits { margin: .7rem .1rem 0; }
   body.home-mode .lim { border-radius: 999px; }
@@ -864,7 +865,7 @@ const TEKISEI2_DATA = [
 ];
 </script>
 <script>
-const SUBJECT = {"id":"tekisei","name":"適性科目","groupLabel":"適性","title":"技術士一次試験 適性科目クイズ","description":"技術士第一次試験・適性科目（技術者倫理）の学習ツール。","eyebrow":"技術士第一次試験｜適性科目","h1":"適性科目クイズ","intro":"適性科目の予想問題を4択にしました（すべて自作）。法令・倫理綱領（技術士法第4章・技術士倫理綱領・製造物責任・知的財産・公益通報・ハラスメント・個人情報）と、安全・倫理・社会（安全工学とリスク・技術者倫理・研究倫理・AIと新技術・SDGs・社会的責任・BCPなど）の2つに分けています。過去問R1再〜R7で出た論点には解説に出題年を付けています。選ぶと即座に正誤と解説が出ます。","ver":"版 2026-10-07","storagePrefix":"tekisei_","sets":[{"key":"tekisei","label":"法令・倫理綱領","short":"適性 法令・倫理綱領","data":"TEKISEI_DATA","default":true},{"key":"tekisei2","label":"安全・倫理・社会","short":"適性 安全・倫理・社会","data":"TEKISEI2_DATA"}],"allSetLabel":"まとめて","examDayDefault":"2026-11-22","emptyMessage":"適性科目の問題は準備中です。","topics":false};
+const SUBJECT = {"id":"tekisei","name":"適性科目","groupLabel":"適性","title":"技術士一次試験 適性科目クイズ","description":"技術士第一次試験・適性科目（技術者倫理）の学習ツール。","eyebrow":"技術士第一次試験｜適性科目","h1":"適性科目クイズ","intro":"適性科目の予想問題を4択にしました（すべて自作）。法令・倫理綱領（技術士法第4章・技術士倫理綱領・製造物責任・知的財産・公益通報・ハラスメント・個人情報）と、安全・倫理・社会（安全工学とリスク・技術者倫理・研究倫理・AIと新技術・SDGs・社会的責任・BCPなど）の2つに分けています。過去問R1再〜R7で出た論点には解説に出題年を付けています。選ぶと即座に正誤と解説が出ます。","ver":"版 2026-10-07","storagePrefix":"tekisei_","sets":[{"key":"tekisei","label":"法令・倫理綱領","short":"適性 法令・倫理綱領","data":"TEKISEI_DATA","default":true},{"key":"tekisei2","label":"安全・倫理・社会","short":"適性 安全・倫理・社会","data":"TEKISEI2_DATA"}],"fieldYears":{"適性:技術士法":["R1再","R2","R3","R4","R5","R6","R7"],"適性:製造物責任":["R1再","R2","R3","R4","R5","R6","R7"],"適性:安全・リスク":["R1再","R2","R3","R4","R5","R6","R7"],"適性:知的財産":["R1再","R2","R3","R4","R5","R7"],"適性:技術者倫理":["R1再","R3","R4","R5","R7"],"適性:SDGs・環境":["R1再","R3","R4","R6","R7"],"適性:AI・新技術":["R1再","R3","R4","R7"],"適性:公益通報":["R1再","R2","R5","R7"],"適性:倫理綱領":["R2","R6","R7"],"適性:研究倫理":["R1再","R5","R6"],"適性:社会的責任":["R2","R4","R6"],"適性:安全保障貿易管理":["R3","R4","R5"]},"allSetLabel":"まとめて","examDayDefault":"2026-11-22","emptyMessage":"適性科目の問題は準備中です。","topics":false};
 const SUBJECT_DATA = { TEKISEI_DATA: TEKISEI_DATA, TEKISEI2_DATA: TEKISEI2_DATA };
 </script>
 <script>
@@ -1894,8 +1895,12 @@ function showGroup(g) {
   });
   if (GROUPED) GROUPS.forEach(function (g) {
     if (SETS["grp:" + g]) add("set", "grp:" + g, g + " まとめて " + SETS["grp:" + g].length + "問", {}, g);
+    add("set freq", "freq:" + g, "★ 頻出だけ", { hidden: true }, g);
   });
-  else if (multi) add("set", "all", (SUBJECT.allSetLabel || "まとめて") + " 全問");
+  else {
+    if (multi) add("set", "all", (SUBJECT.allSetLabel || "まとめて") + " 全問");
+    add("set freq", "freq:all", "★ 頻出だけ", { hidden: true });
+  }
   add("set", "imported", "過去問 0問", { id: "impBtn", hidden: true });
   add("set weak", "weak", "苦手 0問", { id: "weakBtn" });
   add("set bm", "bm", "★ ブックマーク 0問", { id: "bmBtn" });
@@ -1972,6 +1977,9 @@ function whyOf(q) {
   if (!t && SUBJECT.wasteSet && SETS[SUBJECT.wasteSet].indexOf(q) >= 0 && WASTE_TOPIC[q.f]) t = WASTE_TOPIC[q.f];
   const jm = (q.n || "").match(/〔出題実績:\s*([^〕]*)〕/);
   const jis = jm ? jm[1].split("、").map(function (c) { return c.trim(); }).filter(function (c) { return /^R\d/.test(c); }) : [];
+  // 論点単位の記録が薄い分野（適性など）は、分野としての出題年数で頻出を判定する（4年以上＝毎年の過半）
+  const fy = (SUBJECT.fieldYears || {})[q.f] || [];
+  const fieldHot = fy.length >= 4;
   // rank：出題の確かさで並べる順（頻出3回以上 > 2回 > 1回出た > 今年の予想 > 実績なし）
   let w;
   if (t) {
@@ -1980,11 +1988,12 @@ function whyOf(q) {
   } else if (cs.length) {
     const uniq = cs.filter(function (c, k) { return cs.indexOf(c) === k; });
     w = { tier: 0, rank: 3, once: uniq, label: "" };
-  } else if (jis.length) {
+  } else if (jis.length || fieldHot) {
     const ys = {};
     jis.forEach(function (c) { ys[c.split(/\s+/)[0]] = 1; });
     const y = Object.keys(ys).length;
-    if (y >= 2) w = { tier: y >= 3 ? 3 : 2, rank: y >= 3 ? 5 : 4, years: y, topic: { cites: jis, note: "" }, same: false, label: "過去7年で" + y + "回出題" };
+    if (y >= 2 && y >= fy.length) w = { tier: y >= 3 ? 3 : 2, rank: y >= 3 ? 5 : 4, years: y, topic: { cites: jis, note: "" }, same: false, label: "過去7年で" + y + "回出題" };
+    else if (fieldHot) w = { tier: 3, rank: 5, years: fy.length, topic: { cites: fy, note: "分野としての出題年数です。この論点そのものが出たとは限りません。" + (jis.length ? "論点が近い過去問: " + jis.join("・") + "。" : "") }, same: false, label: "分野は過去7年で" + fy.length + "回出題" };
     else w = { tier: 0, rank: 3, once: jis, label: "" };
   } else if (SUBJECT.forecastField && q.f === SUBJECT.forecastField) {
     w = { tier: 1, rank: 2, label: "今年の新論点（出題実績なし・予想）" };
@@ -1994,6 +2003,18 @@ function whyOf(q) {
   WHY_CACHE.set(q, w);
   return w;
 }
+/* 「★ 頻出だけ」：過去7年で2年以上出た論点（適性は分野で4年以上）の問題だけを科目ごとに集める */
+(function fillFreqSets() {
+  document.querySelectorAll('.set[data-set^="freq:"]').forEach(function (b) {
+    const g = b.dataset.set.slice(5);
+    const base = g === "all" ? baseAll() : [].concat.apply([], SUBJECT.sets.filter(function (d) { return d.group === g; }).map(function (d) { return SETS[d.key]; }));
+    const list = base.filter(function (q) { return whyOf(q).tier >= 2; });
+    SETS[b.dataset.set] = list;
+    SET_LABEL[b.dataset.set] = g === "all" ? "頻出だけ" : g + " 頻出だけ";
+    b.textContent = "★ 頻出だけ " + list.length + "問";
+    b.hidden = !list.length;
+  });
+})();
 function whyChips(w) {
   let s = "";
   if (w.tier >= 2) s += '<span class="why t' + w.tier + '">★ ' + w.label + '</span>';

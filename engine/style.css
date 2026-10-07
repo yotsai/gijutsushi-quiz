@@ -597,6 +597,7 @@
   }
   body.home-mode .set[aria-pressed="true"] { background: var(--panel); color: var(--ink); border-color: var(--rule); }
   body.home-mode .set.weak:not(:disabled) { color: var(--ng); border-color: color-mix(in srgb, var(--ng) 45%, var(--rule)); }
+  body.home-mode .set.freq { color: var(--accent); font-weight: 700; }
   body.home-mode .set.bm:not(:disabled) { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--rule)); }
   body.home-mode .limits { margin: .7rem .1rem 0; }
   body.home-mode .lim { border-radius: 999px; }

@@ -1024,8 +1024,12 @@ function showGroup(g) {
   });
   if (GROUPED) GROUPS.forEach(function (g) {
     if (SETS["grp:" + g]) add("set", "grp:" + g, g + " まとめて " + SETS["grp:" + g].length + "問", {}, g);
+    add("set freq", "freq:" + g, "★ 頻出だけ", { hidden: true }, g);
   });
-  else if (multi) add("set", "all", (SUBJECT.allSetLabel || "まとめて") + " 全問");
+  else {
+    if (multi) add("set", "all", (SUBJECT.allSetLabel || "まとめて") + " 全問");
+    add("set freq", "freq:all", "★ 頻出だけ", { hidden: true });
+  }
   add("set", "imported", "過去問 0問", { id: "impBtn", hidden: true });
   add("set weak", "weak", "苦手 0問", { id: "weakBtn" });
   add("set bm", "bm", "★ ブックマーク 0問", { id: "bmBtn" });
@@ -1102,6 +1106,9 @@ function whyOf(q) {
   if (!t && SUBJECT.wasteSet && SETS[SUBJECT.wasteSet].indexOf(q) >= 0 && WASTE_TOPIC[q.f]) t = WASTE_TOPIC[q.f];
   const jm = (q.n || "").match(/〔出題実績:\s*([^〕]*)〕/);
   const jis = jm ? jm[1].split("、").map(function (c) { return c.trim(); }).filter(function (c) { return /^R\d/.test(c); }) : [];
+  // 論点単位の記録が薄い分野（適性など）は、分野としての出題年数で頻出を判定する（4年以上＝毎年の過半）
+  const fy = (SUBJECT.fieldYears || {})[q.f] || [];
+  const fieldHot = fy.length >= 4;
   // rank：出題の確かさで並べる順（頻出3回以上 > 2回 > 1回出た > 今年の予想 > 実績なし）
   let w;
   if (t) {
@@ -1110,11 +1117,12 @@ function whyOf(q) {
   } else if (cs.length) {
     const uniq = cs.filter(function (c, k) { return cs.indexOf(c) === k; });
     w = { tier: 0, rank: 3, once: uniq, label: "" };
-  } else if (jis.length) {
+  } else if (jis.length || fieldHot) {
     const ys = {};
     jis.forEach(function (c) { ys[c.split(/\s+/)[0]] = 1; });
     const y = Object.keys(ys).length;
-    if (y >= 2) w = { tier: y >= 3 ? 3 : 2, rank: y >= 3 ? 5 : 4, years: y, topic: { cites: jis, note: "" }, same: false, label: "過去7年で" + y + "回出題" };
+    if (y >= 2 && y >= fy.length) w = { tier: y >= 3 ? 3 : 2, rank: y >= 3 ? 5 : 4, years: y, topic: { cites: jis, note: "" }, same: false, label: "過去7年で" + y + "回出題" };
+    else if (fieldHot) w = { tier: 3, rank: 5, years: fy.length, topic: { cites: fy, note: "分野としての出題年数です。この論点そのものが出たとは限りません。" + (jis.length ? "論点が近い過去問: " + jis.join("・") + "。" : "") }, same: false, label: "分野は過去7年で" + fy.length + "回出題" };
     else w = { tier: 0, rank: 3, once: jis, label: "" };
   } else if (SUBJECT.forecastField && q.f === SUBJECT.forecastField) {
     w = { tier: 1, rank: 2, label: "今年の新論点（出題実績なし・予想）" };
@@ -1124,6 +1132,18 @@ function whyOf(q) {
   WHY_CACHE.set(q, w);
   return w;
 }
+/* 「★ 頻出だけ」：過去7年で2年以上出た論点（適性は分野で4年以上）の問題だけを科目ごとに集める */
+(function fillFreqSets() {
+  document.querySelectorAll('.set[data-set^="freq:"]').forEach(function (b) {
+    const g = b.dataset.set.slice(5);
+    const base = g === "all" ? baseAll() : [].concat.apply([], SUBJECT.sets.filter(function (d) { return d.group === g; }).map(function (d) { return SETS[d.key]; }));
+    const list = base.filter(function (q) { return whyOf(q).tier >= 2; });
+    SETS[b.dataset.set] = list;
+    SET_LABEL[b.dataset.set] = g === "all" ? "頻出だけ" : g + " 頻出だけ";
+    b.textContent = "★ 頻出だけ " + list.length + "問";
+    b.hidden = !list.length;
+  });
+})();
 function whyChips(w) {
   let s = "";
   if (w.tier >= 2) s += '<span class="why t' + w.tier + '">★ ' + w.label + '</span>';

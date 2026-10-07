@@ -35,6 +35,7 @@ function resolveSubject(id) {
   delete cfg.combine; delete cfg.base;
   cfg.sets = [].concat(...parts.map((p) => p.sets.map((d) => (s.combine ? Object.assign({ group: p.groupLabel || p.name }, d) : d))));
   cfg.topics = parts.some((p) => p.topics);
+  cfg.fieldYears = Object.assign({}, ...parts.map((p) => p.fieldYears || {}));
   const files = [];
   parts.forEach((p) => {
     p.files.forEach((f) => files.push(path.join("subjects", p.id, f)));

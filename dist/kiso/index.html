@@ -610,6 +610,7 @@
   }
   body.home-mode .set[aria-pressed="true"] { background: var(--panel); color: var(--ink); border-color: var(--rule); }
   body.home-mode .set.weak:not(:disabled) { color: var(--ng); border-color: color-mix(in srgb, var(--ng) 45%, var(--rule)); }
+  body.home-mode .set.freq { color: var(--accent); font-weight: 700; }
   body.home-mode .set.bm:not(:disabled) { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--rule)); }
   body.home-mode .limits { margin: .7rem .1rem 0; }
   body.home-mode .lim { border-radius: 999px; }
@@ -1020,7 +1021,7 @@ const KISO_DATA = [
 ];
 </script>
 <script>
-const SUBJECT = {"id":"kiso","name":"基礎科目","groupLabel":"基礎","title":"技術士一次試験 基礎科目（群1〜5）クイズ","description":"技術士第一次試験・基礎科目（群1設計・計画／群2情報・論理／群3解析／群4材料・化学・バイオ／群5環境・エネルギー・技術）の学習ツール。過去問の出題論点にもとづく自作の4択クイズ。","eyebrow":"技術士第一次試験｜基礎科目","h1":"基礎科目クイズ","intro":"基礎科目の5つの群（設計・計画／情報・論理／解析／材料・化学・バイオ／環境・エネルギー・技術）の予想問題を4択にしました。過去8年の出題論点を数え、出る回数の多い論点から作っています（すべて自作）。選ぶと即座に正誤と解説が出ます。キーボードの 1〜4 と Enter でも進められます。問題ごとに\u003cb>ブックマーク\u003c/b>と\u003cb>メモ\u003c/b>を残せます（この端末に保存）。","ver":"版 2026-10-04","storagePrefix":"kiso_","sets":[{"key":"kiso1","label":"群1 設計・計画","short":"基礎 群1 設計・計画","data":"KISO1_DATA"},{"key":"kiso2","label":"群2 情報・論理","short":"基礎 群2 情報・論理","data":"KISO2_DATA"},{"key":"kiso3","label":"群3 解析","short":"基礎 群3 解析","data":"KISO3_DATA"},{"key":"kiso4","label":"群4 材料・化学・バイオ","short":"基礎 群4 材料・化学・バイオ","data":"KISO4_DATA"},{"key":"kiso","label":"群5 環境・エネルギー","short":"基礎 群5 環境・エネルギー","data":"KISO_DATA","default":true}],"allSetLabel":"まとめて","examDayDefault":"2026-11-22","emptyMessage":"この科目の問題は準備中です。","topics":false};
+const SUBJECT = {"id":"kiso","name":"基礎科目","groupLabel":"基礎","title":"技術士一次試験 基礎科目（群1〜5）クイズ","description":"技術士第一次試験・基礎科目（群1設計・計画／群2情報・論理／群3解析／群4材料・化学・バイオ／群5環境・エネルギー・技術）の学習ツール。過去問の出題論点にもとづく自作の4択クイズ。","eyebrow":"技術士第一次試験｜基礎科目","h1":"基礎科目クイズ","intro":"基礎科目の5つの群（設計・計画／情報・論理／解析／材料・化学・バイオ／環境・エネルギー・技術）の予想問題を4択にしました。過去8年の出題論点を数え、出る回数の多い論点から作っています（すべて自作）。選ぶと即座に正誤と解説が出ます。キーボードの 1〜4 と Enter でも進められます。問題ごとに\u003cb>ブックマーク\u003c/b>と\u003cb>メモ\u003c/b>を残せます（この端末に保存）。","ver":"版 2026-10-04","storagePrefix":"kiso_","sets":[{"key":"kiso1","label":"群1 設計・計画","short":"基礎 群1 設計・計画","data":"KISO1_DATA"},{"key":"kiso2","label":"群2 情報・論理","short":"基礎 群2 情報・論理","data":"KISO2_DATA"},{"key":"kiso3","label":"群3 解析","short":"基礎 群3 解析","data":"KISO3_DATA"},{"key":"kiso4","label":"群4 材料・化学・バイオ","short":"基礎 群4 材料・化学・バイオ","data":"KISO4_DATA"},{"key":"kiso","label":"群5 環境・エネルギー","short":"基礎 群5 環境・エネルギー","data":"KISO_DATA","default":true}],"allSetLabel":"まとめて","examDayDefault":"2026-11-22","emptyMessage":"この科目の問題は準備中です。","topics":false,"fieldYears":{}};
 const SUBJECT_DATA = { KISO1_DATA: KISO1_DATA, KISO2_DATA: KISO2_DATA, KISO3_DATA: KISO3_DATA, KISO4_DATA: KISO4_DATA, KISO_DATA: KISO_DATA };
 </script>
 <script>
@@ -2050,8 +2051,12 @@ function showGroup(g) {
   });
   if (GROUPED) GROUPS.forEach(function (g) {
     if (SETS["grp:" + g]) add("set", "grp:" + g, g + " まとめて " + SETS["grp:" + g].length + "問", {}, g);
+    add("set freq", "freq:" + g, "★ 頻出だけ", { hidden: true }, g);
   });
-  else if (multi) add("set", "all", (SUBJECT.allSetLabel || "まとめて") + " 全問");
+  else {
+    if (multi) add("set", "all", (SUBJECT.allSetLabel || "まとめて") + " 全問");
+    add("set freq", "freq:all", "★ 頻出だけ", { hidden: true });
+  }
   add("set", "imported", "過去問 0問", { id: "impBtn", hidden: true });
   add("set weak", "weak", "苦手 0問", { id: "weakBtn" });
   add("set bm", "bm", "★ ブックマーク 0問", { id: "bmBtn" });
@@ -2128,6 +2133,9 @@ function whyOf(q) {
   if (!t && SUBJECT.wasteSet && SETS[SUBJECT.wasteSet].indexOf(q) >= 0 && WASTE_TOPIC[q.f]) t = WASTE_TOPIC[q.f];
   const jm = (q.n || "").match(/〔出題実績:\s*([^〕]*)〕/);
   const jis = jm ? jm[1].split("、").map(function (c) { return c.trim(); }).filter(function (c) { return /^R\d/.test(c); }) : [];
+  // 論点単位の記録が薄い分野（適性など）は、分野としての出題年数で頻出を判定する（4年以上＝毎年の過半）
+  const fy = (SUBJECT.fieldYears || {})[q.f] || [];
+  const fieldHot = fy.length >= 4;
   // rank：出題の確かさで並べる順（頻出3回以上 > 2回 > 1回出た > 今年の予想 > 実績なし）
   let w;
   if (t) {
@@ -2136,11 +2144,12 @@ function whyOf(q) {
   } else if (cs.length) {
     const uniq = cs.filter(function (c, k) { return cs.indexOf(c) === k; });
     w = { tier: 0, rank: 3, once: uniq, label: "" };
-  } else if (jis.length) {
+  } else if (jis.length || fieldHot) {
     const ys = {};
     jis.forEach(function (c) { ys[c.split(/\s+/)[0]] = 1; });
     const y = Object.keys(ys).length;
-    if (y >= 2) w = { tier: y >= 3 ? 3 : 2, rank: y >= 3 ? 5 : 4, years: y, topic: { cites: jis, note: "" }, same: false, label: "過去7年で" + y + "回出題" };
+    if (y >= 2 && y >= fy.length) w = { tier: y >= 3 ? 3 : 2, rank: y >= 3 ? 5 : 4, years: y, topic: { cites: jis, note: "" }, same: false, label: "過去7年で" + y + "回出題" };
+    else if (fieldHot) w = { tier: 3, rank: 5, years: fy.length, topic: { cites: fy, note: "分野としての出題年数です。この論点そのものが出たとは限りません。" + (jis.length ? "論点が近い過去問: " + jis.join("・") + "。" : "") }, same: false, label: "分野は過去7年で" + fy.length + "回出題" };
     else w = { tier: 0, rank: 3, once: jis, label: "" };
   } else if (SUBJECT.forecastField && q.f === SUBJECT.forecastField) {
     w = { tier: 1, rank: 2, label: "今年の新論点（出題実績なし・予想）" };
@@ -2150,6 +2159,18 @@ function whyOf(q) {
   WHY_CACHE.set(q, w);
   return w;
 }
+/* 「★ 頻出だけ」：過去7年で2年以上出た論点（適性は分野で4年以上）の問題だけを科目ごとに集める */
+(function fillFreqSets() {
+  document.querySelectorAll('.set[data-set^="freq:"]').forEach(function (b) {
+    const g = b.dataset.set.slice(5);
+    const base = g === "all" ? baseAll() : [].concat.apply([], SUBJECT.sets.filter(function (d) { return d.group === g; }).map(function (d) { return SETS[d.key]; }));
+    const list = base.filter(function (q) { return whyOf(q).tier >= 2; });
+    SETS[b.dataset.set] = list;
+    SET_LABEL[b.dataset.set] = g === "all" ? "頻出だけ" : g + " 頻出だけ";
+    b.textContent = "★ 頻出だけ " + list.length + "問";
+    b.hidden = !list.length;
+  });
+})();
 function whyChips(w) {
   let s = "";
   if (w.tier >= 2) s += '<span class="why t' + w.tier + '">★ ' + w.label + '</span>';
