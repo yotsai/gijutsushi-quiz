@@ -160,7 +160,7 @@
     transition: background .12s, border-color .12s;
     font-variant-numeric: tabular-nums;
   }
-  @media (hover: hover) { .ch:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); } }
+  @media (hover: hover) and (pointer: fine) { .ch:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); } }
   .ch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .ch:disabled { cursor: default; }
   .ch .key {
@@ -193,9 +193,9 @@
     background: var(--accent); color: var(--paper);
     border: 1px solid var(--accent); border-radius: 2px; padding: .45rem 1.3rem;
   }
-  @media (hover: hover) { .btn:hover { filter: brightness(1.12); } }
+  @media (hover: hover) and (pointer: fine) { .btn:hover { filter: brightness(1.12); } }
   .btn.ghost { background: transparent; color: var(--ink-2); border-color: var(--rule-strong); font-weight: 400; }
-  @media (hover: hover) { .btn.ghost:hover { border-color: var(--accent); color: var(--accent); filter: none; } }
+  @media (hover: hover) and (pointer: fine) { .btn.ghost:hover { border-color: var(--accent); color: var(--accent); filter: none; } }
   .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .btn:disabled { opacity: .35; cursor: default; filter: none; }
   /* 一番よく押す「次の問題」を横幅いっぱいに、その下に「前の問題」「ホーム」を半分ずつ */
@@ -257,7 +257,7 @@
     background: var(--accent); color: var(--paper); border: 1px solid var(--accent);
     border-radius: 2px; padding: .45rem 1.2rem; display: inline-block;
   }
-  @media (hover: hover) { .impfile:hover { filter: brightness(1.12); } }
+  @media (hover: hover) and (pointer: fine) { .impfile:hover { filter: brightness(1.12); } }
   .impfile.ghost { background: transparent; color: var(--accent); }
   .impfile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .impmsg { font-size: .78rem; }
@@ -273,7 +273,7 @@
     background: none; color: var(--ink-3); border: 0;
     border-bottom: 1px solid var(--rule-strong); padding: 0 0 1px;
   }
-  @media (hover: hover) { .impitem button:hover { color: var(--ng); border-bottom-color: var(--ng); } }
+  @media (hover: hover) and (pointer: fine) { .impitem button:hover { color: var(--ng); border-bottom-color: var(--ng); } }
   .privacy { font-size: .76rem; color: var(--ink-3); line-height: 1.7; margin-top: .8rem; }
 
   /* 学習診断 */
@@ -317,7 +317,7 @@
     border: 1px solid var(--rule-strong); border-radius: 999px; padding: .2rem .75rem;
   }
   .flt[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--paper); font-weight: 600; }
-  @media (hover: hover) { .flt:hover:not([aria-pressed="true"]) { border-color: var(--accent); color: var(--accent); } }
+  @media (hover: hover) and (pointer: fine) { .flt:hover:not([aria-pressed="true"]) { border-color: var(--accent); color: var(--accent); } }
   .flt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .hrow {
     display: grid; grid-template-columns: 1fr auto; gap: .1rem .8rem;
@@ -357,7 +357,7 @@
     background: var(--panel); color: var(--ink-3);
     border: 1px solid var(--rule-strong); border-radius: 999px; padding: .12rem .65rem; white-space: nowrap;
   }
-  @media (hover: hover) { .qtool:hover { border-color: var(--accent); color: var(--accent); } }
+  @media (hover: hover) and (pointer: fine) { .qtool:hover { border-color: var(--accent); color: var(--accent); } }
   .qtool[aria-pressed="true"], .qtool.has { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
   .qtool:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .memo { margin-top: 1rem; padding-top: .8rem; border-top: 1px dashed var(--rule-strong); }
@@ -380,7 +380,7 @@
     font: inherit; font-size: .76rem; cursor: pointer; background: none;
     color: var(--ink-3); border: 0; border-bottom: 1px solid var(--rule-strong); padding: 0 0 1px;
   }
-  @media (hover: hover) { .reset:hover { color: var(--ng); border-bottom-color: var(--ng); } }
+  @media (hover: hover) and (pointer: fine) { .reset:hover { color: var(--ng); border-bottom-color: var(--ng); } }
   .lifetime {
     margin-top: 1.2rem; padding-top: .9rem; border-top: 1px solid var(--rule);
     display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap;
@@ -396,7 +396,7 @@
     background: var(--panel); color: var(--ink-2);
     border: 1px solid var(--rule-strong); border-radius: 999px; padding: .22rem .8rem;
   }
-  @media (hover: hover) { .set:hover { border-color: var(--accent); color: var(--accent); } }
+  @media (hover: hover) and (pointer: fine) { .set:hover { border-color: var(--accent); color: var(--accent); } }
   .set[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--paper); font-weight: 600; }
   .set:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -409,7 +409,7 @@
     border: 1px solid var(--rule); border-radius: 2px; padding: .18rem .6rem;
   }
   .lim[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 700; background: var(--accent-soft); }
-  @media (hover: hover) { .lim:hover:not([aria-pressed="true"]) { border-color: var(--rule-strong); } }
+  @media (hover: hover) and (pointer: fine) { .lim:hover:not([aria-pressed="true"]) { border-color: var(--rule-strong); } }
   .lim:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .pickinfo { font-size: .74rem; color: var(--ink-3); margin-left: .2rem; }
   .unvwrap {
@@ -528,7 +528,7 @@
     background: transparent; color: var(--ink-2); border: 1px solid var(--rule-strong);
     border-radius: 999px; padding: .4rem .85rem;
   }
-  @media (hover: hover) { .examEditBtn:hover { border-color: var(--accent); color: var(--accent); } }
+  @media (hover: hover) and (pointer: fine) { .examEditBtn:hover { border-color: var(--accent); color: var(--accent); } }
   .examEditBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .examEditBtn svg { width: 14px; height: 14px; flex-shrink: 0; }
   .examEdit {
