@@ -452,6 +452,18 @@
   /* 頻出テーマ */
   .lede { font-size: .88rem; color: var(--ink-2); margin: 1.1rem 0 .3rem; line-height: 1.75; }
   .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: .9rem; }
+  .segh { font-size: .95rem; margin: 1.1rem 0 .4rem; }
+  .seg { width: 100%; border-collapse: collapse; font-size: .84rem; font-variant-numeric: tabular-nums; }
+  .seg th, .seg td { padding: .38rem .25rem; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+  .seg th { font-size: .72rem; color: var(--ink-3); font-weight: 400; }
+  .seg td:first-child { text-align: left; white-space: normal; padding-left: 1rem; }
+  .seg tr.gh td { font-weight: 700; background: var(--accent-soft); }
+  .seg tr.gh td:first-child { padding-left: .4rem; }
+  .seg .rate.good { color: var(--ok); font-weight: 700; }
+  .seg .rate.bad { color: var(--ng); font-weight: 700; }
+  .segbar { display: block; height: 3px; background: var(--rule); margin-top: .2rem; }
+  .segbar i { display: block; height: 100%; background: var(--accent); }
+  .segnote { font-size: .74rem; color: var(--ink-3); margin: .4rem 0 .8rem; line-height: 1.6; }
   .stats { width: 100%; min-width: 23rem; border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; }
   .stats th, .stats td { padding: .35rem .3rem; white-space: nowrap; border-bottom: 1px solid var(--rule); text-align: right; }
   .stats th:first-child, .stats td:first-child { text-align: left; white-space: normal; min-width: 11rem; }

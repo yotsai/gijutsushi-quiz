@@ -1446,6 +1446,31 @@ function wireDataManager(p) {
 
 /* ---------- 履歴タブ ---------- */
 let HFILTER = "miss";
+/* 科目・セットごとの取り組み状況。正答率は「解いた問題のうち、直近の解答が正解の割合」（累計だと最初の失点を引きずるため） */
+function segTableHtml() {
+  const weakSet = new Set(weakList());
+  function row(label, list, head) {
+    const ans = list.filter(function (q) { return histOf(q); });
+    const ok = ans.filter(function (q) { return histOf(q).last === 1; }).length;
+    const rate = ans.length ? Math.round(ok / ans.length * 100) : null;
+    const done = list.length ? Math.round(ans.length / list.length * 100) : 0;
+    const w = list.filter(function (q) { return weakSet.has(q); }).length;
+    const rc = rate === null ? "" : rate >= 70 ? " good" : rate < 50 ? " bad" : "";
+    return '<tr class="' + (head ? "gh" : "") + '"><td>' + label + '</td>' +
+      '<td>' + ans.length + '/' + list.length + '<span class="segbar"><i style="width:' + done + '%"></i></span></td>' +
+      '<td class="rate' + rc + '">' + (rate === null ? "—" : rate + "%") + '</td>' +
+      '<td>' + (w || "") + '</td></tr>';
+  }
+  let rows = "";
+  (GROUPED ? GROUPS : [null]).forEach(function (g) {
+    const sets = SUBJECT.sets.filter(function (d) { return !g || d.group === g; });
+    if (g) rows += row(g, [].concat.apply([], sets.map(function (d) { return SETS[d.key]; })), true);
+    sets.forEach(function (d) { rows += row(d.label, SETS[d.key], false); });
+  });
+  return '<h3 class="segh">科目・セットごとの取り組み</h3>' +
+    '<table class="seg"><thead><tr><th></th><th>着手</th><th>正答率</th><th>苦手</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    '<p class="segnote">正答率＝解いた問題のうち直近の解答が正解の割合。緑は70%以上（アプリの目標）、赤は50%未満。</p>';
+}
 function renderHistory() {
   const p = document.getElementById("pane-hist");
   const all = SETS.all;
@@ -1489,6 +1514,7 @@ function renderHistory() {
       '<div>着手<b>' + answered.length + ' / ' + all.length + '</b></div>' +
       '<div class="warn">苦手<b>' + weak.length + '</b></div>' +
     '</div>' +
+    segTableHtml() +
     '<div class="filters">' +
       '<button class="flt" data-f="miss" aria-pressed="' + (HFILTER === "miss") + '">間違えた問題</button>' +
       '<button class="flt" data-f="all" aria-pressed="' + (HFILTER === "all") + '">すべて</button>' +
