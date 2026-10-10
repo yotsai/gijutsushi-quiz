@@ -1365,7 +1365,8 @@ function render() {
   // 「〜の数はどれか」の選択肢（2個・0個…）は並べ替えずに小さい順に出す（スマホで探しやすく）
   const isCount = q.c.every(function (c) { return /^\s*[0-9０-９]+\s*(個|つ)?\s*$/.test(c); }) &&
     (q.c.some(function (c) { return /(個|つ)\s*$/.test(c); }) || /の数/.test(q.q.split("<br>")[0]));
-  const order = isCount
+  const isPast = /^過去問 /.test(q.f || "");   // 取り込んだ本番の過去問は原本の①〜⑤の順のまま（正答番号と合わせる）
+  const order = isPast ? q.c.map(function (_, k) { return k; }) : isCount
     ? q.c.map(function (_, k) { return k; }).sort(function (a, b) { return parseInt(q.c[a].replace(/[０-９]/g, function (d) { return "０１２３４５６７８９".indexOf(d); }), 10) - parseInt(q.c[b].replace(/[０-９]/g, function (d) { return "０１２３４５６７８９".indexOf(d); }), 10); })
     : shuffle(q.c.length, seed);
   const prev = answers[i];
@@ -2838,7 +2839,7 @@ function segTableHtml() {
       '<td>' + (w || "") + '</td></tr>';
   }
   let rows = "", fields = "";
-  SEG_FIELDS = [];
+  SEG_FIELDS = []; SEG_MOCK = [];
   (GROUPED ? GROUPS : [null]).forEach(function (g) {
     const sets = SUBJECT.sets.filter(function (d) { return !g || d.group === g; });
     const all = [].concat.apply([], sets.map(function (d) { return SETS[d.key]; }));
@@ -2868,12 +2869,35 @@ function segTableHtml() {
     fields += '<details class="segf" data-g="' + gk + '"' + (SEGF_OPEN[gk] ? " open" : "") + '><summary>' + (g ? g + "の" : "") + '分野別　<span class="segsum">' + fl.length + '分野中 手つかず' + nUn + '・50%未満' + nLow + '</span></summary>' +
       '<table class="seg"><thead><tr><th></th><th>着手</th><th>正答率</th><th>苦手</th><th></th></tr></thead><tbody>' + fr + '</tbody></table></details>';
   });
+  // 取り込んだ本番の過去問：年度ごとに問題番号順で通しで解く（模試用）
+  let mock = "";
+  const imp = importedQuestions();
+  if (imp.length) {
+    const byY = {};
+    imp.forEach(function (q) { (byY[q.f] = byY[q.f] || []).push(q); });
+    const order = { "専門": 0, "基礎": 1, "適性": 2 };
+    const keys = Object.keys(byY).sort(function (a, b) {
+      const pa = a.split(" "), pb = b.split(" ");
+      return ((pa[1] in order ? order[pa[1]] : 9) - (pb[1] in order ? order[pb[1]] : 9)) || (parseInt((pb[2] || "").replace(/\D/g, ""), 10) - parseInt((pa[2] || "").replace(/\D/g, ""), 10));
+    });
+    function numKey(q) { const m = (q.q.match(/^【[^】]*】/) || [""])[0].match(/\d+/g) || []; return m.slice(1).map(function (x) { return ("000" + x).slice(-3); }).join("-"); }
+    let mr = "";
+    keys.forEach(function (k) {
+      const list = byY[k].slice().sort(function (a, b) { return numKey(a) < numKey(b) ? -1 : numKey(a) > numKey(b) ? 1 : 0; });
+      const idx = SEG_MOCK.push(list) - 1;
+      mr += row(k.replace(/^過去問 /, ""), list, false).replace("</tr>", '<td><button class="segrun mock" data-mock="' + idx + '">通しで解く</button></td></tr>');
+    });
+    mock = '<h3 class="segh">本番の過去問（取り込んだ分）</h3>' +
+      '<table class="seg"><thead><tr><th></th><th>着手</th><th>正答率</th><th>苦手</th><th></th></tr></thead><tbody>' + mr + '</tbody></table>' +
+      '<p class="segnote">「通しで解く」は問題番号の順に全問出します（模試用・選択肢も原本の順）。本番の時間の目安：基礎・適性 各1時間、専門 2時間。</p>';
+  }
   return '<h3 class="segh">科目・セットごとの取り組み</h3>' +
     '<table class="seg"><thead><tr><th></th><th>着手</th><th>正答率</th><th>苦手</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>' +
     '<p class="segnote">正答率＝解いた問題のうち直近の解答が正解の割合。緑は70%以上（アプリの目標）、赤は50%未満。</p>' +
     fields +
-    '<p class="segnote">「解く」はその科目・セット・分野だけで出題します（まだ解いていない問題と苦手を優先）。</p>';
+    '<p class="segnote">「解く」はその科目・セット・分野だけで出題します（まだ解いていない問題と苦手を優先）。</p>' + mock;
 }
+let SEG_MOCK = [];
 let SEG_FIELDS = [];
 const SEGF_OPEN = {};
 let HLIST_OPEN = false;
@@ -2963,7 +2987,22 @@ function renderHistory() {
   p.querySelectorAll(".segf").forEach(function (d) {
     d.addEventListener("toggle", function () { SEGF_OPEN[d.dataset.g] = d.open; });
   });
-  p.querySelectorAll(".segrun").forEach(function (b) {
+  p.querySelectorAll(".segrun.mock").forEach(function (b) {
+    b.addEventListener("click", function () {
+      const list = SEG_MOCK[Number(b.dataset.mock)];
+      if (!list || !list.length) return;
+      Q.length = 0; RETRY_FROM = -1; list.forEach(function (q) { Q.push(q); });
+      CUSTOM_LIST = list.slice(); CURRENT_SET = "custom";
+      i = 0; correct = 0; log.length = 0; answers.length = 0;
+      document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
+      selectTab("quiz");
+      FROM_HIST = true;
+      const pi = document.getElementById("pickinfo");
+      if (pi) pi.textContent = "";
+      saveSession(); render();
+    });
+  });
+  p.querySelectorAll(".segrun:not(.mock)").forEach(function (b) {
     b.addEventListener("click", function () {
       const list = SEG_FIELDS[Number(b.dataset.seg)];
       if (!list || !list.length) return;
