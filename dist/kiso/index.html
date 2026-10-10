@@ -196,6 +196,9 @@
 
   .verdict { margin-top: .95rem; padding-top: .85rem; border-top: 1px solid var(--rule); }
   .vtag { font-size: .82rem; font-weight: 700; letter-spacing: .04em; }
+  .easy { margin: .6rem 0 .2rem; padding: .75rem .85rem; background: var(--accent-soft); border-radius: 10px; font-size: .9rem; line-height: 1.8; }
+  .easyh, .vnoteh { font-size: .78rem; font-weight: 700; color: var(--accent); letter-spacing: .04em; margin-bottom: .3rem; }
+  .vnoteh { margin-top: .9rem; color: var(--ink-3); }
   .vtag.ok { color: var(--ok); }
   .vtag.ng { color: var(--ng); }
   .vnote { font-size: .86rem; color: var(--ink-2); margin: .3rem 0 0; line-height: 1.72; }
@@ -1465,6 +1468,11 @@ function choose(card, btn, origIdx) {
   showVerdict(card, btn, hit, true);
 }
 
+/* 専門外の人向けの「やさしい解説」。問題文をキーに別ファイル（easy.js の EASY_NOTES）から引く */
+function easyHtml(q) {
+  const t = (window.EASY_NOTES && window.EASY_NOTES[q.q]) || "";
+  return t ? '<div class="easy"><div class="easyh">やさしい解説</div><div class="easyb">' + t + '</div></div><div class="vnoteh">詳しい解説（出典つき）</div>' : "";
+}
 function showVerdict(card, btn, hit, focusNext) {
   const q = Q[i];
   card.querySelectorAll(".ch").forEach(b => {
@@ -1485,6 +1493,7 @@ function showVerdict(card, btn, hit, focusNext) {
   v.className = "verdict";
   v.innerHTML =
     '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (inRetry() ? (hit ? "もう一度：正解（記録はしません）" : "もう一度：不正解（明日の復習で出ます）") : hit ? "正解" : unknown ? "わからない（不正解として記録し、復習に回します）" : "不正解") + '</div>' +
+    easyHtml(q) +
     '<p class="vnote">' + q.n + '</p>' +
     whyBox(q, whyOf(q)) +
     (q.v ? '<p class="vsrc' + (q.v === "knowledge" ? " k" : "") + '">' + VLABEL[q.v] + '</p>' : '') +

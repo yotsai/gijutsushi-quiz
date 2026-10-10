@@ -183,6 +183,9 @@
 
   .verdict { margin-top: .95rem; padding-top: .85rem; border-top: 1px solid var(--rule); }
   .vtag { font-size: .82rem; font-weight: 700; letter-spacing: .04em; }
+  .easy { margin: .6rem 0 .2rem; padding: .75rem .85rem; background: var(--accent-soft); border-radius: 10px; font-size: .9rem; line-height: 1.8; }
+  .easyh, .vnoteh { font-size: .78rem; font-weight: 700; color: var(--accent); letter-spacing: .04em; margin-bottom: .3rem; }
+  .vnoteh { margin-top: .9rem; color: var(--ink-3); }
   .vtag.ok { color: var(--ok); }
   .vtag.ng { color: var(--ng); }
   .vnote { font-size: .86rem; color: var(--ink-2); margin: .3rem 0 0; line-height: 1.72; }
