@@ -23,5 +23,5 @@ const SUBJECT = {
   examDayDefault: "2026-11-22",
   emptyMessage: "この科目の問題は準備中です。",
 
-  files: ["kiso_g1.js", "kiso_g2.js", "kiso_g3.js", "kiso_g4.js", "kiso.js"]
+  files: ["kiso_g1.js", "kiso_g2.js", "kiso_g3.js", "kiso_g4.js", "kiso.js", "easy.js"]
 };
