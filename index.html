@@ -2603,6 +2603,22 @@ const VLABEL = {
 let i = 0, correct = 0, answered = false;
 const log = [];
 const answers = [];
+/* 回の最後に、間違えた問題をもう一度出す（記録はしない）。RETRY_FROM はその開始位置。-1 は未追加 */
+let RETRY_FROM = -1;
+function inRetry() { return RETRY_FROM >= 0 && i >= RETRY_FROM; }
+function origCount() { return RETRY_FROM >= 0 ? RETRY_FROM : Q.length; }
+function wrongOriginals() {
+  const out = [];
+  for (let k = 0; k < origCount(); k++) if (answers[k] && !answers[k].hit) out.push(Q[k]);
+  return out;
+}
+function appendRetries() {
+  if (RETRY_FROM >= 0) return;
+  const w = wrongOriginals();
+  if (!w.length) return;
+  RETRY_FROM = Q.length;
+  w.forEach(function (q) { Q.push(q); });
+}
 
 const stage = document.getElementById("stage");
 const elField = document.getElementById("field");
@@ -2638,7 +2654,7 @@ function render() {
   answered = !!prev;
 
   elField.textContent = q.f;
-  elCount.textContent = (i + 1) + " / " + Q.length;
+  elCount.textContent = inRetry() ? "もう一度 " + (i - RETRY_FROM + 1) + " / " + (Q.length - RETRY_FROM) : (i + 1) + " / " + origCount();
   elScore.innerHTML = "正解 <b>" + correct + "</b>";
   elBar.style.width = (i / Q.length * 100) + "%";
 
@@ -2705,7 +2721,7 @@ function render() {
 /* 解答前も解答後も「← 前の問題／ホーム／次の問題 →」を同じ位置に出す */
 /* 解答前は「とばす」扱い（控えめな見た目・Enterでは押されない）、解答後は通常の「次へ」 */
 function navHtml(answeredNow) {
-  const label = i + 1 < Q.length ? "次の問題 →" : "結果を見る";
+  const label = i + 1 < Q.length ? "次の問題 →" : (RETRY_FROM < 0 && wrongOriginals().length ? "間違えた問題をもう一度 →" : "結果を見る");
   return '<div class="navrow one">' +
       (answeredNow
         ? '<button class="btn" id="next">' + label + '</button>'
@@ -2735,7 +2751,7 @@ function renderNav(card) {
   wireNav(nav);
 }
 function goPrev() { if (i > 0) { i--; saveSession(); render(); } }
-function goNext() { i++; saveSession(); render(); }
+function goNext() { i++; if (i >= Q.length) appendRetries(); saveSession(); render(); }
 /* 科目が resultJudge を持たないときの結果コメント（正答率の下限ごと） */
 const DEFAULT_JUDGE = [
   { min: 90, text: "仕上がっています。間違えた問題だけ見直して、定着させてください。" },
@@ -2870,7 +2886,7 @@ function wireRoadmap(card) {
       const byTier = [5, 4, 3, 2, 1].map(function (r) { return shuffled(a.list.filter(function (q) { return whyOf(q).rank === r; })); });
       let list = [].concat.apply([], byTier);
       if (a.limit) list = list.slice(0, a.limit);
-      Q.length = 0; list.forEach(function (q) { Q.push(q); });
+      Q.length = 0; RETRY_FROM = -1; list.forEach(function (q) { Q.push(q); });
       CUSTOM_LIST = list.slice(); CURRENT_SET = "custom";
       i = 0; correct = 0; log.length = 0; answers.length = 0;
       applySetButtons("__none__");
@@ -2992,9 +3008,11 @@ function choose(card, btn, origIdx) {
   answered = true;
   const q = Q[i];
   const hit = origIdx === q.a;
-  if (hit) correct++;
-  recordAnswer(q, hit);
-  log.push({ f: q.f, hit: hit, q: q.q, a: q.c[q.a] });
+  if (!inRetry()) {
+    if (hit) correct++;
+    recordAnswer(q, hit);
+    log.push({ f: q.f, hit: hit, q: q.q, a: q.c[q.a] });
+  }
   answers[i] = { pick: origIdx, hit: hit };
   saveSession();
   showVerdict(card, btn, hit, true);
@@ -3019,7 +3037,7 @@ function showVerdict(card, btn, hit, focusNext) {
   const v = document.createElement("div");
   v.className = "verdict";
   v.innerHTML =
-    '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (hit ? "正解" : unknown ? "わからない（不正解として記録し、復習に回します）" : "不正解") + '</div>' +
+    '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (inRetry() ? (hit ? "もう一度：正解（記録はしません）" : "もう一度：不正解（明日の復習で出ます）") : hit ? "正解" : unknown ? "わからない（不正解として記録し、復習に回します）" : "不正解") + '</div>' +
     '<p class="vnote">' + q.n + '</p>' +
     whyBox(q, whyOf(q)) +
     (q.v ? '<p class="vsrc' + (q.v === "knowledge" ? " k" : "") + '">' + VLABEL[q.v] + '</p>' : '') +
@@ -3036,10 +3054,11 @@ function showVerdict(card, btn, hit, focusNext) {
 function renderResult() {
   clearSession();
   elField.textContent = "結果";
-  elCount.textContent = Q.length + " / " + Q.length;
+  const N = origCount();
+  elCount.textContent = N + " / " + N;
   elBar.style.width = "100%";
 
-  const pct = Math.round(correct / Q.length * 100);
+  const pct = Math.round(correct / N * 100);
   const byField = {};
   log.forEach(r => {
     byField[r.f] = byField[r.f] || { n: 0, ok: 0 };
@@ -3059,7 +3078,7 @@ function renderResult() {
   });
 
   const missed = log.filter(r => !r.hit);
-  const skipped = Q.filter((q, k) => !answers[k]);
+  const skipped = Q.slice(0, N).filter((q, k) => !answers[k]);
   let missedHtml = "";
   if (missed.length) {
     missedHtml = '<div class="missed"><h3>間違えた ' + missed.length + ' 問</h3><ol>';
@@ -3071,7 +3090,7 @@ function renderResult() {
   card.className = "card result";
   card.innerHTML =
     '<h2>採点結果</h2>' +
-    '<div class="big">' + correct + '<small> / ' + Q.length + '　（' + pct + '%）</small></div>' +
+    '<div class="big">' + correct + '<small> / ' + N + '　（' + pct + '%）</small></div>' +
     '<p class="judge">' + judge + '</p>' +
     (skipped.length ? '<p class="judge">とばして答えていない問題が <b>' + skipped.length + '問</b> あります（未解答は不正解として計算）。</p>' : '') +
     '<table><thead><tr><th>分野</th><th>正答</th><th>率</th></tr></thead><tbody>' + rows + '</tbody></table>' +
@@ -3084,7 +3103,7 @@ function renderResult() {
         '</b>問</span><button class="reset" id="resetHist">履歴をリセット</button></div>';
     })() +
     '<div class="actions">' +
-      (LIMIT && baseList().length > Q.length ? '<button class="btn" id="nextBatch">次の ' + LIMIT + '問へ</button>' : '') +
+      (LIMIT && baseList().length > N ? '<button class="btn" id="nextBatch">次の ' + LIMIT + '問へ</button>' : '') +
       (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をやり直す</button>' : '') +
       (skipped.length ? '<button class="btn ghost" id="doSkipped">とばした ' + skipped.length + ' 問を解く</button>' : '') +
       '<button class="btn ghost" id="home">ホーム</button>' +
@@ -3094,13 +3113,13 @@ function renderResult() {
   const ag = card.querySelector("#again");
   if (ag) ag.addEventListener("click", () => {
     const keep = new Set(missed.map(m => m.q));
-    const subset = Q.filter(q => keep.has(q.q));
-    Q.length = 0; subset.forEach(q => Q.push(q));
+    const subset = Q.slice(0, N).filter(q => keep.has(q.q));
+    Q.length = 0; RETRY_FROM = -1; subset.forEach(q => Q.push(q));
     i = 0; correct = 0; log.length = 0; answers.length = 0; render();
   });
   const ds = card.querySelector("#doSkipped");
   if (ds) ds.addEventListener("click", () => {
-    Q.length = 0; skipped.forEach(q => Q.push(q));
+    Q.length = 0; RETRY_FROM = -1; skipped.forEach(q => Q.push(q));
     i = 0; correct = 0; log.length = 0; answers.length = 0; saveSession(); render();
   });
   const nb2 = card.querySelector("#nextBatch");
@@ -3176,7 +3195,11 @@ const MASTERY = ["未学習", "要復習", "学習中", "定着", "完璧"];
 function dayStart(t) { const d = new Date(t); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
 function srSchedule(h, now) {
   h.ts = now;
-  h.due = dayStart(now) + SR_DAYS[Math.min(h.st || 0, SR_DAYS.length - 1)] * DAY;
+  let d = SR_DAYS[Math.min(h.st || 0, SR_DAYS.length - 1)];
+  // 本番の2日前までに必ず一度は復習が回るよう、間隔を本番までの残り日数で頭打ちにする
+  const left = Math.round((EXAM_DAY - dayStart(now)) / DAY);
+  if (left > 2) d = Math.min(d, left - 2);
+  h.due = dayStart(now) + d * DAY;
 }
 /* 解いた日時を持たない古い履歴：まちがえた問題は今日が復習日、正解した問題は今日解いたものとして扱う */
 function migrateSR() {
@@ -3232,7 +3255,7 @@ try { AUTO_N = Number(localStorage.getItem(SPFX + "auto_n")) || 20; } catch (e) 
 function startAuto() {
   const list = autoPick(AUTO_N);
   if (!list.length) return;
-  Q.length = 0; list.forEach(function (q) { Q.push(q); });
+  Q.length = 0; RETRY_FROM = -1; list.forEach(function (q) { Q.push(q); });
   CUSTOM_LIST = list.slice(); CURRENT_SET = "auto";
   i = 0; correct = 0; log.length = 0; answers.length = 0;
   applySetButtons("auto");
@@ -3489,7 +3512,7 @@ function pickQuestions(list) {
 function rebuild() {
   const picked = pickQuestions(baseList());
   if (!picked.length) return false;
-  Q.length = 0; picked.forEach(function (q) { Q.push(q); });
+  Q.length = 0; RETRY_FROM = -1; picked.forEach(function (q) { Q.push(q); });
   i = 0; correct = 0; log.length = 0; answers.length = 0;
   const host = document.getElementById("resumeHost");
   if (host) host.innerHTML = "";
@@ -3522,7 +3545,7 @@ function saveSession() {
     localStorage.setItem(SKEY, JSON.stringify({
       set: CURRENT_SET, limit: LIMIT,
       keys: Q.map(function (q) { return q.q; }),
-      i: i, correct: correct, answers: answers
+      i: i, correct: correct, answers: answers, retry: RETRY_FROM
     }));
   } catch (e) {}
 }
@@ -3538,7 +3561,7 @@ function loadSession() {
     SETS.all.forEach(function (q) { byKey[q.q] = q; });
     const list = d.keys.map(function (k) { return byKey[k]; });
     if (list.some(function (q) { return !q; })) return null;  // 問題が入れ替わっていたら破棄
-    return { set: d.set, limit: d.limit || 0, list: list, i: d.i, correct: d.correct || 0, answers: d.answers || [] };
+    return { set: d.set, limit: d.limit || 0, list: list, i: d.i, correct: d.correct || 0, answers: d.answers || [], retry: typeof d.retry === "number" ? d.retry : -1 };
   } catch (e) { return null; }
 }
 function applySetButtons(key) {
@@ -4195,15 +4218,15 @@ refreshWeakBtn();
     document.querySelectorAll(".lim").forEach(function (o) {
       o.setAttribute("aria-pressed", String(Number(o.dataset.lim) === LIMIT));
     });
-    Q.length = 0; sv.list.forEach(function (q) { Q.push(q); });
-    i = sv.i; correct = sv.correct;
+    Q.length = 0; RETRY_FROM = -1; sv.list.forEach(function (q) { Q.push(q); });
+    i = sv.i; correct = sv.correct; RETRY_FROM = sv.retry;
     answers.length = 0; sv.answers.forEach(function (a, idx) { answers[idx] = a; });
     if (SETS[sv.set] || sv.set === "weak" || sv.set === "bm" || sv.set === "auto") applySetButtons(sv.set); else applySetButtons("__none__");
     updatePickInfo();
     showResume(sv.i, Q.length);
     render();
   } else {
-    Q.length = 0;   // 初期値のまま「続きから」が出ないように
+    Q.length = 0; RETRY_FROM = -1;   // 初期値のまま「続きから」が出ないように
     goHome();       // 解きかけの回がないときは、道のりと出題範囲を選ぶ画面から始める
   }
 })();
