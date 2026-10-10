@@ -1808,7 +1808,7 @@ function showVerdict(card, btn, hit, focusNext) {
     '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (inRetry() ? (hit ? "もう一度：正解（記録はしません）" : "もう一度：不正解（明日の復習で出ます）") : hit ? "正解" : unknown ? "わからない（不正解として記録し、復習に回します）" : "不正解") + '</div>' +
     easyHtml(q) +
     '<p class="vnote">' + q.n + '</p>' +
-    whyBox(q, whyOf(q)) +
+    (/^過去問 /.test(q.f || "") && whyOf(q).tier < 2 ? "" : whyBox(q, whyOf(q))) +
     (q.v ? '<p class="vsrc' + (q.v === "knowledge" ? " k" : "") + '">' + VLABEL[q.v] + '</p>' : '') +
     '<div class="qnav">' + navHtml(true) + '</div>' +
     '<p class="hintkey">← → キーでも移動できます</p>';
