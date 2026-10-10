@@ -161,6 +161,12 @@
   }
   .qn { font-size: .75rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
   .qt { font-size: 1.03rem; font-weight: 600; margin: .25rem 0 .1rem; line-height: 1.6; text-wrap: pretty; white-space: pre-line; }
+  .stl { margin: .35rem 0 .6rem; display: flex; flex-direction: column; gap: .35rem; }
+  .strow { display: flex; gap: .55rem; align-items: flex-start; font-size: .93rem; line-height: 1.6; }
+  .stm { flex: none; width: 2.1rem; height: 2.1rem; border-radius: 50%; border: 1px solid var(--rule-strong); background: var(--panel); color: var(--ink-3); font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; }
+  .stm.o { border-color: var(--ok); color: var(--ok); background: var(--ok-soft); }
+  .stm.x { border-color: var(--ng); color: var(--ng); background: var(--ng-soft); }
+  .sttally { font-size: .8rem; color: var(--accent); font-weight: 700; margin-top: .15rem; text-align: right; }
   .qh { font-size: .82rem; color: var(--ink-3); margin: 0 0 .9rem; line-height: 1.6; }
 
   .choices { display: flex; flex-direction: column; gap: .45rem; }
@@ -1344,7 +1350,12 @@ function render() {
   const q = Q[i];
   let seed = 0;
   for (let k = 0; k < q.q.length; k++) seed = (seed * 31 + q.q.charCodeAt(k)) & 0x7fffffff;
-  const order = shuffle(q.c.length, seed);
+  // 「〜の数はどれか」の選択肢（2個・0個…）は並べ替えずに小さい順に出す（スマホで探しやすく）
+  const isCount = q.c.every(function (c) { return /^\s*[0-9０-９]+\s*(個|つ)?\s*$/.test(c); }) &&
+    (q.c.some(function (c) { return /(個|つ)\s*$/.test(c); }) || /の数/.test(q.q.split("<br>")[0]));
+  const order = isCount
+    ? q.c.map(function (_, k) { return k; }).sort(function (a, b) { return parseInt(q.c[a].replace(/[０-９]/g, function (d) { return "０１２３４５６７８９".indexOf(d); }), 10) - parseInt(q.c[b].replace(/[０-９]/g, function (d) { return "０１２３４５６７８９".indexOf(d); }), 10); })
+    : shuffle(q.c.length, seed);
   const prev = answers[i];
   answered = !!prev;
 
@@ -1376,7 +1387,7 @@ function render() {
       '<textarea id="memoTa" rows="3" placeholder="覚え方、間違えた理由など"></textarea>' +
       '<div class="saved" aria-live="polite"></div>' +
     '</div>';
-  card.querySelector(".qt").textContent = q.q.replace(/<br>/g, "\n");
+  renderStatements(card, q);
   card.querySelector(".qh").textContent = q.h;
   wireNoteTools(card, q);
 
@@ -1410,6 +1421,49 @@ function render() {
     renderNav(card);
   }
   window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+/* (ア)〜(オ) の記述を並べる問題は、各記述に ○／× の印を付けられる行に分け、○の数をその場で数える */
+function renderStatements(card, q) {
+  const qt = card.querySelector(".qt");
+  const parts = q.q.split("<br>");
+  const isSt = parts.map(function (l) { return /^\s*[（(][ア-コ][）)]/.test(l); });
+  if (isSt.filter(Boolean).length < 2) { qt.textContent = q.q.replace(/<br>/g, "\n"); return; }
+  qt.textContent = parts.filter(function (_, k) { return !isSt[k]; }).join("\n");
+  const box = document.createElement("div");
+  box.className = "stl";
+  const tally = document.createElement("div");
+  tally.className = "sttally";
+  const marks = [];
+  function upd() {
+    const o = marks.filter(function (m) { return m === "○"; }).length, x = marks.filter(function (m) { return m === "×"; }).length;
+    tally.textContent = "○ " + o + "個　× " + x + "個　未 " + (marks.length - o - x) + "個";
+  }
+  parts.forEach(function (l, k) {
+    if (!isSt[k]) return;
+    const idx = marks.push("") - 1;
+    const row = document.createElement("div");
+    row.className = "strow";
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "stm";
+    b.setAttribute("aria-label", "この記述の判定（タップで ○→×→未）");
+    b.textContent = "・";
+    b.addEventListener("click", function () {
+      marks[idx] = marks[idx] === "" ? "○" : marks[idx] === "○" ? "×" : "";
+      b.textContent = marks[idx] || "・";
+      b.className = "stm" + (marks[idx] === "○" ? " o" : marks[idx] === "×" ? " x" : "");
+      upd();
+    });
+    const t = document.createElement("span");
+    t.className = "stt";
+    t.textContent = l.trim();
+    row.appendChild(b); row.appendChild(t);
+    box.appendChild(row);
+  });
+  upd();
+  box.appendChild(tally);
+  qt.insertAdjacentElement("afterend", box);
 }
 
 /* 前へ／次へのナビゲーション。解答前でも「前へ」で戻れる */

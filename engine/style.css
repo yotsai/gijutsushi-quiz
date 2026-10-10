@@ -148,6 +148,12 @@
   }
   .qn { font-size: .75rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
   .qt { font-size: 1.03rem; font-weight: 600; margin: .25rem 0 .1rem; line-height: 1.6; text-wrap: pretty; white-space: pre-line; }
+  .stl { margin: .35rem 0 .6rem; display: flex; flex-direction: column; gap: .35rem; }
+  .strow { display: flex; gap: .55rem; align-items: flex-start; font-size: .93rem; line-height: 1.6; }
+  .stm { flex: none; width: 2.1rem; height: 2.1rem; border-radius: 50%; border: 1px solid var(--rule-strong); background: var(--panel); color: var(--ink-3); font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; }
+  .stm.o { border-color: var(--ok); color: var(--ok); background: var(--ok-soft); }
+  .stm.x { border-color: var(--ng); color: var(--ng); background: var(--ng-soft); }
+  .sttally { font-size: .8rem; color: var(--accent); font-weight: 700; margin-top: .15rem; text-align: right; }
   .qh { font-size: .82rem; color: var(--ink-3); margin: 0 0 .9rem; line-height: 1.6; }
 
   .choices { display: flex; flex-direction: column; gap: .45rem; }
