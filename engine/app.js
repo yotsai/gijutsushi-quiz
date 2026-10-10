@@ -1482,7 +1482,10 @@ function segTableHtml() {
       const k = SEG_FIELDS.push(x.list) - 1;
       fr += row(x.f.replace(/^(基礎|適性):/, ""), x.list, false).replace("</tr>", '<td><button class="segrun" data-seg="' + k + '">解く</button></td></tr>');
     });
-    fields += '<details class="segf" open><summary>' + (g ? g + "の" : "") + '分野別（' + fl.length + '分野・手つかずが多い順）</summary>' +
+    const nUn = fl.filter(function (x) { return x.un === 1; }).length;
+    const nLow = fl.filter(function (x) { return x.rate >= 0 && x.rate < 0.5; }).length;
+    const gk = g || "all";
+    fields += '<details class="segf" data-g="' + gk + '"' + (SEGF_OPEN[gk] ? " open" : "") + '><summary>' + (g ? g + "の" : "") + '分野別　<span class="segsum">' + fl.length + '分野中 手つかず' + nUn + '・50%未満' + nLow + '</span></summary>' +
       '<table class="seg"><thead><tr><th></th><th>着手</th><th>正答率</th><th>苦手</th><th></th></tr></thead><tbody>' + fr + '</tbody></table></details>';
   });
   return '<h3 class="segh">科目・セットごとの取り組み</h3>' +
@@ -1492,6 +1495,8 @@ function segTableHtml() {
     '<p class="segnote">「解く」はその分野だけで出題します（まだ解いていない問題と苦手を優先）。</p>';
 }
 let SEG_FIELDS = [];
+const SEGF_OPEN = {};
+let HLIST_OPEN = false;
 function renderHistory() {
   const p = document.getElementById("pane-hist");
   const all = SETS.all;
@@ -1536,6 +1541,7 @@ function renderHistory() {
       '<div class="warn">苦手<b>' + weak.length + '</b></div>' +
     '</div>' +
     segTableHtml() +
+    '<details class="hlist"' + (HLIST_OPEN ? " open" : "") + '><summary>問題ごとの一覧を見る（間違えた問題・未回答・ブックマーク）</summary>' +
     '<div class="filters">' +
       '<button class="flt" data-f="miss" aria-pressed="' + (HFILTER === "miss") + '">間違えた問題</button>' +
       '<button class="flt" data-f="all" aria-pressed="' + (HFILTER === "all") + '">すべて</button>' +
@@ -1552,6 +1558,7 @@ function renderHistory() {
           : HFILTER === "bm" ? "ブックマークした問題はありません。クイズ画面で問題の右上の「☆ ブックマーク」を押すと、ここに集まります。"
           : HFILTER === "memo" ? "メモを書いた問題はありません。クイズ画面で問題の右上の「メモ」から書けます。"
           : "履歴がありません。") + '</p>')
+    + '</details>'
     + renderDiagnosis() + renderBackup() + renderDataManager();
 
   // 問題文・メモは利用者の入力を含むので textContent で入れる
@@ -1569,7 +1576,12 @@ function renderHistory() {
   });
 
   p.querySelectorAll(".flt").forEach(function (b) {
-    b.addEventListener("click", function () { HFILTER = b.dataset.f; renderHistory(); });
+    b.addEventListener("click", function () { HFILTER = b.dataset.f; HLIST_OPEN = true; renderHistory(); });
+  });
+  const hl = p.querySelector(".hlist");
+  if (hl) hl.addEventListener("toggle", function () { HLIST_OPEN = hl.open; });
+  p.querySelectorAll(".segf").forEach(function (d) {
+    d.addEventListener("toggle", function () { SEGF_OPEN[d.dataset.g] = d.open; });
   });
   p.querySelectorAll(".segrun").forEach(function (b) {
     b.addEventListener("click", function () {
