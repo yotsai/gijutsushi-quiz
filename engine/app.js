@@ -1461,16 +1461,37 @@ function segTableHtml() {
       '<td class="rate' + rc + '">' + (rate === null ? "—" : rate + "%") + '</td>' +
       '<td>' + (w || "") + '</td></tr>';
   }
-  let rows = "";
+  let rows = "", fields = "";
+  SEG_FIELDS = [];
   (GROUPED ? GROUPS : [null]).forEach(function (g) {
     const sets = SUBJECT.sets.filter(function (d) { return !g || d.group === g; });
-    if (g) rows += row(g, [].concat.apply([], sets.map(function (d) { return SETS[d.key]; })), true);
+    const all = [].concat.apply([], sets.map(function (d) { return SETS[d.key]; }));
+    if (g) rows += row(g, all, true);
     sets.forEach(function (d) { rows += row(d.label, SETS[d.key], false); });
+    // 分野（f）ごと：手をつけていない割合が大きい順、同じなら正答率が低い順
+    const byF = {};
+    all.forEach(function (q) { (byF[q.f] = byF[q.f] || []).push(q); });
+    const fl = Object.keys(byF).map(function (f) {
+      const list = byF[f];
+      const ans = list.filter(function (q) { return histOf(q); });
+      const ok = ans.filter(function (q) { return histOf(q).last === 1; }).length;
+      return { f: f, list: list, un: 1 - ans.length / list.length, rate: ans.length ? ok / ans.length : -1 };
+    }).sort(function (a, b) { return (b.un - a.un) || (a.rate - b.rate); });
+    let fr = "";
+    fl.forEach(function (x) {
+      const k = SEG_FIELDS.push(x.list) - 1;
+      fr += row(x.f.replace(/^(基礎|適性):/, ""), x.list, false).replace("</tr>", '<td><button class="segrun" data-seg="' + k + '">解く</button></td></tr>');
+    });
+    fields += '<details class="segf" open><summary>' + (g ? g + "の" : "") + '分野別（' + fl.length + '分野・手つかずが多い順）</summary>' +
+      '<table class="seg"><thead><tr><th></th><th>着手</th><th>正答率</th><th>苦手</th><th></th></tr></thead><tbody>' + fr + '</tbody></table></details>';
   });
   return '<h3 class="segh">科目・セットごとの取り組み</h3>' +
     '<table class="seg"><thead><tr><th></th><th>着手</th><th>正答率</th><th>苦手</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-    '<p class="segnote">正答率＝解いた問題のうち直近の解答が正解の割合。緑は70%以上（アプリの目標）、赤は50%未満。</p>';
+    '<p class="segnote">正答率＝解いた問題のうち直近の解答が正解の割合。緑は70%以上（アプリの目標）、赤は50%未満。</p>' +
+    fields +
+    '<p class="segnote">「解く」はその分野だけで出題します（まだ解いていない問題と苦手を優先）。</p>';
 }
+let SEG_FIELDS = [];
 function renderHistory() {
   const p = document.getElementById("pane-hist");
   const all = SETS.all;
@@ -1549,6 +1570,17 @@ function renderHistory() {
 
   p.querySelectorAll(".flt").forEach(function (b) {
     b.addEventListener("click", function () { HFILTER = b.dataset.f; renderHistory(); });
+  });
+  p.querySelectorAll(".segrun").forEach(function (b) {
+    b.addEventListener("click", function () {
+      const list = SEG_FIELDS[Number(b.dataset.seg)];
+      if (!list || !list.length) return;
+      CUSTOM_LIST = list.slice();
+      CURRENT_SET = "custom";
+      document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
+      selectTab("quiz");
+      rebuild();
+    });
   });
   const st = p.querySelector("#solveThese");
   if (st) st.addEventListener("click", function () {

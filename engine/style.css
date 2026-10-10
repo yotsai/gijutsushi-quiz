@@ -463,6 +463,9 @@
   .seg .rate.bad { color: var(--ng); font-weight: 700; }
   .segbar { display: block; height: 3px; background: var(--rule); margin-top: .2rem; }
   .segbar i { display: block; height: 100%; background: var(--accent); }
+  .segf { margin: .3rem 0 .2rem; }
+  .segf summary { font-size: .86rem; font-weight: 700; padding: .45rem 0; cursor: pointer; color: var(--accent); }
+  .segrun { font: inherit; font-size: .74rem; padding: .2rem .55rem; border: 1px solid var(--accent); color: var(--accent); background: transparent; border-radius: 999px; cursor: pointer; }
   .segnote { font-size: .74rem; color: var(--ink-3); margin: .4rem 0 .8rem; line-height: 1.6; }
   .stats { width: 100%; min-width: 23rem; border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; }
   .stats th, .stats td { padding: .35rem .3rem; white-space: nowrap; border-bottom: 1px solid var(--rule); text-align: right; }
