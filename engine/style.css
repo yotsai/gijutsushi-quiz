@@ -173,6 +173,13 @@
   .ch.ng { border-color: var(--ng); background: var(--ng-soft); }
   .ch.ng .key { border-color: var(--ng); color: var(--ng); font-weight: 700; }
   .ch.dim { opacity: .45; }
+  .dk {
+    align-self: flex-end; margin-top: .15rem; font: inherit; font-size: .8rem; color: var(--ink-3);
+    background: transparent; border: 1px dashed var(--rule-strong); border-radius: 999px;
+    padding: .35rem .95rem; cursor: pointer;
+  }
+  .dk:disabled { cursor: default; }
+  .dk.on { color: var(--ng); border: 1px solid var(--ng); background: var(--ng-soft); }
 
   .verdict { margin-top: .95rem; padding-top: .85rem; border-top: 1px solid var(--rule); }
   .vtag { font-size: .82rem; font-weight: 700; letter-spacing: .04em; }

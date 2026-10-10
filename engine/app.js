@@ -94,12 +94,19 @@ function render() {
     b.addEventListener("click", () => choose(card, b, origIdx));
     box.appendChild(b);
   });
+  // 1つも消去できないときだけ使う。当てずっぽうの正解で「覚えた」扱いにならないよう、不正解として記録する
+  const dk = document.createElement("button");
+  dk.className = "dk";
+  dk.type = "button";
+  dk.textContent = "わからない";
+  dk.addEventListener("click", () => choose(card, dk, -1));
+  box.appendChild(dk);
 
   stage.replaceChildren(card);
 
   if (prev) {
     // 解答済みの問題に戻ってきた場合は、そのときの状態を復元する
-    const btn = Array.prototype.find.call(card.querySelectorAll(".ch"),
+    const btn = prev.pick === -1 ? card.querySelector(".dk") : Array.prototype.find.call(card.querySelectorAll(".ch"),
       b => Number(b.dataset.orig) === prev.pick);
     showVerdict(card, btn, prev.hit, false);
   } else {
@@ -416,6 +423,9 @@ function showVerdict(card, btn, hit, focusNext) {
     else if (b === btn) b.classList.add("ng");
     else b.classList.add("dim");
   });
+  const dkb = card.querySelector(".dk");
+  const unknown = !!btn && btn === dkb;
+  if (dkb) { dkb.disabled = true; if (unknown) dkb.classList.add("on"); else dkb.hidden = true; }
 
   const oldNav = card.querySelector(".nav");
   if (oldNav) oldNav.remove();
@@ -423,7 +433,7 @@ function showVerdict(card, btn, hit, focusNext) {
   const v = document.createElement("div");
   v.className = "verdict";
   v.innerHTML =
-    '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (hit ? "正解" : "不正解") + '</div>' +
+    '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (hit ? "正解" : unknown ? "わからない（不正解として記録し、復習に回します）" : "不正解") + '</div>' +
     '<p class="vnote">' + q.n + '</p>' +
     whyBox(q, whyOf(q)) +
     (q.v ? '<p class="vsrc' + (q.v === "knowledge" ? " k" : "") + '">' + VLABEL[q.v] + '</p>' : '') +
