@@ -608,6 +608,9 @@
   .homecard .btn.wide#cont { border-radius: 12px; margin-top: .8rem; }
 
   /* 数字のタイル（2×2） */
+  .agrps { display: flex; gap: .35rem; margin: .1rem 0 .5rem; flex-wrap: wrap; }
+  .agrp { font: inherit; font-size: .8rem; padding: .3rem .8rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.45); background: transparent; color: inherit; cursor: pointer; }
+  .agrp[aria-pressed="true"] { background: #fff; color: #0E5049; border-color: #fff; font-weight: 700; }
   .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; margin-top: .8rem; }
   .tile {
     font: inherit; text-align: left; border: 1px solid var(--rule); border-radius: 14px; background: var(--paper);

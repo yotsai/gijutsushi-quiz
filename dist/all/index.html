@@ -621,6 +621,9 @@
   .homecard .btn.wide#cont { border-radius: 12px; margin-top: .8rem; }
 
   /* 数字のタイル（2×2） */
+  .agrps { display: flex; gap: .35rem; margin: .1rem 0 .5rem; flex-wrap: wrap; }
+  .agrp { font: inherit; font-size: .8rem; padding: .3rem .8rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.45); background: transparent; color: inherit; cursor: pointer; }
+  .agrp[aria-pressed="true"] { background: #fff; color: #0E5049; border-color: #fff; font-weight: 700; }
   .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; margin-top: .8rem; }
   .tile {
     font: inherit; text-align: left; border: 1px solid var(--rule); border-radius: 14px; background: var(--paper);
@@ -3992,10 +3995,25 @@ function mastery(q) {
   const st = h.st || 0;
   return st >= 5 ? 4 : st >= 3 ? 3 : 2;
 }
+/* おまかせの対象科目（全部入り版のみ）。"" はすべて */
+let AUTO_G = "";
+try { AUTO_G = localStorage.getItem(SPFX + "auto_g") || ""; } catch (e) {}
+function autoBase() {
+  if (!AUTO_G || typeof GROUPED === "undefined" || !GROUPED || GROUPS.indexOf(AUTO_G) < 0) return verifiedOnly(SETS.all);
+  return verifiedOnly([].concat.apply([], SUBJECT.sets.filter(function (d) { return d.group === AUTO_G; }).map(function (d) { return SETS[d.key]; })));
+}
+function autoDueCount() {
+  const t = dayStart(Date.now());
+  return autoBase().filter(function (q) { return isDue(histOf(q), t); }).length;
+}
+function autoDueHtml() {
+  const due = autoDueCount();
+  return due ? '今日の復習 <b>' + due + '</b>問' : '今日の復習はありません。<br>まだ解いていない頻出論点から出します';
+}
 /* 出題の順：①復習日を過ぎた問題（古い順・習熟度の低い順） ②まだ解いていない問題（頻出論点から） ③期限前でも習熟度の低い問題 */
 function autoPick(n) {
   const today = dayStart(Date.now());
-  const all = verifiedOnly(SETS.all);
+  const all = autoBase();
   let pick = all.filter(function (q) { return isDue(histOf(q), today); }).sort(function (a, b) {
     return histOf(a).due - histOf(b).due || mastery(a) - mastery(b) || whyOf(b).rank - whyOf(a).rank;
   }).slice(0, n);
@@ -4036,11 +4054,15 @@ function refreshAutoBtn() {
   if (nb) { nb.textContent = n > 99 ? "99+" : String(n); nb.hidden = !n; }
 }
 function renderAutoBlock() {
-  const due = dueList().length;
   const m = [0, 0, 0, 0, 0];
   verifiedOnly(SETS.all).forEach(function (q) { m[mastery(q)]++; });
-  return '<div class="auto hero"><h3>おまかせ出題</h3>' +
-    '<p class="due">' + (due ? '今日の復習 <b>' + due + '</b>問' : '今日の復習はありません。<br>まだ解いていない頻出論点から出します') + '</p>' +
+  const grpChips = (typeof GROUPED !== "undefined" && GROUPED)
+    ? '<div class="agrps" role="group" aria-label="おまかせの科目">' + [""].concat(GROUPS).map(function (g) {
+        return '<button type="button" class="agrp" data-g="' + g + '" aria-pressed="' + (AUTO_G === g) + '">' + (g || "すべて") + '</button>';
+      }).join("") + '</div>'
+    : "";
+  return '<div class="auto hero"><h3>おまかせ出題</h3>' + grpChips +
+    '<p class="due">' + autoDueHtml() + '</p>' +
     '<div class="auto-n"><label for="autoN">出題数</label><output id="autoNv">' + AUTO_N + '問</output></div>' +
     '<input type="range" id="autoN" min="5" max="100" step="5" value="' + AUTO_N + '">' +
     '<div class="auto-scale"><span>5問</span><span>100問</span></div>' +
@@ -4071,6 +4093,15 @@ function wireAutoBlock(card) {
     try { localStorage.setItem(SPFX + "auto_n", String(AUTO_N)); } catch (e) {}
   });
   go.addEventListener("click", startAuto);
+  card.querySelectorAll(".agrp").forEach(function (b) {
+    b.addEventListener("click", function () {
+      AUTO_G = b.dataset.g;
+      try { localStorage.setItem(SPFX + "auto_g", AUTO_G); } catch (e) {}
+      card.querySelectorAll(".agrp").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
+      const d = card.querySelector(".due");
+      if (d) d.innerHTML = autoDueHtml();
+    });
+  });
 }
 /* 苦手＝直近で誤答した問題、または正答率6割未満の問題 */
 function weakList() {
