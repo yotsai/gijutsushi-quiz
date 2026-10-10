@@ -930,6 +930,14 @@ const log = [];
 const answers = [];
 /* 回の最後に、間違えた問題をもう一度出す（記録はしない）。RETRY_FROM はその開始位置。-1 は未追加 */
 let RETRY_FROM = -1;
+/* 履歴の「解く」から始めた回は、ホームではなく履歴に戻れるようにする */
+let FROM_HIST = false;
+function goBack() {
+  if (!FROM_HIST) { goHome(); return; }
+  FROM_HIST = false;
+  if (Q.length > 0 && i < Q.length) saveSession();
+  selectTab("hist");
+}
 function inRetry() { return RETRY_FROM >= 0 && i >= RETRY_FROM; }
 function origCount() { return RETRY_FROM >= 0 ? RETRY_FROM : Q.length; }
 function wrongOriginals() {
@@ -1102,12 +1110,12 @@ function navHtml(answeredNow) {
     '</div>' +
     '<div class="navrow two">' +
       '<button class="btn ghost" id="prev"' + (i > 0 ? '' : ' disabled') + '>← 前の問題</button>' +
-      '<button class="btn ghost" id="home">ホーム</button>' +
+      '<button class="btn ghost" id="home">' + (FROM_HIST ? "← 履歴に戻る" : "ホーム") + '</button>' +
     '</div>';
 }
 function wireNav(el) {
   el.querySelector("#prev").addEventListener("click", goPrev);
-  el.querySelector("#home").addEventListener("click", goHome);
+  el.querySelector("#home").addEventListener("click", goBack);
   const nb = el.querySelector("#next");
   if (nb) nb.addEventListener("click", goNext);
   const sk = el.querySelector("#skip");
@@ -1334,6 +1342,7 @@ function setQuizChrome(show) {
   document.querySelector(".bar").hidden = !show;
 }
 function goHome() {
+  FROM_HIST = false;
   const inProgress = Q.length > 0 && i < Q.length;
   if (inProgress) saveSession();
   AT_HOME = true;
@@ -1485,7 +1494,7 @@ function renderResult() {
       (LIMIT && baseList().length > N ? '<button class="btn" id="nextBatch">次の ' + LIMIT + '問へ</button>' : '') +
       (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をやり直す</button>' : '') +
       (skipped.length ? '<button class="btn ghost" id="doSkipped">とばした ' + skipped.length + ' 問を解く</button>' : '') +
-      '<button class="btn ghost" id="home">ホーム</button>' +
+      '<button class="btn ghost" id="home">' + (FROM_HIST ? "← 履歴に戻る" : "ホーム") + '</button>' +
     '</div>';
   stage.replaceChildren(card);
 
@@ -1503,7 +1512,7 @@ function renderResult() {
   });
   const nb2 = card.querySelector("#nextBatch");
   if (nb2) nb2.addEventListener("click", function () { rebuild(); });
-  card.querySelector("#home").addEventListener("click", goHome);
+  card.querySelector("#home").addEventListener("click", goBack);
   const rh = card.querySelector("#resetHist");
   if (rh) rh.addEventListener("click", function () {
     if (!confirm("これまでの解答履歴をすべて削除します。よろしいですか。")) return;
@@ -2550,6 +2559,7 @@ function renderHistory() {
       CURRENT_SET = "custom";
       document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
       selectTab("quiz");
+      FROM_HIST = true;
       rebuild();
     });
   });
@@ -2559,6 +2569,7 @@ function renderHistory() {
     CURRENT_SET = "custom";
     document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
     selectTab("quiz");
+    FROM_HIST = true;
     rebuild();
   });
   wireBackup(p);
