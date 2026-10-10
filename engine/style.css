@@ -187,6 +187,7 @@
   .dk:disabled { cursor: default; }
   .dk.on { color: var(--ng); border: 1px solid var(--ng); background: var(--ng-soft); }
 
+  .verdict, .easy, .hq, .hmemo { overflow-wrap: anywhere; word-break: break-word; }
   .verdict { margin-top: .95rem; padding-top: .85rem; border-top: 1px solid var(--rule); }
   .vtag { font-size: .82rem; font-weight: 700; letter-spacing: .04em; }
   .easy { margin: .6rem 0 .2rem; padding: .75rem .85rem; background: var(--accent-soft); border-radius: 10px; font-size: .9rem; line-height: 1.8; }
