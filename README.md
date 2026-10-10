@@ -168,6 +168,10 @@ node build.js --root           all をビルドし、ルートの index.html に
 - 本番（GitHub Pages・Cloudflare Pages）はルートの `index.html` を配信する。ビルド工程は不要。
 - `all` と `senmon-kankyo` の localStorage キーは従来どおり（`gq_history_v1` など）なので、既存の履歴はそのまま残る。
 
+## ホーム画面に追加（iPhone）
+
+ルートの index.html は manifest.webmanifest・pwa/ のアイコン・sw.js（オフライン用。ページはネットワーク優先で、つながらないときだけ保存版）を読み込む。Safari の共有メニュー「ホーム画面に追加」で全画面のアプリとして起動できる。iOS ではホーム画面版と Safari で保存領域（解答履歴）が別になるので、履歴タブの書き出し→読み込みで移す。
+
 ## 基礎・適性・専門を別アプリとして出す
 
 1. 出したい科目の `dist/<id>/` をそのままホスティングする（静的ホスティングならどこでも可。フォルダの中身は `index.html` と `_headers` だけ）。

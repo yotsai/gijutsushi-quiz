@@ -1,0 +1,14 @@
+{
+  "name": "技術士一次試験 環境部門クイズ",
+  "short_name": "技術士クイズ",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F7F6F1",
+  "theme_color": "#0E5049",
+  "lang": "ja",
+  "icons": [
+    { "src": "pwa/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "pwa/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

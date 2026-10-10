@@ -96,7 +96,17 @@ function writeDist(id) {
 
 function writeRoot() {
   const r = build("all", { note: "生成物です。直接編集しないでください。元は engine/ と subjects/ で、`node build.js --root` で作り直します（GitHub Pages がこのファイルを配信します）" });
-  fs.writeFileSync(path.join(ROOT, "index.html"), r.out);
+  // ルート版だけホーム画面に追加できるようにする（manifest・アイコン・オフライン用の sw.js）
+  const pwaHead =
+    '<link rel="manifest" href="manifest.webmanifest">\n' +
+    '<link rel="apple-touch-icon" href="pwa/apple-touch-icon.png">\n' +
+    '<meta name="apple-mobile-web-app-capable" content="yes">\n' +
+    '<meta name="mobile-web-app-capable" content="yes">\n' +
+    '<meta name="apple-mobile-web-app-title" content="技術士クイズ">\n' +
+    '<meta name="apple-mobile-web-app-status-bar-style" content="default">\n' +
+    '<meta name="theme-color" content="#0E5049">\n' +
+    '<script>if ("serviceWorker" in navigator) window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });</script>\n';
+  fs.writeFileSync(path.join(ROOT, "index.html"), r.out.replace("</head>", pwaHead + "</head>"));
   console.log("index.html（ルート）  " + r.total + "問  " + Math.round(r.out.length / 1024) + "KB");
 }
 
