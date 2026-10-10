@@ -80,5 +80,5 @@ const SUBJECT = {
 
   shareTitle: "技術士一次試験 環境部門 学習状況",
 
-  files: ["data.js", "pastq.js", "measure.js", "extra.js", "trend.js"]
+  files: ["data.js", "pastq.js", "measure.js", "extra.js", "trend.js", "easy.js"]
 };

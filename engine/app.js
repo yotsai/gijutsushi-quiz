@@ -434,7 +434,7 @@ function choose(card, btn, origIdx) {
 
 /* 専門外の人向けの「やさしい解説」。問題文をキーに別ファイル（easy.js の EASY_NOTES）から引く */
 function easyHtml(q) {
-  const t = (window.EASY_NOTES && window.EASY_NOTES[q.q]) || "";
+  const t = ((window.EASY_NOTES && window.EASY_NOTES[q.q]) || "").replace(/<b>(ひとことで|用語|考え方|覚え方)<\/b>\s*/g, '<span class="ezh">$1</span>');
   return t ? '<div class="easy"><div class="easyh">やさしい解説</div><div class="easyb">' + t + '</div></div><div class="vnoteh">詳しい解説（出典つき）</div>' : "";
 }
 function showVerdict(card, btn, hit, focusNext) {
