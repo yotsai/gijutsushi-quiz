@@ -3,3 +3,4 @@ _*.html
 questions/
 parsed/
 .DS_Store
+!pwa/*.png
