@@ -25,6 +25,7 @@
     --ok-soft: #E2F0E5;
     --ng: #9E3324;
     --ng-soft: #F7E6E2;
+    --warn: #8A5A00;
     --shadow: 0 1px 2px rgba(25,29,26,.07);
   }
   @media (prefers-color-scheme: dark) {
@@ -33,7 +34,7 @@
       --ink: #E8EBE7; --ink-2: #AFB5AD; --ink-3: #838A82;
       --accent: #6FBFB2; --accent-soft: #1E3833;
       --ok: #6FC28C; --ok-soft: #1C3325;
-      --ng: #E08878; --ng-soft: #3A2320;
+      --ng: #E08878; --ng-soft: #3A2320; --warn: #E3B341;
       --shadow: none;
     }
   }
@@ -42,7 +43,7 @@
     --ink: #E8EBE7; --ink-2: #AFB5AD; --ink-3: #838A82;
     --accent: #6FBFB2; --accent-soft: #1E3833;
     --ok: #6FC28C; --ok-soft: #1C3325;
-    --ng: #E08878; --ng-soft: #3A2320;
+    --ng: #E08878; --ng-soft: #3A2320; --warn: #E3B341;
     --shadow: none;
   }
 
@@ -210,6 +211,7 @@
   .easyh, .vnoteh { font-size: .78rem; font-weight: 700; color: var(--accent); letter-spacing: .04em; margin-bottom: .3rem; }
   .vnoteh { margin-top: .9rem; color: var(--ink-3); }
   .ezh { display: block; font-weight: 700; color: var(--accent); margin-bottom: .1rem; }
+  .ezh.now { color: var(--warn); }
   .vtag.ok { color: var(--ok); }
   .vtag.ng { color: var(--ng); }
   .vnote { font-size: .86rem; color: var(--ink-2); margin: .3rem 0 0; line-height: 1.72; }
@@ -3034,7 +3036,8 @@ function choose(card, btn, origIdx) {
 /* 専門外の人向けの「やさしい解説」。問題文をキーに別ファイル（easy.js の EASY_NOTES）から引く */
 function easyHtml(q) {
   // 取り込んだ過去問は、解説を取り込みファイルの中（q.e）に持つ（本文を公開しないため）
-  const t = ((window.EASY_NOTES && window.EASY_NOTES[q.q]) || q.e || "").replace(/<b>(ひとことで|用語|解き方|考え方|覚え方)<\/b>\s*/g, '<span class="ezh">$1</span>');
+  const t = ((window.EASY_NOTES && window.EASY_NOTES[q.q]) || q.e || "").replace(/<b>(ひとことで|用語|解き方|考え方|覚え方)<\/b>\s*/g, '<span class="ezh">$1</span>')
+    .replace(/<b>今の状況<\/b>\s*/g, '<span class="ezh now">今の状況（過去問の当時から変わったか）</span>');
   return t ? '<div class="easy"><div class="easyh">やさしい解説</div><div class="easyb">' + t + '</div></div><div class="vnoteh">詳しい解説（出典つき）</div>' : "";
 }
 function showVerdict(card, btn, hit, focusNext) {
