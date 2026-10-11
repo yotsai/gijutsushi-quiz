@@ -953,8 +953,16 @@ function refreshImportedSet() {
   const btn = document.getElementById("impBtn");
   if (btn) {
     btn.textContent = "過去問 " + list.length + "問";
-    btn.hidden = list.length === 0;
+    // 全部入り版では科目ごとの「過去問」ボタンに分ける（f が「過去問 専門 R7」の形）
+    btn.hidden = list.length === 0 || (typeof GROUPED !== "undefined" && GROUPED);
   }
+  document.querySelectorAll('.set.impg').forEach(function (b) {
+    const g = b.dataset.set.slice(4);
+    const sub = list.filter(function (q) { return (q.f || "").split(" ")[1] === g; });
+    SETS[b.dataset.set] = sub;
+    b.textContent = "過去問 " + sub.length + "問";
+    b.hidden = sub.length === 0;
+  });
   refreshWeakBtn();
 }
 
@@ -1151,6 +1159,9 @@ function showGroup(g) {
   if (GROUPED) GROUPS.forEach(function (g) {
     if (SETS["grp:" + g]) add("set", "grp:" + g, g + " まとめて " + SETS["grp:" + g].length + "問", {}, g);
     add("set freq", "freq:" + g, "★ 頻出だけ", { hidden: true }, g);
+    SETS["imp:" + g] = [];
+    SET_LABEL["imp:" + g] = g + " 過去問";
+    add("set impg", "imp:" + g, "過去問 0問", { hidden: true }, g);
   });
   else {
     if (multi) add("set", "all", (SUBJECT.allSetLabel || "まとめて") + " 全問");
