@@ -236,10 +236,28 @@ function goNext() { i++; if (i >= Q.length) appendRetries(); saveSession(); rend
 /* 科目が resultJudge を持たないときの結果コメント（正答率の下限ごと） */
 const DEFAULT_JUDGE = [
   { min: 90, text: "仕上がっています。間違えた問題だけ見直して、定着させてください。" },
-  { min: 70, text: "あと一歩です。間違えた問題だけ回し直せば固まります。" },
+  { min: 70, text: "合格ライン（50%）は超えています。間違えた問題だけ回し直して余裕を広げてください。" },
   { min: 50, text: "曖昧なところが残っています。解説を読み直してから、もう一度解いてください。" },
   { min: 0,  text: "まず解説を読んで、正解の根拠を確認してから解き直しましょう。" }
 ];
+/* 本番の過去問を1年度まるごと解いたときは、本番の選び方・合格基準（各科目50%）で合否を出す。
+   適性15問中8問／基礎は各群6問から3問を選ぶ15問中8問／専門は35問から25問を選んで13問 */
+function pastExamVerdict(log, N) {
+  if (!log.length || log.length !== N) return "";
+  const m0 = /^【(R\S+) (専門|基礎|適性) /.exec(log[0].q || "");
+  if (!m0 || !log.every(r => (r.q || "").indexOf("【" + m0[1] + " " + m0[2] + " ") === 0)) return "";
+  const kind = m0[2], ok = log.filter(r => r.hit).length;
+  let got, need = 8, how;
+  if (kind === "適性" && N === 15) { got = ok; how = "15問中8問以上で合格"; }
+  else if (kind === "専門" && N === 35) { got = Math.min(ok, 25); need = 13; how = "35問から25問を選び13問以上で合格。正解した問題を選べた前提で数えています"; }
+  else if (kind === "基礎" && N === 30) {
+    const g = {};
+    log.forEach(r => { const m = /Ⅰ-(\d)-/.exec(r.q); if (m && r.hit) g[m[1]] = (g[m[1]] || 0) + 1; });
+    got = Object.keys(g).reduce((s, k) => s + Math.min(3, g[k]), 0);
+    how = "各群6問から3問を選ぶ15問中8問以上で合格。各群で正解した問題を3問まで数えています";
+  } else return "";
+  return '<b>本番の採点なら' + (got >= need ? '合格' : '不合格') + '（' + got + '/' + (kind === "専門" ? 25 : 15) + '点）</b>　' + how + '。';
+}
 /* ---------- 合格までの道のり（本番日と期日の目安） ---------- */
 /* 受験日はホーム画面から変更でき、この端末に保存する。未設定・壊れた値は既定日にフォールバック */
 const EKEY = SPFX + "exam_day";
@@ -558,6 +576,8 @@ function renderResult() {
 
   let judge = "";
   (SUBJECT.resultJudge || DEFAULT_JUDGE).some(function (r) { if (pct >= r.min) { judge = r.text; return true; } return false; });
+  const exam = pastExamVerdict(log, N);
+  if (exam) judge = exam + '<br>' + judge;
 
   let rows = "";
   Object.keys(byField).forEach(f => {
