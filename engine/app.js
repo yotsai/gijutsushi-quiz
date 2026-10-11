@@ -103,13 +103,23 @@ function render() {
         '<button type="button" class="qtool" id="memoTog" aria-expanded="false" aria-controls="memoBox"></button>' +
       '</span></div>' +
     whyChips(whyOf(q)) +
-    '<p class="qt"></p><p class="qh"></p><div class="choices"></div>' +
+    '<p class="qt"></p><div class="qimg" hidden></div><p class="qh"></p><div class="choices"></div>' +
     '<div class="memo" id="memoBox" hidden>' +
       '<label for="memoTa">メモ（この端末に自動で保存されます）</label>' +
       '<textarea id="memoTa" rows="3" placeholder="覚え方、間違えた理由など"></textarea>' +
       '<div class="saved" aria-live="polite"></div>' +
     '</div>';
   renderStatements(card, q);
+  if (q.hasImg) {
+    const box = card.querySelector(".qimg");
+    IMGDB.get(imgKey(q)).then(function (src) {
+      if (!src || !box.isConnected) return;
+      const im = document.createElement("img");
+      im.src = src; im.alt = "問題の図（原本より）";
+      im.addEventListener("click", function () { box.classList.toggle("zoom"); });
+      box.appendChild(im); box.hidden = false;
+    });
+  }
   card.querySelector(".qh").textContent = q.h;
   wireNoteTools(card, q);
 
@@ -940,7 +950,46 @@ function validateImport(d) {
   }
   return null;
 }
+/* 取り込んだ過去問の図（q.img＝data URI）は容量が大きいので localStorage ではなく IndexedDB に分けて置く */
+const IMGDB = {
+  db: null,
+  open: function () {
+    const self = this;
+    return new Promise(function (res, rej) {
+      if (self.db) return res(self.db);
+      if (!window.indexedDB) return rej(new Error("no idb"));
+      const r = indexedDB.open("gq_imgs", 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore("img"); };
+      r.onsuccess = function () { self.db = r.result; res(self.db); };
+      r.onerror = function () { rej(r.error); };
+    });
+  },
+  put: function (k, v) {
+    return this.open().then(function (db) {
+      return new Promise(function (res, rej) {
+        const t = db.transaction("img", "readwrite");
+        t.objectStore("img").put(v, k);
+        t.oncomplete = function () { res(); };
+        t.onerror = function () { rej(t.error); };
+      });
+    });
+  },
+  get: function (k) {
+    return this.open().then(function (db) {
+      return new Promise(function (res) {
+        const r = db.transaction("img").objectStore("img").get(k);
+        r.onsuccess = function () { res(r.result || null); };
+        r.onerror = function () { res(null); };
+      });
+    }).catch(function () { return null; });
+  }
+};
+function imgKey(q) { return SPFX + "img:" + q.q; }
 function applyImport(d) {
+  const puts = [];
+  d.questions.forEach(function (q) {
+    if (q.img) { puts.push(IMGDB.put(imgKey(q), q.img).catch(function () {})); delete q.img; q.hasImg = 1; }
+  });
   IMPORTED[d.id] = { label: d.label, count: d.questions.length, questions: d.questions };
   if (!saveImported()) return "端末の保存領域が足りません";
   refreshImportedSet();
