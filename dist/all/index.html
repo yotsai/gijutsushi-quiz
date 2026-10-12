@@ -4088,7 +4088,8 @@ function startAuto() {
 function refreshAutoBtn() {
   const b = document.getElementById("autoBtn");
   if (!b) return;
-  const n = dueList().length;
+  // おまかせで選んでいる科目の「今日の復習」の数（「すべて」なら全科目）。おまかせの説明と同じ数にそろえる
+  const n = autoDueCount();
   b.innerHTML = "おまかせ" + (n ? '<span class="badge">' + n + '</span>' : "");
   const nb = document.getElementById("navBadge");
   if (nb) { nb.textContent = n > 99 ? "99+" : String(n); nb.hidden = !n; }
@@ -4140,6 +4141,7 @@ function wireAutoBlock(card) {
       card.querySelectorAll(".agrp").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
       const d = card.querySelector(".due");
       if (d) d.innerHTML = autoDueHtml();
+      refreshAutoBtn();
     });
   });
 }
