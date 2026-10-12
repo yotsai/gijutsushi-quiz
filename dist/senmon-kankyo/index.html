@@ -3276,7 +3276,9 @@ let AUTO_G = "";
 try { AUTO_G = localStorage.getItem(SPFX + "auto_g") || ""; } catch (e) {}
 function autoBase() {
   if (!AUTO_G || typeof GROUPED === "undefined" || !GROUPED || GROUPS.indexOf(AUTO_G) < 0) return verifiedOnly(SETS.all);
-  return verifiedOnly([].concat.apply([], SUBJECT.sets.filter(function (d) { return d.group === AUTO_G; }).map(function (d) { return SETS[d.key]; })));
+  // 取り込んだ本番の過去問（f が「過去問 専門 R7」の形）も、選んだ科目の分は復習・出題の対象に入れる
+  const imp = (SETS.imported || []).filter(function (q) { return (q.f || "").split(" ")[1] === AUTO_G; });
+  return verifiedOnly([].concat.apply([], SUBJECT.sets.filter(function (d) { return d.group === AUTO_G; }).map(function (d) { return SETS[d.key]; })).concat(imp));
 }
 function autoDueCount() {
   const t = dayStart(Date.now());
