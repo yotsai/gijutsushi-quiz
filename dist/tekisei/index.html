@@ -212,6 +212,9 @@
   .vnoteh { margin-top: .9rem; color: var(--ink-3); }
   .ezh { display: block; font-weight: 700; color: var(--accent); margin-bottom: .1rem; }
   .ezh.now { color: var(--warn); }
+  .selcnt { font-size: .82rem; color: var(--ink-3); margin: .2rem 0 .4rem; text-align: right; }
+  .selcnt b { color: var(--accent); }
+  .selcnt.over, .selcnt.over b { color: var(--ng); }
   .vtag.ok { color: var(--ok); }
   .vtag.ng { color: var(--ng); }
   .vnote { font-size: .86rem; color: var(--ink-2); margin: .3rem 0 0; line-height: 1.72; }
@@ -1122,8 +1125,10 @@ function renderStatements(card, q) {
 /* 解答前も解答後も「← 前の問題／ホーム／次の問題 →」を同じ位置に出す */
 /* 解答前は「とばす」扱い（控えめな見た目・Enterでは押されない）、解答後は通常の「次へ」 */
 function navHtml(answeredNow) {
-  const label = i + 1 < Q.length ? "次の問題 →" : (RETRY_FROM < 0 && wrongOriginals().length ? "間違えた問題をもう一度 →" : "結果を見る");
-  return '<div class="navrow one">' +
+  let label = i + 1 < Q.length ? "次の問題 →" : (RETRY_FROM < 0 && wrongOriginals().length ? "間違えた問題をもう一度 →" : "結果を見る");
+  const ex = examRun();
+  if (!answeredNow && ex && ex.kind !== "適性" && !inRetry() && i + 1 < Q.length) label = "この問題は選ばない →";
+  return selCountHtml() + '<div class="navrow one">' +
       (answeredNow
         ? '<button class="btn" id="next">' + label + '</button>'
         : '<button class="btn ghost" id="skip">' + label + '</button>') +
@@ -1160,23 +1165,47 @@ const DEFAULT_JUDGE = [
   { min: 50, text: "曖昧なところが残っています。解説を読み直してから、もう一度解いてください。" },
   { min: 0,  text: "まず解説を読んで、正解の根拠を確認してから解き直しましょう。" }
 ];
+/* 本番の過去問を1年度まるごと解いている回か（専門35問・基礎30問・適性15問）。違えば null */
+function examRun() {
+  const n = origCount();
+  const m = /^【(R\S+) (専門|基礎|適性) /.exec((Q[0] && Q[0].q) || "");
+  if (!m || n !== { 専門: 35, 基礎: 30, 適性: 15 }[m[2]]) return null;
+  const head = "【" + m[1] + " " + m[2] + " ";
+  for (let k = 0; k < n; k++) if ((Q[k].q || "").indexOf(head) !== 0) return null;
+  return { kind: m[2], year: m[1] };
+}
+function kisoGroup(q) { const m = /Ⅰ-(\d)-/.exec((q && q.q) || ""); return m ? m[1] : ""; }
+/* 選んで解く科目（専門25問・基礎は各群3問）で、今いくつ選んだか */
+function selCountHtml() {
+  const ex = examRun();
+  if (!ex || ex.kind === "適性" || inRetry()) return "";
+  const n = origCount();
+  let c = 0, cap = 25, what = "選んで解いた問題";
+  if (ex.kind === "専門") { for (let k = 0; k < n; k++) if (answers[k]) c++; }
+  else { const g = kisoGroup(Q[i]); cap = 3; what = g + "群で選んで解いた問題"; for (let k = 0; k < n; k++) if (answers[k] && kisoGroup(Q[k]) === g) c++; }
+  return '<p class="selcnt' + (c > cap ? ' over' : '') + '">' + what + ' <b>' + c + '</b> / ' + cap +
+    (c > cap ? '（本番では' + cap + '問までしか解答できません）' : '') + '</p>';
+}
 /* 本番の過去問を1年度まるごと解いたときは、本番の選び方・合格基準（各科目50%）で合否を出す。
-   適性15問中8問／基礎は各群6問から3問を選ぶ15問中8問／専門は35問から25問を選んで13問 */
+   全問に答えた回は「正解した問題を選べた」前提で数え、選ばない問題があった回は選んだ問題だけで数える */
 function pastExamVerdict(log, N) {
-  if (!log.length || log.length !== N) return "";
-  const m0 = /^【(R\S+) (専門|基礎|適性) /.exec(log[0].q || "");
-  if (!m0 || !log.every(r => (r.q || "").indexOf("【" + m0[1] + " " + m0[2] + " ") === 0)) return "";
-  const kind = m0[2], ok = log.filter(r => r.hit).length;
-  let got, need = 8, how;
-  if (kind === "適性" && N === 15) { got = ok; how = "15問中8問以上で合格"; }
-  else if (kind === "専門" && N === 35) { got = Math.min(ok, 25); need = 13; how = "35問から25問を選び13問以上で合格。正解した問題を選べた前提で数えています"; }
-  else if (kind === "基礎" && N === 30) {
-    const g = {};
-    log.forEach(r => { const m = /Ⅰ-(\d)-/.exec(r.q); if (m && r.hit) g[m[1]] = (g[m[1]] || 0) + 1; });
-    got = Object.keys(g).reduce((s, k) => s + Math.min(3, g[k]), 0);
-    how = "各群6問から3問を選ぶ15問中8問以上で合格。各群で正解した問題を3問まで数えています";
-  } else return "";
-  return '<b>本番の採点なら' + (got >= need ? '合格' : '不合格') + '（' + got + '/' + (kind === "専門" ? 25 : 15) + '点）</b>　' + how + '。';
+  const ex = examRun();
+  if (!ex || !log.length) return "";
+  const ok = log.filter(r => r.hit).length, all = log.length === N;
+  const line = (got, need, of, how) => '<b>本番の採点なら' + (got >= need ? '合格' : '不合格') + '（' + got + '/' + of + '点）</b>　' + how + '。';
+  if (ex.kind === "適性") return line(ok, 8, 15, "15問すべて解答し8問以上で合格" + (all ? "" : "（答えていない" + (N - log.length) + "問は0点）"));
+  if (ex.kind === "専門") {
+    if (all) return line(Math.min(ok, 25), 13, 25, "35問から25問を選び13問以上で合格。正解した問題を選べた前提で数えています");
+    if (log.length > 25) return '<b>25問を超えて解答しています（' + log.length + '問）。</b>本番では25問までしか解答できません。';
+    return line(ok, 13, 25, "選んだ" + log.length + "問で採点。25問を選び13問以上で合格" + (log.length < 25 ? "（あと" + (25 - log.length) + "問選べました）" : ""));
+  }
+  const g = {};
+  log.forEach(r => { const k = kisoGroup(r); g[k] = g[k] || { n: 0, ok: 0 }; g[k].n++; if (r.hit) g[k].ok++; });
+  if (all) return line(Object.keys(g).reduce((t, k) => t + Math.min(3, g[k].ok), 0), 8, 15, "各群6問から3問を選ぶ15問中8問以上で合格。各群で正解した問題を3問まで数えています");
+  const over = Object.keys(g).filter(k => g[k].n > 3).sort();
+  if (over.length) return '<b>' + over.map(k => k + "群").join("・") + 'で3問を超えて解答しています。</b>本番では各群3問までしか解答できません。';
+  const short = ["1", "2", "3", "4", "5"].filter(k => !g[k] || g[k].n < 3);
+  return line(ok, 8, 15, "選んだ問題で採点。各群3問・計15問中8問以上で合格" + (short.length ? "（" + short.map(k => k + "群").join("・") + "は3問に足りていません）" : ""));
 }
 /* ---------- 合格までの道のり（本番日と期日の目安） ---------- */
 /* 受験日はホーム画面から変更でき、この端末に保存する。未設定・壊れた値は既定日にフォールバック */
@@ -1486,7 +1515,11 @@ function renderResult() {
   elCount.textContent = N + " / " + N;
   elBar.style.width = "100%";
 
-  const pct = Math.round(correct / N * 100);
+  // 選んで解く科目（専門・基礎）で選ばない問題があった回は、本番と同じく選んだ問題だけを採点する
+  const exr = examRun();
+  const sel = !!exr && exr.kind !== "適性" && log.length < N;
+  const D = sel ? (exr.kind === "専門" ? 25 : 15) : N;
+  const pct = Math.round(correct / D * 100);
   const byField = {};
   log.forEach(r => {
     byField[r.f] = byField[r.f] || { n: 0, ok: 0 };
@@ -1520,9 +1553,11 @@ function renderResult() {
   card.className = "card result";
   card.innerHTML =
     '<h2>採点結果</h2>' +
-    '<div class="big">' + correct + '<small> / ' + N + '　（' + pct + '%）</small></div>' +
+    '<div class="big">' + correct + '<small> / ' + D + '　（' + pct + '%）</small></div>' +
     '<p class="judge">' + judge + '</p>' +
-    (skipped.length ? '<p class="judge">とばして答えていない問題が <b>' + skipped.length + '問</b> あります（未解答は不正解として計算）。</p>' : '') +
+    (skipped.length ? (sel
+      ? '<p class="judge">選ばなかった問題 <b>' + skipped.length + '問</b>（本番と同じく採点に含めていません）。</p>'
+      : '<p class="judge">とばして答えていない問題が <b>' + skipped.length + '問</b> あります（未解答は不正解として計算）。</p>') : '') +
     '<table><thead><tr><th>分野</th><th>正答</th><th>率</th></tr></thead><tbody>' + rows + '</tbody></table>' +
     missedHtml +
     (function () {

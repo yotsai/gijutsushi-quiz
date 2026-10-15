@@ -199,6 +199,9 @@
   .vnoteh { margin-top: .9rem; color: var(--ink-3); }
   .ezh { display: block; font-weight: 700; color: var(--accent); margin-bottom: .1rem; }
   .ezh.now { color: var(--warn); }
+  .selcnt { font-size: .82rem; color: var(--ink-3); margin: .2rem 0 .4rem; text-align: right; }
+  .selcnt b { color: var(--accent); }
+  .selcnt.over, .selcnt.over b { color: var(--ng); }
   .vtag.ok { color: var(--ok); }
   .vtag.ng { color: var(--ng); }
   .vnote { font-size: .86rem; color: var(--ink-2); margin: .3rem 0 0; line-height: 1.72; }
