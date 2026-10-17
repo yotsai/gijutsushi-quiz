@@ -3555,16 +3555,20 @@ function examRun() {
   return { kind: m[2], year: m[1] };
 }
 function kisoGroup(q) { const m = /Ⅰ-(\d)-/.exec((q && q.q) || ""); return m ? m[1] : ""; }
-/* 選んで解く科目（専門25問・基礎は各群3問）で、今いくつ選んだか */
+/* 解いている途中の表示：選んで解く科目（専門25問・基礎は各群3問）では今いくつ選んだか、どの回でも飛ばした問題の数 */
 function selCountHtml() {
-  const ex = examRun();
-  if (!ex || ex.kind === "適性" || inRetry()) return "";
+  if (inRetry()) return "";
   const n = origCount();
+  let skip = 0;
+  for (let k = 0; k < Math.min(i, n); k++) if (!answers[k]) skip++;
+  const ex = examRun();
+  if (!ex || ex.kind === "適性") return skip ? '<p class="selcnt">とばした問題 <b>' + skip + '</b>問（結果画面から解けます）</p>' : "";
   let c = 0, cap = 25, what = "選んで解いた問題";
   if (ex.kind === "専門") { for (let k = 0; k < n; k++) if (answers[k]) c++; }
   else { const g = kisoGroup(Q[i]); cap = 3; what = g + "群で選んで解いた問題"; for (let k = 0; k < n; k++) if (answers[k] && kisoGroup(Q[k]) === g) c++; }
   return '<p class="selcnt' + (c > cap ? ' over' : '') + '">' + what + ' <b>' + c + '</b> / ' + cap +
-    (c > cap ? '（本番では' + cap + '問までしか解答できません）' : '') + '</p>';
+    (c > cap ? '（本番では' + cap + '問までしか解答できません）' : '') +
+    '　選ばなかった <b>' + skip + '</b>問</p>';
 }
 /* 本番の過去問を1年度まるごと解いたときの点数。本番の選び方・合格基準（各科目50%）で数える。
    全問に答えた回は「正解した問題を選べた」前提、選ばない問題があった回は選んだ問題だけで数える */
@@ -3601,7 +3605,7 @@ try { MOCKS = JSON.parse(localStorage.getItem(MKEY) || "{}") || {}; } catch (e) 
    各問の最初の解答が確実に分かる年度（全問が「1回だけ解いた」「毎回正解」「毎回不正解」のどれか）だけ復元し、
    1問でも最初の正誤が分からない年度は復元しない（推測の点数を出さないため） */
 function restoreOldMocks() {
-  const MIG = SPFX + "mock_restored_v1";
+  const MIG = SPFX + "mock_restored_v2";   // v2: 記録の不具合で入らなかった 2026-10-17 の回を拾うためにもう一度だけ復元する
   try { if (localStorage.getItem(MIG)) return; } catch (e) { return; }
   const byY = {};
   importedQuestions().forEach(function (q) { (byY[q.f] = byY[q.f] || []).push(q); });
@@ -3633,9 +3637,10 @@ function restoreOldMocks() {
 }
 function saveMockScore(log, N) {
   const r = pastExamScore(log, N);
-  if (!r || r.over) return;
+  if (!r) return;
   const key = Q[0].f;
-  (MOCKS[key] = MOCKS[key] || []).push({ t: Date.now(), got: r.got, of: r.of, pass: r.got >= r.need, n: log.length, all: r.all });
+  if (r.over) (MOCKS[key] = MOCKS[key] || []).push({ t: Date.now(), over: true, n: log.length, ok: log.filter(function (x) { return x.hit; }).length });
+  else (MOCKS[key] = MOCKS[key] || []).push({ t: Date.now(), got: r.got, of: r.of, pass: r.got >= r.need, n: log.length, all: r.all });
   try { localStorage.setItem(MKEY, JSON.stringify(MOCKS)); } catch (e) {}
 }
 /* ---------- 合格までの道のり（本番日と期日の目安） ---------- */
@@ -3964,7 +3969,7 @@ function renderResult() {
   let judge = "";
   (SUBJECT.resultJudge || DEFAULT_JUDGE).some(function (r) { if (pct >= r.min) { judge = r.text; return true; } return false; });
   const exam = pastExamVerdict(log, N);
-  if (exam && Q.length === N && !RESULT_SAVED) { saveMockScore(log, N); RESULT_SAVED = true; }
+  if (exam && !RESULT_SAVED) { saveMockScore(log, N); RESULT_SAVED = true; }
   if (exam) judge = exam + '<br>' + judge;
 
   let rows = "";
@@ -4530,7 +4535,7 @@ function saveSession() {
     localStorage.setItem(SKEY, JSON.stringify({
       set: CURRENT_SET, limit: LIMIT,
       keys: Q.map(function (q) { return q.q; }),
-      i: i, correct: correct, answers: answers, retry: RETRY_FROM
+      i: i, correct: correct, answers: answers, retry: RETRY_FROM, saved: RESULT_SAVED
     }));
   } catch (e) {}
 }
@@ -5093,10 +5098,10 @@ function segTableHtml() {
       const idx = SEG_MOCK.push(list) - 1;
       // 点数は「通しで解く」で最後まで解いた回の記録だけから出す（おまかせ・復習で同じ問題を解いた分は入れない）
       const rec = MOCKS[k] || [], last = rec[rec.length - 1];
-      const pc = last ? Math.round(last.got / last.of * 100) : null;
+      const pc = last && !last.over ? Math.round(last.got / last.of * 100) : null;
       mr += '<tr><td>' + k.replace(/^過去問 /, "") + '</td>' +
-        '<td>' + (last ? last.got + '/' + last.of : "—") + '</td>' +
-        '<td class="rate' + (last ? (last.pass ? " good" : " bad") : "") + '">' + (last ? pc + "%" : "—") + '</td>' +
+        '<td>' + (!last ? "—" : last.over ? "超過" : last.got + '/' + last.of) + '</td>' +
+        '<td class="rate' + (last ? (last.pass ? " good" : " bad") : "") + '">' + (pc === null ? "—" : pc + "%") + '</td>' +
         '<td>' + (rec.length || "") + '</td>' +
         '<td><button class="segrun mock" data-mock="' + idx + '">通しで解く</button></td></tr>';
       rec.forEach(function (x) { allRec.push({ k: k, x: x }); });
@@ -5105,7 +5110,7 @@ function segTableHtml() {
     const recHtml = allRec.length ? '<details class="segf mockrec"' + (SEGF_OPEN.mockrec ? " open" : "") + ' data-g="mockrec"><summary>通しで解いた記録　<span class="segsum">' + allRec.length + '回</span></summary><table class="seg"><thead><tr><th>日付</th><th></th><th>点数</th><th>合否</th></tr></thead><tbody>' +
       allRec.map(function (r) {
         const d = new Date(r.x.t);
-        return '<tr><td>' + (d.getMonth() + 1) + '/' + d.getDate() + '</td><td>' + r.k.replace(/^過去問 /, "") + '</td><td>' + r.x.got + '/' + r.x.of + (r.x.restored ? '<span class="mocksel">（復元）</span>' : r.x.all ? "" : '<span class="mocksel">（' + r.x.n + '問選択）</span>') + '</td><td class="rate ' + (r.x.pass ? "good" : "bad") + '">' + (r.x.pass ? "合格" : "不合格") + '</td></tr>';
+        return '<tr><td>' + (d.getMonth() + 1) + '/' + d.getDate() + '</td><td>' + r.k.replace(/^過去問 /, "") + '</td><td>' + (r.x.over ? '規定数超過<span class="mocksel">（' + r.x.n + '問解答・' + r.x.ok + '問正解）</span>' : r.x.got + '/' + r.x.of + (r.x.restored ? '<span class="mocksel">（復元）</span>' : r.x.all ? "" : '<span class="mocksel">（' + r.x.n + '問選択）</span>')) + '</td><td class="rate ' + (r.x.pass ? "good" : "bad") + '">' + (r.x.over ? "超過" : r.x.pass ? "合格" : "不合格") + '</td></tr>';
       }).join("") + '</tbody></table></details>' : "";
     mock = '<h3 class="segh">本番の過去問（取り込んだ分）</h3>' +
       '<table class="seg"><thead><tr><th></th><th>最新の点</th><th>得点率</th><th>回数</th><th></th></tr></thead><tbody>' + mr + '</tbody></table>' +
@@ -5355,7 +5360,7 @@ refreshWeakBtn();
     i = sv.i; correct = sv.correct; RETRY_FROM = sv.retry;
     answers.length = 0; sv.answers.forEach(function (a, idx) { answers[idx] = a; });
     // 途中から再開した回でも、結果画面の採点（過去問の合否・点数の記録）が最初からの解答で数えられるよう、解答の一覧を作り直す
-    log.length = 0; RESULT_SAVED = false;
+    log.length = 0; RESULT_SAVED = !!sv.saved;
     for (let k = 0; k < origCount(); k++) if (answers[k]) log.push({ f: Q[k].f, hit: answers[k].hit, q: Q[k].q, a: Q[k].c[Q[k].a] });
     if (SETS[sv.set] || sv.set === "weak" || sv.set === "bm" || sv.set === "auto") applySetButtons(sv.set); else applySetButtons("__none__");
     updatePickInfo();
