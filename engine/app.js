@@ -356,7 +356,9 @@ function saveMockScore(log, N) {
   const key = Q[0].f;
   if (r.over) (MOCKS[key] = MOCKS[key] || []).push({ t: Date.now(), over: true, n: log.length, ok: log.filter(function (x) { return x.hit; }).length });
   else (MOCKS[key] = MOCKS[key] || []).push({ t: Date.now(), got: r.got, of: r.of, pass: r.got >= r.need, n: log.length, all: r.all,
-    wrong: log.filter(function (x) { return !x.hit; }).map(function (x) { return (x.q.match(/^【[^】]*】/) || [""])[0]; }) });
+    wrong: log.filter(function (x) { return !x.hit; }).map(function (x) { return (x.q.match(/^【[^】]*】/) || [""])[0]; }),
+    // 選ばなかった（答えていない）問題も、あとで復習できるように番号を残す
+    skip: Q.slice(0, N).filter(function (q, k) { return !answers[k]; }).map(function (q) { return (q.q.match(/^【[^】]*】/) || [""])[0]; }) });
   try { localStorage.setItem(MKEY, JSON.stringify(MOCKS)); } catch (e) {}
 }
 /* ---------- 合格までの道のり（本番日と期日の目安） ---------- */
@@ -704,6 +706,11 @@ function renderResult() {
     missed.forEach(r => { missedHtml += '<li>' + r.q + ' → <b>' + r.a + '</b></li>'; });
     missedHtml += '</ol></div>';
   }
+  if (sel && skipped.length) {
+    missedHtml += '<div class="missed"><h3>選ばなかった ' + skipped.length + ' 問</h3><ol>';
+    skipped.forEach(q => { missedHtml += '<li>' + String(q.q).split("<br>")[0] + '</li>'; });
+    missedHtml += '</ol><p class="segnote">履歴の「通しで解いた記録」から、間違えた問題と一緒にあとで解き直せます。</p></div>';
+  }
 
   const card = document.createElement("div");
   card.className = "card result";
@@ -731,7 +738,7 @@ function renderResult() {
     '<div class="actions">' +
       (LIMIT && baseList().length > N ? '<button class="btn" id="nextBatch">次の ' + LIMIT + '問へ</button>' : '') +
       (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をもう一度（記録しません）</button>' : '') +
-      (skipped.length ? '<button class="btn ghost" id="doSkipped">とばした ' + skipped.length + ' 問を解く</button>' : '') +
+      (skipped.length ? '<button class="btn ghost" id="doSkipped">' + (sel ? '選ばなかった ' : 'とばした ') + skipped.length + ' 問を解く</button>' : '') +
       '<button class="btn ghost" id="home">' + (FROM_HIST ? "← 履歴に戻る" : "ホーム") + '</button>' +
     '</div>';
   stage.replaceChildren(card);
@@ -1638,7 +1645,7 @@ function mergeStudyData(d) {
       d.mocks[k].forEach(function (r) {
         if (!r || typeof r.t !== "number" || typeof r.got !== "number" || typeof r.of !== "number") return;
         if (cur.some(function (x) { return x.t === r.t; })) return;
-        cur.push({ t: r.t, got: r.got, of: r.of, pass: !!r.pass, n: r.n, all: !!r.all, wrong: Array.isArray(r.wrong) ? r.wrong.filter(function (x) { return typeof x === "string"; }) : undefined, restored: !!r.restored });
+        cur.push({ t: r.t, got: r.got, of: r.of, pass: !!r.pass, n: r.n, all: !!r.all, wrong: Array.isArray(r.wrong) ? r.wrong.filter(function (x) { return typeof x === "string"; }) : undefined, skip: Array.isArray(r.skip) ? r.skip.filter(function (x) { return typeof x === "string"; }) : undefined, restored: !!r.restored });
       });
       cur.sort(function (a, b) { return a.t - b.t; });
     });
@@ -1828,9 +1835,12 @@ function segTableHtml() {
       allRec.map(function (r) {
         const d = new Date(r.x.t);
         // その回に間違えた問題だけを、あとから解き直せるボタン（記録を始めた後の回だけ）
-        const ws = new Set(r.x.wrong || []);
+        // 選ばなかった問題（r.x.skip）も一緒に解き直す。問題番号の順に並べる
+        const ws = new Set((r.x.wrong || []).concat(r.x.skip || []));
+        const nw = (r.x.wrong || []).length, ns = (r.x.skip || []).length;
         const wl = (sortedBy[r.k] || []).filter(function (q) { return ws.has((q.q.match(/^【[^】]*】/) || [""])[0]); });
-        const wbtn = wl.length ? '<button class="segrun mock" data-mock="' + (SEG_MOCK.push(wl) - 1) + '">間違えた' + wl.length + '問</button>' : '';
+        const wbtn = wl.length ? '<button class="segrun mock" data-mock="' + (SEG_MOCK.push(wl) - 1) + '">' +
+          (ns ? '間違い' + nw + '・選ばず' + ns : '間違えた' + wl.length + '問') + '</button>' : '';
         return '<tr><td>' + (d.getMonth() + 1) + '/' + d.getDate() + '</td><td>' + r.k.replace(/^過去問 /, "") + '</td><td>' + (r.x.over ? '規定数超過<span class="mocksel">（' + r.x.n + '問解答・' + r.x.ok + '問正解）</span>' : r.x.got + '/' + r.x.of + (r.x.restored ? '<span class="mocksel">（復元）</span>' : r.x.all ? "" : '<span class="mocksel">（' + r.x.n + '問選択）</span>')) + '</td><td class="rate ' + (r.x.pass ? "good" : "bad") + '">' + (r.x.over ? "超過" : r.x.pass ? "合格" : "不合格") + '</td><td>' + wbtn + '</td></tr>';
       }).join("") + '</tbody></table></details>' : "";
     mock = '<h3 class="segh">本番の過去問（取り込んだ分）</h3>' +
