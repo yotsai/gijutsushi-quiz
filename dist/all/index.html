@@ -215,6 +215,7 @@
   .selcnt { font-size: .82rem; color: var(--ink-3); margin: .2rem 0 .4rem; text-align: right; }
   .selcnt b { color: var(--accent); }
   .selcnt.over, .selcnt.over b { color: var(--ng); }
+  .mocksel { font-size: .75em; color: var(--ink-3); margin-left: .2em; }
   .vtag.ok { color: var(--ok); }
   .vtag.ng { color: var(--ng); }
   .vnote { font-size: .86rem; color: var(--ink-2); margin: .3rem 0 0; line-height: 1.72; }
@@ -3317,6 +3318,7 @@ const log = [];
 const answers = [];
 /* 回の最後に、間違えた問題をもう一度出す（記録はしない）。RETRY_FROM はその開始位置。-1 は未追加 */
 let RETRY_FROM = -1;
+let RESULT_SAVED = false;   // この回の点数を過去問の記録に入れたか（結果画面を開き直しても二重に入れない）
 /* 履歴の「解く」から始めた回は、ホームではなく履歴に戻れるようにする */
 let FROM_HIST = false;
 function goBack() {
@@ -3564,26 +3566,43 @@ function selCountHtml() {
   return '<p class="selcnt' + (c > cap ? ' over' : '') + '">' + what + ' <b>' + c + '</b> / ' + cap +
     (c > cap ? '（本番では' + cap + '問までしか解答できません）' : '') + '</p>';
 }
-/* 本番の過去問を1年度まるごと解いたときは、本番の選び方・合格基準（各科目50%）で合否を出す。
-   全問に答えた回は「正解した問題を選べた」前提で数え、選ばない問題があった回は選んだ問題だけで数える */
-function pastExamVerdict(log, N) {
+/* 本番の過去問を1年度まるごと解いたときの点数。本番の選び方・合格基準（各科目50%）で数える。
+   全問に答えた回は「正解した問題を選べた」前提、選ばない問題があった回は選んだ問題だけで数える */
+function pastExamScore(log, N) {
   const ex = examRun();
-  if (!ex || !log.length) return "";
+  if (!ex || !log.length) return null;
   const ok = log.filter(r => r.hit).length, all = log.length === N;
-  const line = (got, need, of, how) => '<b>本番の採点なら' + (got >= need ? '合格' : '不合格') + '（' + got + '/' + of + '点）</b>　' + how + '。';
-  if (ex.kind === "適性") return line(ok, 8, 15, "15問すべて解答し8問以上で合格" + (all ? "" : "（答えていない" + (N - log.length) + "問は0点）"));
+  if (ex.kind === "適性") return { kind: ex.kind, got: ok, of: 15, need: 8, all: all,
+    how: "15問すべて解答し8問以上で合格" + (all ? "" : "（答えていない" + (N - log.length) + "問は0点）") };
   if (ex.kind === "専門") {
-    if (all) return line(Math.min(ok, 25), 13, 25, "35問から25問を選び13問以上で合格。正解した問題を選べた前提で数えています");
-    if (log.length > 25) return '<b>25問を超えて解答しています（' + log.length + '問）。</b>本番では25問までしか解答できません。';
-    return line(ok, 13, 25, "選んだ" + log.length + "問で採点。25問を選び13問以上で合格" + (log.length < 25 ? "（あと" + (25 - log.length) + "問選べました）" : ""));
+    if (all) return { kind: ex.kind, got: Math.min(ok, 25), of: 25, need: 13, all: true, how: "35問から25問を選び13問以上で合格。正解した問題を選べた前提で数えています" };
+    if (log.length > 25) return { kind: ex.kind, over: '<b>25問を超えて解答しています（' + log.length + '問）。</b>本番では25問までしか解答できません。' };
+    return { kind: ex.kind, got: ok, of: 25, need: 13, all: false, how: "選んだ" + log.length + "問で採点。25問を選び13問以上で合格" + (log.length < 25 ? "（あと" + (25 - log.length) + "問選べました）" : "") };
   }
   const g = {};
   log.forEach(r => { const k = kisoGroup(r); g[k] = g[k] || { n: 0, ok: 0 }; g[k].n++; if (r.hit) g[k].ok++; });
-  if (all) return line(Object.keys(g).reduce((t, k) => t + Math.min(3, g[k].ok), 0), 8, 15, "各群6問から3問を選ぶ15問中8問以上で合格。各群で正解した問題を3問まで数えています");
+  if (all) return { kind: ex.kind, got: Object.keys(g).reduce((t, k) => t + Math.min(3, g[k].ok), 0), of: 15, need: 8, all: true, how: "各群6問から3問を選ぶ15問中8問以上で合格。各群で正解した問題を3問まで数えています" };
   const over = Object.keys(g).filter(k => g[k].n > 3).sort();
-  if (over.length) return '<b>' + over.map(k => k + "群").join("・") + 'で3問を超えて解答しています。</b>本番では各群3問までしか解答できません。';
+  if (over.length) return { kind: ex.kind, over: '<b>' + over.map(k => k + "群").join("・") + 'で3問を超えて解答しています。</b>本番では各群3問までしか解答できません。' };
   const short = ["1", "2", "3", "4", "5"].filter(k => !g[k] || g[k].n < 3);
-  return line(ok, 8, 15, "選んだ問題で採点。各群3問・計15問中8問以上で合格" + (short.length ? "（" + short.map(k => k + "群").join("・") + "は3問に足りていません）" : ""));
+  return { kind: ex.kind, got: ok, of: 15, need: 8, all: false, how: "選んだ問題で採点。各群3問・計15問中8問以上で合格" + (short.length ? "（" + short.map(k => k + "群").join("・") + "は3問に足りていません）" : "") };
+}
+function pastExamVerdict(log, N) {
+  const r = pastExamScore(log, N);
+  if (!r) return "";
+  if (r.over) return r.over;
+  return '<b>本番の採点なら' + (r.got >= r.need ? '合格' : '不合格') + '（' + r.got + '/' + r.of + '点）</b>　' + r.how + '。';
+}
+/* 過去問を通しで解いた回の点数の記録（年度ごと）。おまかせ・復習などで同じ問題を解いても、ここには入らない */
+const MKEY = SPFX + "mock_v1";
+let MOCKS = {};
+try { MOCKS = JSON.parse(localStorage.getItem(MKEY) || "{}") || {}; } catch (e) { MOCKS = {}; }
+function saveMockScore(log, N) {
+  const r = pastExamScore(log, N);
+  if (!r || r.over) return;
+  const key = Q[0].f;
+  (MOCKS[key] = MOCKS[key] || []).push({ t: Date.now(), got: r.got, of: r.of, pass: r.got >= r.need, n: log.length, all: r.all });
+  try { localStorage.setItem(MKEY, JSON.stringify(MOCKS)); } catch (e) {}
 }
 /* ---------- 合格までの道のり（本番日と期日の目安） ---------- */
 /* 受験日はホーム画面から変更でき、この端末に保存する。未設定・壊れた値は既定日にフォールバック */
@@ -3714,7 +3733,7 @@ function wireRoadmap(card) {
       if (a.limit) list = list.slice(0, a.limit);
       Q.length = 0; RETRY_FROM = -1; list.forEach(function (q) { Q.push(q); });
       CUSTOM_LIST = list.slice(); CURRENT_SET = "custom";
-      i = 0; correct = 0; log.length = 0; answers.length = 0;
+      i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
       applySetButtons("__none__");
       document.getElementById("pickinfo").textContent = "";
       saveSession(); render();
@@ -3911,6 +3930,7 @@ function renderResult() {
   let judge = "";
   (SUBJECT.resultJudge || DEFAULT_JUDGE).some(function (r) { if (pct >= r.min) { judge = r.text; return true; } return false; });
   const exam = pastExamVerdict(log, N);
+  if (exam && Q.length === N && !RESULT_SAVED) { saveMockScore(log, N); RESULT_SAVED = true; }
   if (exam) judge = exam + '<br>' + judge;
 
   let rows = "";
@@ -3972,7 +3992,7 @@ function renderResult() {
   const ds = card.querySelector("#doSkipped");
   if (ds) ds.addEventListener("click", () => {
     Q.length = 0; RETRY_FROM = -1; skipped.forEach(q => Q.push(q));
-    i = 0; correct = 0; log.length = 0; answers.length = 0; saveSession(); render();
+    i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0; saveSession(); render();
   });
   const nb2 = card.querySelector("#nextBatch");
   if (nb2) nb2.addEventListener("click", function () { rebuild(); });
@@ -4126,7 +4146,7 @@ function startAuto() {
   if (!list.length) return;
   Q.length = 0; RETRY_FROM = -1; list.forEach(function (q) { Q.push(q); });
   CUSTOM_LIST = list.slice(); CURRENT_SET = "auto";
-  i = 0; correct = 0; log.length = 0; answers.length = 0;
+  i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
   applySetButtons("auto");
   const pi = document.getElementById("pickinfo");
   if (pi) pi.textContent = "";
@@ -4444,7 +4464,7 @@ function rebuild() {
   const picked = pickQuestions(baseList());
   if (!picked.length) return false;
   Q.length = 0; RETRY_FROM = -1; picked.forEach(function (q) { Q.push(q); });
-  i = 0; correct = 0; log.length = 0; answers.length = 0;
+  i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
   const host = document.getElementById("resumeHost");
   if (host) host.innerHTML = "";
   clearSession();
@@ -4506,7 +4526,7 @@ function showResume(n, total) {
   host.innerHTML = '<div class="resume">前回の続き（<b>' + (n + 1) + ' / ' + total +
     '問目</b>）から再開しました<button id="restart">最初から解き直す</button></div>';
   host.querySelector("#restart").addEventListener("click", function () {
-    i = 0; correct = 0; log.length = 0; answers.length = 0;
+    i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
     clearSession(); host.innerHTML = ""; render();
   });
 }
@@ -4816,7 +4836,7 @@ function exportStudyData() {
   const nh = Object.keys(HIST).length, nn = Object.keys(NOTES).length;
   if (!nh && !nn) return null;
   const d = { app: "gijutsushi-quiz", kind: "study-data", v: 1,
-              exported: new Date().toISOString(), history: HIST, notes: NOTES, examDay: ymd(EXAM_DAY) };
+              exported: new Date().toISOString(), history: HIST, notes: NOTES, mocks: MOCKS, examDay: ymd(EXAM_DAY) };
   const t = new Date();
   const pad = function (x) { return String(x).padStart(2, "0"); };
   const a = document.createElement("a");
@@ -4855,6 +4875,20 @@ function mergeStudyData(d) {
     const cur = NOTES[k];
     if (!cur || t > (cur.t || 0)) { NOTES[k] = { bm: bm, memo: memo, t: t || Date.now() }; n++; }
   });
+  // 過去問を通しで解いた記録：同じ回（解いた日時が同じ）は1回だけ入れる
+  if (d.mocks && typeof d.mocks === "object") {
+    Object.keys(d.mocks).forEach(function (k) {
+      if (!Array.isArray(d.mocks[k])) return;
+      const cur = MOCKS[k] = MOCKS[k] || [];
+      d.mocks[k].forEach(function (r) {
+        if (!r || typeof r.t !== "number" || typeof r.got !== "number" || typeof r.of !== "number") return;
+        if (cur.some(function (x) { return x.t === r.t; })) return;
+        cur.push({ t: r.t, got: r.got, of: r.of, pass: !!r.pass, n: r.n, all: !!r.all });
+      });
+      cur.sort(function (a, b) { return a.t - b.t; });
+    });
+    try { localStorage.setItem(MKEY, JSON.stringify(MOCKS)); } catch (e) {}
+  }
   saveHist(); saveNotes();
   migrateSR();   // 復習日を持たない古い形式のファイルにも復習日を付ける
   // 受験日はこの端末が既定日のままのときだけ取り込む（すでに変更済みの設定を上書きしないため）
@@ -5019,13 +5053,29 @@ function segTableHtml() {
     });
     function numKey(q) { const m = (q.q.match(/^【[^】]*】/) || [""])[0].match(/\d+/g) || []; return m.slice(1).map(function (x) { return ("000" + x).slice(-3); }).join("-"); }
     let mr = "";
+    const allRec = [];
     keys.forEach(function (k) {
       const list = byY[k].slice().sort(function (a, b) { return numKey(a) < numKey(b) ? -1 : numKey(a) > numKey(b) ? 1 : 0; });
       const idx = SEG_MOCK.push(list) - 1;
-      mr += row(k.replace(/^過去問 /, ""), list, false).replace("</tr>", '<td><button class="segrun mock" data-mock="' + idx + '">通しで解く</button></td></tr>');
+      // 点数は「通しで解く」で最後まで解いた回の記録だけから出す（おまかせ・復習で同じ問題を解いた分は入れない）
+      const rec = MOCKS[k] || [], last = rec[rec.length - 1];
+      const pc = last ? Math.round(last.got / last.of * 100) : null;
+      mr += '<tr><td>' + k.replace(/^過去問 /, "") + '</td>' +
+        '<td>' + (last ? last.got + '/' + last.of : "—") + '</td>' +
+        '<td class="rate' + (last ? (last.pass ? " good" : " bad") : "") + '">' + (last ? pc + "%" : "—") + '</td>' +
+        '<td>' + (rec.length || "") + '</td>' +
+        '<td><button class="segrun mock" data-mock="' + idx + '">通しで解く</button></td></tr>';
+      rec.forEach(function (x) { allRec.push({ k: k, x: x }); });
     });
+    allRec.sort(function (a, b) { return b.x.t - a.x.t; });
+    const recHtml = allRec.length ? '<details class="segf mockrec"' + (SEGF_OPEN.mockrec ? " open" : "") + ' data-g="mockrec"><summary>通しで解いた記録　<span class="segsum">' + allRec.length + '回</span></summary><table class="seg"><thead><tr><th>日付</th><th></th><th>点数</th><th>合否</th></tr></thead><tbody>' +
+      allRec.map(function (r) {
+        const d = new Date(r.x.t);
+        return '<tr><td>' + (d.getMonth() + 1) + '/' + d.getDate() + '</td><td>' + r.k.replace(/^過去問 /, "") + '</td><td>' + r.x.got + '/' + r.x.of + (r.x.all ? "" : '<span class="mocksel">（' + r.x.n + '問選択）</span>') + '</td><td class="rate ' + (r.x.pass ? "good" : "bad") + '">' + (r.x.pass ? "合格" : "不合格") + '</td></tr>';
+      }).join("") + '</tbody></table></details>' : "";
     mock = '<h3 class="segh">本番の過去問（取り込んだ分）</h3>' +
-      '<table class="seg"><thead><tr><th></th><th>着手</th><th>正答率</th><th>苦手</th><th></th></tr></thead><tbody>' + mr + '</tbody></table>' +
+      '<table class="seg"><thead><tr><th></th><th>最新の点</th><th>得点率</th><th>回数</th><th></th></tr></thead><tbody>' + mr + '</tbody></table>' +
+      '<p class="segnote">点数は「通しで解く」で最後まで解いた回だけの記録です（本番の採点どおり：専門25点・基礎15点・適性15点、50%以上で合格。緑＝合格・赤＝不合格）。おまかせや復習で同じ問題を解いても変わりません。</p>' + recHtml +
       '<p class="segnote">「通しで解く」は問題番号の順に全問出します（模試用・選択肢も原本の順）。本番の時間の目安：基礎・適性 各1時間、専門 2時間。</p>';
   }
   return '<h3 class="segh">科目・セットごとの取り組み</h3>' +
@@ -5130,7 +5180,7 @@ function renderHistory() {
       if (!list || !list.length) return;
       Q.length = 0; RETRY_FROM = -1; list.forEach(function (q) { Q.push(q); });
       CUSTOM_LIST = list.slice(); CURRENT_SET = "custom";
-      i = 0; correct = 0; log.length = 0; answers.length = 0;
+      i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
       document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
       selectTab("quiz");
       FROM_HIST = true;
@@ -5269,6 +5319,9 @@ refreshWeakBtn();
     Q.length = 0; RETRY_FROM = -1; sv.list.forEach(function (q) { Q.push(q); });
     i = sv.i; correct = sv.correct; RETRY_FROM = sv.retry;
     answers.length = 0; sv.answers.forEach(function (a, idx) { answers[idx] = a; });
+    // 途中から再開した回でも、結果画面の採点（過去問の合否・点数の記録）が最初からの解答で数えられるよう、解答の一覧を作り直す
+    log.length = 0; RESULT_SAVED = false;
+    for (let k = 0; k < origCount(); k++) if (answers[k]) log.push({ f: Q[k].f, hit: answers[k].hit, q: Q[k].q, a: Q[k].c[Q[k].a] });
     if (SETS[sv.set] || sv.set === "weak" || sv.set === "bm" || sv.set === "auto") applySetButtons(sv.set); else applySetButtons("__none__");
     updatePickInfo();
     showResume(sv.i, Q.length);
