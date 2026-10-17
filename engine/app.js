@@ -158,7 +158,10 @@ function render() {
 /* (ア)〜(オ) の記述を並べる問題は、各記述に ○／× の印を付けられる行に分け、○の数をその場で数える */
 function renderStatements(card, q) {
   const qt = card.querySelector(".qt");
-  const parts = q.q.split("<br>");
+  // 1行に「(ア) …　(イ) …」と複数の記述が並んでいる場合も、記述ごとの行に分ける
+  const parts = [].concat.apply([], q.q.split("<br>").map(function (l) {
+    return /^\s*[（(][ア-コ][）)]/.test(l) ? l.split(/[\s　]+(?=[（(][ア-コ][）)])/) : [l];
+  }));
   const isSt = parts.map(function (l) { return /^\s*[（(][ア-コ][）)]/.test(l); });
   if (isSt.filter(Boolean).length < 2) { qt.textContent = q.q.replace(/<br>/g, "\n"); return; }
   qt.textContent = parts.filter(function (_, k) { return !isSt[k]; }).join("\n");
