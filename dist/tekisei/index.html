@@ -1128,7 +1128,7 @@ function renderStatements(card, q) {
 /* 解答前も解答後も「← 前の問題／ホーム／次の問題 →」を同じ位置に出す */
 /* 解答前は「とばす」扱い（控えめな見た目・Enterでは押されない）、解答後は通常の「次へ」 */
 function navHtml(answeredNow) {
-  let label = i + 1 < Q.length ? "次の問題 →" : (RETRY_FROM < 0 && wrongOriginals().length ? "間違えた問題をもう一度 →" : "結果を見る");
+  let label = i + 1 < Q.length ? "次の問題 →" : "結果を見る";
   const ex = examRun();
   if (!answeredNow && ex && ex.kind !== "適性" && !inRetry() && i + 1 < Q.length) label = "この問題は選ばない →";
   return selCountHtml() + '<div class="navrow one">' +
@@ -1160,7 +1160,7 @@ function renderNav(card) {
   wireNav(nav);
 }
 function goPrev() { if (i > 0) { i--; saveSession(); render(); } }
-function goNext() { i++; if (i >= Q.length) appendRetries(); saveSession(); render(); }
+function goNext() { i++; saveSession(); render(); }
 /* 科目が resultJudge を持たないときの結果コメント（正答率の下限ごと） */
 const DEFAULT_JUDGE = [
   { min: 90, text: "仕上がっています。間違えた問題だけ見直して、定着させてください。" },
@@ -1561,6 +1561,11 @@ function renderResult() {
     '<h2>採点結果</h2>' +
     '<div class="big">' + correct + '<small> / ' + D + '　（' + pct + '%）</small></div>' +
     '<p class="judge">' + judge + '</p>' +
+    (RETRY_FROM >= 0 && Q.length > RETRY_FROM ? (function () {
+      let ok = 0, done = 0;
+      for (let k = RETRY_FROM; k < Q.length; k++) if (answers[k]) { done++; if (answers[k].hit) ok++; }
+      return done ? '<p class="judge">もう一度：<b>' + ok + ' / ' + done + '</b> 問正解（記録はしていません。採点は最初の解答のままです）。</p>' : '';
+    })() : '') +
     (skipped.length ? (sel
       ? '<p class="judge">選ばなかった問題 <b>' + skipped.length + '問</b>（本番と同じく採点に含めていません）。</p>'
       : '<p class="judge">とばして答えていない問題が <b>' + skipped.length + '問</b> あります（未解答は不正解として計算）。</p>') : '') +
@@ -1575,18 +1580,19 @@ function renderResult() {
     })() +
     '<div class="actions">' +
       (LIMIT && baseList().length > N ? '<button class="btn" id="nextBatch">次の ' + LIMIT + '問へ</button>' : '') +
-      (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をやり直す</button>' : '') +
+      (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をもう一度（記録しません）</button>' : '') +
       (skipped.length ? '<button class="btn ghost" id="doSkipped">とばした ' + skipped.length + ' 問を解く</button>' : '') +
       '<button class="btn ghost" id="home">' + (FROM_HIST ? "← 履歴に戻る" : "ホーム") + '</button>' +
     '</div>';
   stage.replaceChildren(card);
 
+  // 採点の後に、間違えた問題だけを記録しないでもう一度解く。終わると同じ結果画面に戻り、もう一度の成績も出る
   const ag = card.querySelector("#again");
   if (ag) ag.addEventListener("click", () => {
-    const keep = new Set(missed.map(m => m.q));
-    const subset = Q.slice(0, N).filter(q => keep.has(q.q));
-    Q.length = 0; RETRY_FROM = -1; subset.forEach(q => Q.push(q));
-    i = 0; correct = 0; log.length = 0; answers.length = 0; render();
+    if (RETRY_FROM >= 0) { Q.length = RETRY_FROM; RETRY_FROM = -1; }
+    appendRetries();
+    for (let k = RETRY_FROM; k < Q.length; k++) answers[k] = undefined;
+    i = RETRY_FROM; saveSession(); render();
   });
   const ds = card.querySelector("#doSkipped");
   if (ds) ds.addEventListener("click", () => {
