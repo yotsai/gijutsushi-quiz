@@ -209,6 +209,7 @@ function navHtml(answeredNow) {
   let label = i + 1 < Q.length ? "次の問題 →" : "結果を見る";
   const ex = examRun();
   if (!answeredNow && ex && ex.kind !== "適性" && !inRetry() && i + 1 < Q.length) label = "この問題は選ばない →";
+  if (selFull()) label = "結果を見る";
   return selCountHtml() + '<div class="navrow one">' +
       (answeredNow
         ? '<button class="btn" id="next">' + label + '</button>'
@@ -238,7 +239,17 @@ function renderNav(card) {
   wireNav(nav);
 }
 function goPrev() { if (i > 0) { i--; saveSession(); render(); } }
-function goNext() { i++; saveSession(); render(); }
+/* 本番の過去問を通しで解く回で、選ぶ数（専門25問・基礎は各群3問）を満たしたか。満たしたら次へで結果画面に進む */
+function selFull() {
+  const ex = examRun();
+  if (!ex || ex.kind === "適性" || inRetry()) return false;
+  const n = origCount();
+  if (ex.kind === "専門") { let c = 0; for (let k = 0; k < n; k++) if (answers[k]) c++; return c >= 25; }
+  const g = {};
+  for (let k = 0; k < n; k++) if (answers[k]) { const x = kisoGroup(Q[k]); g[x] = (g[x] || 0) + 1; }
+  return ["1", "2", "3", "4", "5"].every(x => (g[x] || 0) >= 3);
+}
+function goNext() { if (selFull()) i = Q.length; else i++; saveSession(); render(); }
 /* 科目が resultJudge を持たないときの結果コメント（正答率の下限ごと） */
 const DEFAULT_JUDGE = [
   { min: 90, text: "仕上がっています。間違えた問題だけ見直して、定着させてください。" },
