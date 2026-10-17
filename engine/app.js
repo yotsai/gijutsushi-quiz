@@ -264,12 +264,15 @@ function selCountHtml() {
   for (let k = 0; k < Math.min(i, n); k++) if (!answers[k]) skip++;
   const ex = examRun();
   if (!ex || ex.kind === "適性") return skip ? '<p class="selcnt">とばした問題 <b>' + skip + '</b>問（結果画面から解けます）</p>' : "";
-  let c = 0, cap = 25, what = "選んで解いた問題";
-  if (ex.kind === "専門") { for (let k = 0; k < n; k++) if (answers[k]) c++; }
-  else { const g = kisoGroup(Q[i]); cap = 3; what = g + "群で選んで解いた問題"; for (let k = 0; k < n; k++) if (answers[k] && kisoGroup(Q[k]) === g) c++; }
-  return '<p class="selcnt' + (c > cap ? ' over' : '') + '">' + what + ' <b>' + c + '</b> / ' + cap +
-    (c > cap ? '（本番では' + cap + '問までしか解答できません）' : '') +
-    '　選ばなかった <b>' + skip + '</b>問</p>';
+  // 専門は35問中10問、基礎は各群6問中3問まで選ばずに飛ばせる
+  let c = 0, cap = 25, sk = skip, skCap = 10, what = "選んで解いた問題", skWhat = "選ばなかった";
+  if (ex.kind === "基礎") {
+    const g = kisoGroup(Q[i]); cap = 3; skCap = 3; sk = 0; what = g + "群で選んだ"; skWhat = "選ばなかった";
+    for (let k = 0; k < n; k++) if (kisoGroup(Q[k]) === g) { if (answers[k]) c++; else if (k < i) sk++; }
+  } else { for (let k = 0; k < n; k++) if (answers[k]) c++; }
+  return '<p class="selcnt' + (c > cap || sk > skCap ? ' over' : '') + '">' + what + ' <b>' + c + '</b> / ' + cap + '問' +
+    '　' + skWhat + ' <b>' + sk + '</b> / ' + skCap + '問' +
+    (c > cap ? '（本番では' + cap + '問までしか解答できません）' : sk > skCap ? '（飛ばしすぎで' + cap + '問に届きません）' : '') + '</p>';
 }
 /* 本番の過去問を1年度まるごと解いたときの点数。本番の選び方・合格基準（各科目50%）で数える。
    全問に答えた回は「正解した問題を選べた」前提、選ばない問題があった回は選んだ問題だけで数える */
