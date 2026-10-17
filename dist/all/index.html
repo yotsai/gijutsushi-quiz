@@ -3334,9 +3334,22 @@ function wrongOriginals() {
   for (let k = 0; k < origCount(); k++) if (answers[k] && !answers[k].hit) out.push(Q[k]);
   return out;
 }
+/* 本番の過去問を通しで解いた回（専門・基礎）では、選ばなかった問題も「もう一度」に入れる。問題番号の順 */
+function retryOriginals() {
+  const ex = examRun(), sk = !!ex && ex.kind !== "適性";
+  const out = [];
+  for (let k = 0; k < origCount(); k++) if (answers[k] ? !answers[k].hit : sk) out.push(Q[k]);
+  return out;
+}
+/* 「もう一度」の k 問目が、最初の回で選ばなかった（答えていない）問題か */
+function retryWasSkipped(k) {
+  if (RETRY_FROM < 0 || k < RETRY_FROM) return false;
+  for (let j = 0; j < RETRY_FROM; j++) if (Q[j] === Q[k]) return !answers[j];
+  return false;
+}
 function appendRetries() {
   if (RETRY_FROM >= 0) return;
-  const w = wrongOriginals();
+  const w = retryOriginals();
   if (!w.length) return;
   RETRY_FROM = Q.length;
   w.forEach(function (q) { Q.push(q); });
@@ -3914,7 +3927,7 @@ function choose(card, btn, origIdx) {
     if (hit) correct++;
     recordAnswer(q, hit);
     log.push({ f: q.f, hit: hit, q: q.q, a: q.c[q.a] });
-  }
+  } else if (retryWasSkipped(i)) recordAnswer(q, hit);   // 選ばなかった問題は初めて解くので記録する（点数は変えない）
   answers[i] = { pick: origIdx, hit: hit };
   saveSession();
   showVerdict(card, btn, hit, true);
@@ -3949,7 +3962,7 @@ function showVerdict(card, btn, hit, focusNext) {
   const v = document.createElement("div");
   v.className = "verdict";
   v.innerHTML =
-    '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (inRetry() ? (hit ? "もう一度：正解（記録はしません）" : "もう一度：不正解（明日の復習で出ます）") : hit ? "正解" : unknown ? "わからない（不正解として記録し、復習に回します）" : "不正解") + '</div>' +
+    '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (inRetry() ? (retryWasSkipped(i) ? (hit ? "選ばなかった問題：正解（記録しました）" : "選ばなかった問題：不正解（記録し、復習に回します）") : hit ? "もう一度：正解（記録はしません）" : "もう一度：不正解（明日の復習で出ます）") : hit ? "正解" : unknown ? "わからない（不正解として記録し、復習に回します）" : "不正解") + '</div>' +
     easyHtml(q) +
     '<p class="vnote">' + q.n + '</p>' +
     (/^過去問 /.test(q.f || "") && whyOf(q).tier < 2 ? "" : whyBox(q, whyOf(q))) +
@@ -4008,7 +4021,7 @@ function renderResult() {
   if (sel && skipped.length) {
     missedHtml += '<div class="missed"><h3>選ばなかった ' + skipped.length + ' 問</h3><ol>';
     skipped.forEach(q => { missedHtml += '<li>' + String(q.q).split("<br>")[0] + '</li>'; });
-    missedHtml += '</ol><p class="segnote">履歴の「通しで解いた記録」から、間違えた問題と一緒にあとで解き直せます。</p></div>';
+    missedHtml += '</ol><p class="segnote">下の「もう一度」で間違えた問題と一緒に解き直せます（選ばなかった問題の解答は記録します。点数は変わりません）。あとからなら履歴の「通しで解いた記録」からも解けます。</p></div>';
   }
 
   const card = document.createElement("div");
@@ -4020,7 +4033,11 @@ function renderResult() {
     (RETRY_FROM >= 0 && Q.length > RETRY_FROM ? (function () {
       let ok = 0, done = 0;
       for (let k = RETRY_FROM; k < Q.length; k++) if (answers[k]) { done++; if (answers[k].hit) ok++; }
-      return done ? '<p class="judge">もう一度：<b>' + ok + ' / ' + done + '</b> 問正解（記録はしていません。採点は最初の解答のままです）。</p>' : '';
+      let sk = 0;
+      for (let k = RETRY_FROM; k < Q.length; k++) if (answers[k] && retryWasSkipped(k)) sk++;
+      return done ? '<p class="judge">もう一度：<b>' + ok + ' / ' + done + '</b> 問正解（' +
+        (sk ? '選ばなかった ' + sk + ' 問の解答は記録しました。間違えた問題の解き直しは記録していません。' : '記録はしていません。') +
+        '採点は最初の解答のままです）。</p>' : '';
     })() : '') +
     (skipped.length ? (sel
       ? '<p class="judge">選ばなかった問題 <b>' + skipped.length + '問</b>（本番と同じく採点に含めていません）。</p>'
@@ -4036,8 +4053,9 @@ function renderResult() {
     })() +
     '<div class="actions">' +
       (LIMIT && baseList().length > N ? '<button class="btn" id="nextBatch">次の ' + LIMIT + '問へ</button>' : '') +
-      (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をもう一度（記録しません）</button>' : '') +
-      (skipped.length ? '<button class="btn ghost" id="doSkipped">' + (sel ? '選ばなかった ' : 'とばした ') + skipped.length + ' 問を解く</button>' : '') +
+      (sel ? ((missed.length || skipped.length) ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問＋選ばなかった ' + skipped.length + ' 問をもう一度</button>' : '')
+        : (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をもう一度（記録しません）</button>' : '') +
+          (skipped.length ? '<button class="btn ghost" id="doSkipped">とばした ' + skipped.length + ' 問を解く</button>' : '')) +
       '<button class="btn ghost" id="home">' + (FROM_HIST ? "← 履歴に戻る" : "ホーム") + '</button>' +
     '</div>';
   stage.replaceChildren(card);
