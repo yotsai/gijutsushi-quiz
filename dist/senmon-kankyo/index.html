@@ -2835,6 +2835,40 @@ function pastExamVerdict(log, N) {
 const MKEY = SPFX + "mock_v1";
 let MOCKS = {};
 try { MOCKS = JSON.parse(localStorage.getItem(MKEY) || "{}") || {}; } catch (e) { MOCKS = {}; }
+/* 記録を始める前（2026-10-17 より前）に通しで解いた分を、1問ごとの解答履歴から一度だけ復元する。
+   各問の最初の解答が確実に分かる年度（全問が「1回だけ解いた」「毎回正解」「毎回不正解」のどれか）だけ復元し、
+   1問でも最初の正誤が分からない年度は復元しない（推測の点数を出さないため） */
+function restoreOldMocks() {
+  const MIG = SPFX + "mock_restored_v1";
+  try { if (localStorage.getItem(MIG)) return; } catch (e) { return; }
+  const byY = {};
+  importedQuestions().forEach(function (q) { (byY[q.f] = byY[q.f] || []).push(q); });
+  Object.keys(byY).forEach(function (k) {
+    if (MOCKS[k] && MOCKS[k].length) return;
+    const kind = k.split(" ")[1], list = byY[k];
+    if ({ 専門: 35, 基礎: 30, 適性: 15 }[kind] !== list.length) return;
+    let ts = 0; const first = [];
+    for (let j = 0; j < list.length; j++) {
+      const h = histOf(list[j]);
+      if (!h || !h.n) return;
+      if (h.ok === h.n) first.push(true);
+      else if (h.ok === 0) first.push(false);
+      else return;
+      if (typeof h.ts === "number") ts = Math.max(ts, h.ts);
+    }
+    let got, of = kind === "専門" ? 25 : 15, need = kind === "専門" ? 13 : 8;
+    if (kind === "基礎") {
+      const g = {};
+      list.forEach(function (q, j) { const gk = kisoGroup(q); g[gk] = (g[gk] || 0) + (first[j] ? 1 : 0); });
+      got = Object.keys(g).reduce(function (t, gk) { return t + Math.min(3, g[gk]); }, 0);
+    } else {
+      got = first.filter(Boolean).length;
+      if (kind === "専門") got = Math.min(got, 25);
+    }
+    MOCKS[k] = [{ t: ts || Date.now(), got: got, of: of, pass: got >= need, n: list.length, all: true, restored: true }];
+  });
+  try { localStorage.setItem(MKEY, JSON.stringify(MOCKS)); localStorage.setItem(MIG, "1"); } catch (e) {}
+}
 function saveMockScore(log, N) {
   const r = pastExamScore(log, N);
   if (!r || r.over) return;
@@ -4309,7 +4343,7 @@ function segTableHtml() {
     const recHtml = allRec.length ? '<details class="segf mockrec"' + (SEGF_OPEN.mockrec ? " open" : "") + ' data-g="mockrec"><summary>通しで解いた記録　<span class="segsum">' + allRec.length + '回</span></summary><table class="seg"><thead><tr><th>日付</th><th></th><th>点数</th><th>合否</th></tr></thead><tbody>' +
       allRec.map(function (r) {
         const d = new Date(r.x.t);
-        return '<tr><td>' + (d.getMonth() + 1) + '/' + d.getDate() + '</td><td>' + r.k.replace(/^過去問 /, "") + '</td><td>' + r.x.got + '/' + r.x.of + (r.x.all ? "" : '<span class="mocksel">（' + r.x.n + '問選択）</span>') + '</td><td class="rate ' + (r.x.pass ? "good" : "bad") + '">' + (r.x.pass ? "合格" : "不合格") + '</td></tr>';
+        return '<tr><td>' + (d.getMonth() + 1) + '/' + d.getDate() + '</td><td>' + r.k.replace(/^過去問 /, "") + '</td><td>' + r.x.got + '/' + r.x.of + (r.x.restored ? '<span class="mocksel">（復元）</span>' : r.x.all ? "" : '<span class="mocksel">（' + r.x.n + '問選択）</span>') + '</td><td class="rate ' + (r.x.pass ? "good" : "bad") + '">' + (r.x.pass ? "合格" : "不合格") + '</td></tr>';
       }).join("") + '</tbody></table></details>' : "";
     mock = '<h3 class="segh">本番の過去問（取り込んだ分）</h3>' +
       '<table class="seg"><thead><tr><th></th><th>最新の点</th><th>得点率</th><th>回数</th><th></th></tr></thead><tbody>' + mr + '</tbody></table>' +
@@ -4537,6 +4571,7 @@ Object.keys(TABS).forEach(function (k) {
 });
 
 refreshImportedSet();
+restoreOldMocks();
 renderCountdown();
 updateUnvUI();
 refreshWeakBtn();
