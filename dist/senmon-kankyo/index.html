@@ -3084,7 +3084,10 @@ function choose(card, btn, origIdx) {
 function easyHtml(q) {
   // 取り込んだ過去問は、解説を取り込みファイルの中（q.e）に持つ（本文を公開しないため）
   const t = ((window.EASY_NOTES && window.EASY_NOTES[q.q]) || q.e || "").replace(/<b>(ひとことで|用語|解き方|考え方|覚え方)<\/b>\s*/g, '<span class="ezh">$1</span>')
-    .replace(/<b>今の状況<\/b>\s*/g, '<span class="ezh now">今の状況（過去問の当時から変わったか）</span>');
+    .replace(/<b>今の状況<\/b>\s*/g, '<span class="ezh now">今の状況（過去問の当時から変わったか）</span>')
+    // 文中に続けて書かれた手順（②③…）と選択肢ごとの理由（・2番：…）は、文の切れ目で改行して読みやすくする
+    .replace(/([。）)])\s*(?=[②-⑳])/g, '$1<br>')
+    .replace(/。\s*(?=・[1-5①-⑤]番)/g, '。<br>');
   return t ? '<div class="easy"><div class="easyh">やさしい解説</div><div class="easyb">' + t + '</div></div><div class="vnoteh">詳しい解説（出典つき）</div>' : "";
 }
 function showVerdict(card, btn, hit, focusNext) {
