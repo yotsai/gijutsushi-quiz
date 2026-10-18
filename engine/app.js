@@ -14,6 +14,8 @@ const VLABEL = {
   textbook:  "△ 教科書の基本事項（独立した解き直しで正解を確認。規格・一次資料の本文は未確認）",
   knowledge: "△ 教科書的知識にもとづく記述（一次資料は未確認。テキストでの確認を推奨）"
 };
+// 科目ごとに根拠の表示文を差し替えられる（SCR は白書・法令ではなく国際機関・基準設定主体の公開文書）
+if (SUBJECT.vlabel) Object.assign(VLABEL, SUBJECT.vlabel);
 let i = 0, correct = 0, answered = false;
 const log = [];
 const answers = [];
@@ -895,7 +897,7 @@ function autoDueCount() {
 }
 function autoDueHtml() {
   const due = autoDueCount();
-  return due ? '今日の復習 <b>' + due + '</b>問' : '今日の復習はありません。<br>まだ解いていない頻出論点から出します';
+  return due ? '今日の復習 <b>' + due + '</b>問' : '今日の復習はありません。<br>' + (SUBJECT.autoNote || 'まだ解いていない頻出論点から出します');
 }
 /* 出題の順：①復習日を過ぎた問題（古い順・習熟度の低い順） ②まだ解いていない問題（頻出論点から） ③期限前でも習熟度の低い問題 */
 function autoPick(n) {
@@ -1505,6 +1507,7 @@ function whyChips(w) {
   return s ? '<div class="whys">' + s + '</div>' : "";
 }
 function whyBox(q, w) {
+  if (SUBJECT.noWhyBox) return "";   // 過去問の出題実績を持たない科目（SCR など）は「位置づけ」を出さない
   let body;
   if (w.tier >= 2) {
     body = '過去7年で<b>' + w.years + '回</b>出題（' + w.topic.cites.join("・") + '）。' +

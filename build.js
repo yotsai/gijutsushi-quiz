@@ -13,7 +13,7 @@ const vm = require("vm");
 
 const ROOT = __dirname;
 const rd = (...p) => fs.readFileSync(path.join(ROOT, ...p), "utf8");
-const IDS = ["senmon-kankyo", "kiso", "tekisei", "all"];
+const IDS = ["senmon-kankyo", "kiso", "tekisei", "all", "scr"];
 
 function loadSubject(id) {
   const file = path.join("subjects", id, "subject.js");
