@@ -633,6 +633,9 @@
   .agrps { display: flex; gap: .35rem; margin: .1rem 0 .5rem; flex-wrap: wrap; }
   .agrp { font: inherit; font-size: .8rem; padding: .3rem .8rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.45); background: transparent; color: inherit; cursor: pointer; }
   .agrp[aria-pressed="true"] { background: #fff; color: #0E5049; border-color: #fff; font-weight: 700; }
+  .asrcs { margin-top: -.15rem; }
+  .asrc { font: inherit; font-size: .75rem; padding: .2rem .7rem; border-radius: 6px; border: 1px solid rgba(255,255,255,.35); background: transparent; color: inherit; cursor: pointer; }
+  .asrc[aria-pressed="true"] { background: rgba(255,255,255,.22); border-color: #fff; font-weight: 700; }
   .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; margin-top: .8rem; }
   .tile {
     font: inherit; text-align: left; border: 1px solid var(--rule); border-radius: 14px; background: var(--paper);
@@ -4184,7 +4187,16 @@ function mastery(q) {
 /* おまかせの対象科目（全部入り版のみ）。"" はすべて */
 let AUTO_G = "";
 try { AUTO_G = localStorage.getItem(SPFX + "auto_g") || ""; } catch (e) {}
+/* おまかせの出題元。"" は自作問題と過去問、"past" は取り込んだ過去問のうち解いたことがある問題だけ（過去問の復習用） */
+let AUTO_SRC = "";
+try { AUTO_SRC = localStorage.getItem(SPFX + "auto_src") || ""; } catch (e) {}
+function autoPastOnly() { return AUTO_SRC === "past" && (SETS.imported || []).length > 0; }
 function autoBase() {
+  if (autoPastOnly()) {
+    return verifiedOnly((SETS.imported || []).filter(function (q) {
+      return histOf(q) && (!AUTO_G || typeof GROUPED === "undefined" || !GROUPED || (q.f || "").split(" ")[1] === AUTO_G);
+    }));
+  }
   if (!AUTO_G || typeof GROUPED === "undefined" || !GROUPED || GROUPS.indexOf(AUTO_G) < 0) return verifiedOnly(SETS.all);
   // 取り込んだ本番の過去問（f が「過去問 専門 R7」の形）も、選んだ科目の分は復習・出題の対象に入れる
   const imp = (SETS.imported || []).filter(function (q) { return (q.f || "").split(" ")[1] === AUTO_G; });
@@ -4196,6 +4208,12 @@ function autoDueCount() {
 }
 function autoDueHtml() {
   const due = autoDueCount();
+  if (autoPastOnly()) {
+    const n = autoBase().length;
+    if (!n) return '解いた過去問がまだありません。';
+    return (due ? '過去問の今日の復習 <b>' + due + '</b>問' : '過去問の今日の復習はありません。<br>次の復習日が近い順に出します') +
+      '<br><small>解いた過去問 ' + n + '問から出します</small>';
+  }
   return due ? '今日の復習 <b>' + due + '</b>問' : '今日の復習はありません。<br>' + (SUBJECT.autoNote || 'まだ解いていない頻出論点から出します');
 }
 /* 出題の順：①復習日を過ぎた問題（古い順・習熟度の低い順） ②まだ解いていない問題（頻出論点から） ③期限前でも習熟度の低い問題 */
@@ -4250,7 +4268,12 @@ function renderAutoBlock() {
         return '<button type="button" class="agrp" data-g="' + g + '" aria-pressed="' + (AUTO_G === g) + '">' + (g || "すべて") + '</button>';
       }).join("") + '</div>'
     : "";
-  return '<div class="auto hero"><h3>おまかせ出題</h3>' + grpChips +
+  const srcChips = (SETS.imported || []).length
+    ? '<div class="agrps asrcs" role="group" aria-label="おまかせの出題元">' + [["", "自作も含める"], ["past", "解いた過去問だけ"]].map(function (o) {
+        return '<button type="button" class="asrc" data-src="' + o[0] + '" aria-pressed="' + (AUTO_SRC === o[0]) + '">' + o[1] + '</button>';
+      }).join("") + '</div>'
+    : "";
+  return '<div class="auto hero"><h3>おまかせ出題</h3>' + grpChips + srcChips +
     '<p class="due">' + autoDueHtml() + '</p>' +
     '<div class="auto-n"><label for="autoN">出題数</label><output id="autoNv">' + AUTO_N + '問</output></div>' +
     '<input type="range" id="autoN" min="5" max="100" step="5" value="' + AUTO_N + '">' +
@@ -4259,7 +4282,8 @@ function renderAutoBlock() {
     '<details><summary>おまかせ出題とは</summary>' +
       '<p>忘れかけたころに復習が回ってくるよう、問題ごとに次の復習日を決めて出題します。' +
       'まちがえた問題は翌日、続けて正解するほど間隔を空けます（2日→4日→7日→14日→30日）。' +
-      '復習日の問題が足りないときは、まだ解いていない頻出論点から出します。</p>' +
+      '復習日の問題が足りないときは、まだ解いていない頻出論点から出します。' +
+      '「解いた過去問だけ」にすると、取り込んだ本番の過去問のうち一度でも解いた問題だけから、復習日の来た順に出します（まだ解いていない過去問は出しません）。</p>' +
       '<div class="mastery">' + MASTERY.map(function (l, k) { return '<span class="m' + k + '">' + l + ' <b>' + m[k] + '</b></span>'; }).join("") + '</div>' +
     '</details>' +
   '</div>';
@@ -4287,6 +4311,16 @@ function wireAutoBlock(card) {
       AUTO_G = b.dataset.g;
       try { localStorage.setItem(SPFX + "auto_g", AUTO_G); } catch (e) {}
       card.querySelectorAll(".agrp").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
+      const d = card.querySelector(".due");
+      if (d) d.innerHTML = autoDueHtml();
+      refreshAutoBtn();
+    });
+  });
+  card.querySelectorAll(".asrc").forEach(function (b) {
+    b.addEventListener("click", function () {
+      AUTO_SRC = b.dataset.src;
+      try { localStorage.setItem(SPFX + "auto_src", AUTO_SRC); } catch (e) {}
+      card.querySelectorAll(".asrc").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
       const d = card.querySelector(".due");
       if (d) d.innerHTML = autoDueHtml();
       refreshAutoBtn();
