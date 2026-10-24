@@ -101,6 +101,10 @@
   .why.t3 { background: var(--accent); color: var(--paper); }
   .why.same { background: var(--accent-soft); }
   .why.t1 { border-style: dashed; border-color: var(--rule-strong); color: var(--ink-3); font-weight: 600; }
+  .why.prA { background: var(--accent); color: var(--paper); }
+  .why.prC { border-color: var(--rule-strong); color: var(--ink-2); }
+  .why.prN { border-style: dashed; border-color: var(--rule-strong); color: var(--ink-3); font-weight: 600; }
+  .why.prD { border-color: var(--rule-strong); color: var(--ink-3); background: transparent; font-weight: 600; }
   .whybox {
     margin: .7rem 0 0; padding: .55rem .7rem; background: var(--accent-soft);
     border-left: 3px solid var(--accent); font-size: .82rem; line-height: 1.7; color: var(--ink-2);

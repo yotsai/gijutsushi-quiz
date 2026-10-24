@@ -118,7 +118,7 @@ function render() {
         '<button type="button" class="qtool" id="bmTog" aria-pressed="' + bm + '">' + bmLabel(bm) + '</button>' +
         '<button type="button" class="qtool" id="memoTog" aria-expanded="false" aria-controls="memoBox"></button>' +
       '</span></div>' +
-    whyChips(whyOf(q)) +
+    whyChips(whyOf(q), q) +
     '<p class="qt"></p><div class="qimg" hidden></div><p class="qh"></p><div class="choices"></div>' +
     '<div class="memo" id="memoBox" hidden>' +
       '<label for="memoTa">メモ（この端末に自動で保存されます）</label>' +
@@ -668,7 +668,7 @@ function showVerdict(card, btn, hit, focusNext) {
     '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (inRetry() ? (retryWasSkipped(i) ? (hit ? "選ばなかった問題：正解（記録しました）" : "選ばなかった問題：不正解（記録し、復習に回します）") : hit ? "もう一度：正解（記録はしません）" : "もう一度：不正解（明日の復習で出ます）") : hit ? "正解" : unknown ? "わからない（不正解として記録し、復習に回します）" : "不正解") + '</div>' +
     easyHtml(q) +
     '<p class="vnote">' + q.n + '</p>' +
-    (/^過去問 /.test(q.f || "") && whyOf(q).tier < 2 ? "" : whyBox(q, whyOf(q))) +
+    (/^過去問 /.test(q.f || "") && whyOf(q).tier < 2 && !pastRank(q) ? "" : whyBox(q, whyOf(q))) +
     (q.v ? '<p class="vsrc' + (q.v === "knowledge" ? " k" : "") + '">' + VLABEL[q.v] + '</p>' : '') +
     '<div class="qnav">' + navHtml(true) + '</div>' +
     '<p class="hintkey">← → キーでも移動できます</p>';
@@ -1212,6 +1212,18 @@ function refreshImportedSet() {
     b.textContent = "過去問 " + sub.length + "問";
     b.hidden = sub.length === 0;
   });
+  // 重要度で分けた過去問（専門のみ）：頻出＝最頻出＋頻出（3年以上出た論点）、捨て候補＝R1〜R5の単発
+  document.querySelectorAll('.set.imprk').forEach(function (b) {
+    const hot = b.dataset.set.indexOf("imphot:") === 0;
+    const g = b.dataset.set.slice(hot ? 7 : 8);
+    const sub = list.filter(function (q) {
+      const r = (q.f || "").split(" ")[1] === g && pastRank(q);
+      return r && (hot ? (r.k === "A" || r.k === "B") : r.k === "D");
+    });
+    SETS[b.dataset.set] = sub;
+    b.textContent = (hot ? "★ 過去問の頻出 " : "過去問の捨て候補 ") + sub.length + "問";
+    b.hidden = sub.length === 0;
+  });
   refreshWeakBtn();
 }
 
@@ -1411,6 +1423,12 @@ function showGroup(g) {
     SETS["imp:" + g] = [];
     SET_LABEL["imp:" + g] = g + " 過去問";
     add("set impg", "imp:" + g, "過去問 0問", { hidden: true }, g);
+    if (HAS_TOPICS) {
+      SETS["imphot:" + g] = []; SET_LABEL["imphot:" + g] = g + " 過去問の頻出";
+      add("set imprk", "imphot:" + g, "★ 過去問の頻出 0問", { hidden: true }, g);
+      SETS["impdrop:" + g] = []; SET_LABEL["impdrop:" + g] = g + " 過去問の捨て候補";
+      add("set imprk", "impdrop:" + g, "過去問の捨て候補 0問", { hidden: true }, g);
+    }
   });
   else {
     if (multi) add("set", "all", (SUBJECT.allSetLabel || "まとめて") + " 全問");
@@ -1530,7 +1548,30 @@ function whyOf(q) {
     b.hidden = !list.length;
   });
 })();
-function whyChips(w) {
+/* 取り込んだ専門の過去問の「重要度」。同じ論点が過去7年で何年出たか（topics.js）で4段階に分ける。
+   本番の専門は35問から25問を選んで解くので、10問は捨ててよい。1回しか出ていない論点が「捨て候補」。
+   ただし R6・R7 の単発は、繰り返すかを確かめる年数がまだ無いので「新しい論点」として分ける */
+const PAST_RANKS = {
+  A: { label: "最頻出", note: "同じ論点が過去7年で5回以上出ています。毎年のように出るので、必ず取る問題です。" },
+  B: { label: "頻出", note: "同じ論点が過去7年で3〜4回出ています。2年に1回は出るので、覚えておく価値が高い問題です。" },
+  C: { label: "ときどき", note: "同じ論点が過去7年で2回出ています。頻出を固めたあとに押さえる問題です。" },
+  N: { label: "新しい論点", note: "最近の年度（R6・R7）に初めて出た論点です。繰り返し出るかはまだ分かりません。頻出を固めたあと、余力で押さえる問題です。" },
+  D: { label: "捨て候補", note: "過去7年で1回しか出ていない論点です（出たあと2年以上、同じ論点は出ていません）。覚える優先度はいちばん低い問題です。本番の専門は35問から25問を選ぶので、10問は飛ばせます。飛ばすのはこの種の単発の問題からにします。ただし最近は単発の問題が年に15問前後あり、全部は飛ばせません。単発の問題でも、消去法で絞れるものは解きます。" }
+};
+function pastRank(q) {
+  if (!HAS_TOPICS || !/^過去問 専門 R\d/.test(q.f || "")) return null;
+  const w = whyOf(q);
+  const y = w.tier >= 2 ? w.years : 1;
+  const k = y >= 5 ? "A" : y >= 3 ? "B" : y === 2 ? "C" : /R[67]$/.test(q.f) ? "N" : "D";
+  return { k: k, years: y, label: PAST_RANKS[k].label, note: PAST_RANKS[k].note };
+}
+function whyChips(w, q) {
+  const r = q && pastRank(q);
+  if (r) {
+    return '<div class="whys"><span class="why pr' + r.k + '">' + (r.k === "D" ? "" : r.k === "N" ? "" : "★ ") + r.label +
+      (r.k === "N" ? "（R6・R7で初出）" : "・7年で" + r.years + "回") + '</span>' +
+      (w.same ? '<span class="why same">選択肢まで同じ再出題</span>' : '') + '</div>';
+  }
   let s = "";
   if (w.tier >= 2) s += '<span class="why t' + w.tier + '">★ ' + w.label + '</span>';
   if (w.same) s += '<span class="why same">選択肢まで同じ再出題</span>';
@@ -1539,6 +1580,11 @@ function whyChips(w) {
 }
 function whyBox(q, w) {
   if (SUBJECT.noWhyBox) return "";   // 過去問の出題実績を持たない科目（SCR など）は「位置づけ」を出さない
+  const pr = pastRank(q);
+  if (pr) {
+    return '<div class="whybox pr' + pr.k + '"><span class="wh">重要度：' + pr.label + '</span>' + pr.note +
+      (w.tier >= 2 ? '（' + w.topic.cites.join("・") + '）' : '') + '</div>';
+  }
   let body;
   if (w.tier >= 2) {
     body = '過去7年で<b>' + w.years + '回</b>出題（' + w.topic.cites.join("・") + '）。' +
