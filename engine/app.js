@@ -668,7 +668,7 @@ function showVerdict(card, btn, hit, focusNext) {
     '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (inRetry() ? (retryWasSkipped(i) ? (hit ? "選ばなかった問題：正解（記録しました）" : "選ばなかった問題：不正解（記録し、復習に回します）") : hit ? "もう一度：正解（記録はしません）" : "もう一度：不正解（明日の復習で出ます）") : hit ? "正解" : unknown ? "わからない（不正解として記録し、復習に回します）" : "不正解") + '</div>' +
     easyHtml(q) +
     '<p class="vnote">' + q.n + '</p>' +
-    (/^過去問 /.test(q.f || "") && whyOf(q).tier < 2 && !pastRank(q) ? "" : whyBox(q, whyOf(q))) +
+    (/^過去問 /.test(q.f || "") && whyOf(q).tier < 2 && !pastRank(q) && !kisoTarget(q) ? "" : whyBox(q, whyOf(q))) +
     (q.v ? '<p class="vsrc' + (q.v === "knowledge" ? " k" : "") + '">' + VLABEL[q.v] + '</p>' : '') +
     '<div class="qnav">' + navHtml(true) + '</div>' +
     '<p class="hintkey">← → キーでも移動できます</p>';
@@ -1217,11 +1217,15 @@ function refreshImportedSet() {
     const hot = b.dataset.set.indexOf("imphot:") === 0;
     const g = b.dataset.set.slice(hot ? 7 : 8);
     const sub = list.filter(function (q) {
-      const r = (q.f || "").split(" ")[1] === g && pastRank(q);
+      if ((q.f || "").split(" ")[1] !== g) return false;
+      if (kisoTarget(q)) return hot;
+      const r = pastRank(q);
       return r && (hot ? (r.k === "A" || r.k === "B") : r.k === "D");
     });
     SETS[b.dataset.set] = sub;
-    b.textContent = (hot ? "★ 過去問の頻出 " : "過去問の捨て候補 ") + sub.length + "問";
+    const kiso = sub.length && kisoTarget(sub[0]);
+    if (kiso) SET_LABEL[b.dataset.set] = g + " 過去問の狙い目";
+    b.textContent = (hot ? (kiso ? "★ 過去問の狙い目（2〜4群） " : "★ 過去問の頻出 ") : "過去問の捨て候補 ") + sub.length + "問";
     b.hidden = sub.length === 0;
   });
   refreshWeakBtn();
@@ -1565,7 +1569,43 @@ function pastRank(q) {
   const k = y >= 5 ? "A" : y >= 3 ? "B" : y === 2 ? "C" : /R[67]$/.test(q.f) ? "N" : "D";
   return { k: k, years: y, label: PAST_RANKS[k].label, note: PAST_RANKS[k].note };
 }
+/* 基礎の第2〜4群（情報・解析・材料化学バイオ）で、毎年同じ型が繰り返し出ている「狙い目」の過去問。
+   各群6問から3問を選ぶので、苦手な群でもこの型だけ取りにいけばよい。キーは問題番号（本文は持たない） */
+const KISO_TYPES = {
+  sec: { label: "情報セキュリティ", note: "毎年1〜2問出る型です。技術より常識で解ける問題が多く、「〜だけで十分」「〜すれば必ず安全」と言い切る選択肢を疑います。" },
+  calc: { label: "伝送時間・容量の計算", note: "計算式が問題文に書いてあり、数字を入れるだけの型です。注意するのは単位の換算だけです（1バイト＝8ビット、k＝1000）。" },
+  set: { label: "集合の要素数", note: "ベン図を描いて数える型です。A∪Bの要素数＝Aの数＋Bの数−A∩Bの数。直積の要素数は各集合の要素数のかけ算です。" },
+  num: { label: "数値解析の精度・誤差", note: "知識の型で、毎年ほぼ同じ考え方が問われます。刻み（メッシュや時間刻み）を細かくする、高次の要素や公式を使う、は精度が上がる側です。" },
+  grad: { label: "最急勾配・逆行列", note: "公式1つで解ける型です。最急勾配の大きさは √((∂f/∂x)²＋(∂f/∂y)²) に点の座標を入れます。逆行列は、元の行列と掛けて単位行列になる選択肢を選びます（選択肢を掛けて確かめれば解けます）。" },
+  bar: { label: "棒の伸び・応力", note: "フックの法則の型です。応力＝力÷断面積、ひずみ＝応力÷縦弾性係数、伸び＝ひずみ×長さ。mm²とm²、kNとNの換算で間違えやすい問題です。" },
+  spring: { label: "ばね・合成抵抗", note: "直列と並列の型です。ばねは並列で k1＋k2、直列で 1÷(1/k1＋1/k2)。抵抗は逆で、直列で R1＋R2、並列で 1÷(1/R1＋1/R2)。固有振動数は √(k/m) に比例します。" },
+  ox: { label: "酸化数・酸化還元", note: "酸化数の型です。化合物全体で0、酸素は−2、水素は＋1として、残りの原子の値を計算します。" },
+  bio: { label: "DNA・アミノ酸・タンパク質", note: "第4群の後半2問は毎年バイオです。DNAは A と T、G と C が対になる、塩基3つで1つのアミノ酸を指定する、PCRは熱変性→アニーリング→伸長の繰り返し、を押さえれば解ける問題が多い型です。" }
+};
+const KISO_TARGET = {};
+(function () {
+  const m = {
+    sec: ["R1 Ⅰ-2-1", "R3 Ⅰ-2-1", "R4 Ⅰ-2-1", "R5 Ⅰ-2-1", "R2 Ⅰ-2-3", "R7 Ⅰ-2-4", "R6 Ⅰ-2-6"],
+    calc: ["R1 Ⅰ-2-3", "R3 Ⅰ-2-3", "R7 Ⅰ-2-5"],
+    set: ["R1 Ⅰ-2-6", "R4 Ⅰ-2-2", "R5 Ⅰ-2-6", "R7 Ⅰ-2-1"],
+    num: ["R1 Ⅰ-3-3", "R2 Ⅰ-3-3", "R4 Ⅰ-3-3", "R5 Ⅰ-3-3"],
+    grad: ["R2 Ⅰ-3-2", "R7 Ⅰ-3-2", "R5 Ⅰ-3-1", "R7 Ⅰ-3-1"],
+    bar: ["R3 Ⅰ-3-4", "R5 Ⅰ-3-4", "R7 Ⅰ-3-4"],
+    spring: ["R2 Ⅰ-3-5", "R3 Ⅰ-3-5", "R6 Ⅰ-3-5", "R7 Ⅰ-3-5", "R5 Ⅰ-3-6", "R6 Ⅰ-3-6"],
+    ox: ["R3 Ⅰ-4-2", "R4 Ⅰ-4-2", "R7 Ⅰ-4-1"],
+    bio: [].concat.apply([], ["R1", "R2", "R3", "R4", "R5", "R6", "R7"].map(function (y) { return [y + " Ⅰ-4-5", y + " Ⅰ-4-6"]; }))
+  };
+  Object.keys(m).forEach(function (k) { m[k].forEach(function (id) { KISO_TARGET[id.replace(" ", " 基礎 ")] = k; }); });
+})();
+function kisoTarget(q) {
+  if (!/^過去問 基礎 /.test(q.f || "")) return null;
+  const id = ((q.q || "").match(/^【(R\d 基礎 Ⅰ-\d-\d)】/) || [])[1];
+  const k = id && KISO_TARGET[id];
+  return k ? KISO_TYPES[k] : null;
+}
 function whyChips(w, q) {
+  const kt = q && kisoTarget(q);
+  if (kt) return '<div class="whys"><span class="why prA">★ 狙い目：' + kt.label + '</span></div>';
   const r = q && pastRank(q);
   if (r) {
     return '<div class="whys"><span class="why pr' + r.k + '">' + (r.k === "D" ? "" : r.k === "N" ? "" : "★ ") + r.label +
@@ -1580,6 +1620,8 @@ function whyChips(w, q) {
 }
 function whyBox(q, w) {
   if (SUBJECT.noWhyBox) return "";   // 過去問の出題実績を持たない科目（SCR など）は「位置づけ」を出さない
+  const kt = kisoTarget(q);
+  if (kt) return '<div class="whybox prA"><span class="wh">狙い目：' + kt.label + '</span>' + kt.note + '</div>';
   const pr = pastRank(q);
   if (pr) {
     return '<div class="whybox pr' + pr.k + '"><span class="wh">重要度：' + pr.label + '</span>' + pr.note +
