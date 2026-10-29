@@ -3957,7 +3957,10 @@ function easyHtml(q) {
     .replace(/<b>今の状況<\/b>\s*/g, '<span class="ezh now">今の状況（過去問の当時から変わったか）</span>')
     // 文中に続けて書かれた手順（②③…）と選択肢ごとの理由（・2番：…）は、文の切れ目で改行して読みやすくする
     .replace(/([。）)])\s*(?=[②-⑳])/g, '$1<br>')
-    .replace(/。\s*(?=・[1-5①-⑤]番)/g, '。<br>');
+    .replace(/。\s*(?=・[1-5①-⑤]番)/g, '。<br>')
+    // (ア)〜(オ)の記述ごとの判定と、最後のまとめ（「正しいのは…」など）も文の切れ目で改行する
+    .replace(/。\s*(?=[（(][ア-オ][)）])/g, '。<br>')
+    .replace(/。\s*(?=(正しいのは|誤っているのは|不適切なのは|適切なのは|したがって|よって|以上から|以上より))/g, '。<br>');
   return t ? '<div class="easy"><div class="easyh">やさしい解説</div><div class="easyb">' + t + '</div></div><div class="vnoteh">詳しい解説（出典つき）</div>' : "";
 }
 function showVerdict(card, btn, hit, focusNext) {
