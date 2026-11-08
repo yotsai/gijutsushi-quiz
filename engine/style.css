@@ -668,3 +668,18 @@
   /* 問題が1問もない科目（準備中）：出題操作を隠して案内だけを出す */
   .empty-note { margin: 1.4rem 0; padding: 1.2rem; border: 1px dashed var(--rule-strong); border-radius: 12px; color: var(--ink-2); text-align: center; font-size: .92rem; }
   body.empty-mode #setsHead, body.empty-mode .sets, body.empty-mode .limits, body.empty-mode .unvwrap, body.empty-mode .unvnote { display: none; }
+
+  /* 行列（問題用紙と同じく、丸かっこで囲んだ縦並び）。app.js の setMxText / mxHtml が組み立てる */
+  .mx {
+    position: relative; display: inline-block; vertical-align: middle;
+    margin: .2em .25em; padding: 0 .5em; white-space: nowrap; font-weight: 400;
+  }
+  .mx::before, .mx::after {
+    content: ""; position: absolute; top: .05em; bottom: .05em; width: .45em;
+    border: 1.5px solid currentColor;
+  }
+  .mx::before { left: 0; border-right: 0; border-radius: .6em 0 0 .6em / 50% 0 0 50%; }
+  .mx::after { right: 0; border-left: 0; border-radius: 0 .6em .6em 0 / 0 50% 50% 0; }
+  .mxb { display: inline-table; border-collapse: collapse; }
+  .mxr { display: table-row; }
+  .mxc { display: table-cell; padding: .08em .5em; text-align: center; line-height: 1.4; font-variant-numeric: tabular-nums; }

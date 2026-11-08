@@ -145,7 +145,7 @@ function render() {
     b.className = "ch";
     b.type = "button";
     b.innerHTML = '<span class="key">' + LETTERS[pos] + '</span><span></span>';
-    b.lastChild.textContent = q.c[origIdx];
+    setMxText(b.lastChild, q.c[origIdx]);
     b.dataset.orig = origIdx;
     b.addEventListener("click", () => choose(card, b, origIdx));
     box.appendChild(b);
@@ -179,8 +179,8 @@ function renderStatements(card, q) {
     return /^\s*[（(][ア-コ][）)]/.test(l) ? l.split(/[\s　]+(?=[（(][ア-コ][）)])/) : [l];
   }));
   const isSt = parts.map(function (l) { return /^\s*[（(][ア-コ][）)]/.test(l); });
-  if (isSt.filter(Boolean).length < 2) { qt.textContent = q.q.replace(/<br>/g, "\n"); return; }
-  qt.textContent = parts.filter(function (_, k) { return !isSt[k]; }).join("\n");
+  if (isSt.filter(Boolean).length < 2) { setMxText(qt, q.q.replace(/<br>/g, "\n")); return; }
+  setMxText(qt, parts.filter(function (_, k) { return !isSt[k]; }).join("\n"));
   const box = document.createElement("div");
   box.className = "stl";
   const tally = document.createElement("div");
@@ -636,6 +636,43 @@ function choose(card, btn, origIdx) {
   showVerdict(card, btn, hit, true);
 }
 
+/* 行列の表記 [[1,0,0],[a,1,0],[b,c,1]] を、本番の問題用紙と同じ「丸かっこで囲んだ縦並び」で表示する（2026-11-08）。
+   過去問の基礎（Ⅰ-3-1 の逆行列・ヤコビ行列など）だけに出てくる。2行以上の [[…],[…]] だけを行列とみなす */
+function mxRe() { return /\[(\[[^\[\]]*\](?:\s*,\s*\[[^\[\]]*\])+)\]/g; }
+function mxRows(inner) {
+  return inner.match(/\[[^\[\]]*\]/g).map(function (r) { return r.slice(1, -1).split(",").map(function (s) { return s.trim().replace(/-/g, "−"); }); });
+}
+/* セルの「-」は問題用紙と同じ「−」（マイナス記号）にする。
+   文字として表示する場所（問題文・選択肢）用。セルも textContent で入れる */
+function setMxText(el, text) {
+  text = String(text == null ? "" : text);
+  if (!mxRe().test(text)) { el.textContent = text; return; }
+  el.textContent = "";
+  let last = 0;
+  text.replace(mxRe(), function (m, inner, off) {
+    if (off > last) el.appendChild(document.createTextNode(text.slice(last, off)));
+    const wrap = document.createElement("span"); wrap.className = "mx";
+    const body = document.createElement("span"); body.className = "mxb";
+    mxRows(inner).forEach(function (r) {
+      const row = document.createElement("span"); row.className = "mxr";
+      r.forEach(function (c) { const cell = document.createElement("span"); cell.className = "mxc"; cell.textContent = c; row.appendChild(cell); });
+      body.appendChild(row);
+    });
+    wrap.appendChild(body); el.appendChild(wrap);
+    last = off + m.length;
+    return m;
+  });
+  if (last < text.length) el.appendChild(document.createTextNode(text.slice(last)));
+}
+/* HTMLとして組み立てる場所（解説）用 */
+function mxHtml(html) {
+  return String(html).replace(mxRe(), function (m, inner) {
+    return '<span class="mx"><span class="mxb">' + mxRows(inner).map(function (r) {
+      return '<span class="mxr">' + r.map(function (c) { return '<span class="mxc">' + c + '</span>'; }).join("") + '</span>';
+    }).join("") + '</span></span>';
+  });
+}
+
 /* 専門外の人向けの「やさしい解説」。問題文をキーに別ファイル（easy.js の EASY_NOTES）から引く */
 function easyHtml(q) {
   // 取り込んだ過去問は、解説を取り込みファイルの中（q.e）に持つ（本文を公開しないため）
@@ -647,7 +684,7 @@ function easyHtml(q) {
     // (ア)〜(オ)の記述ごとの判定と、最後のまとめ（「正しいのは…」など）も文の切れ目で改行する
     .replace(/。\s*(?=[（(][ア-オ][)）])/g, '。<br>')
     .replace(/。\s*(?=(正しいのは|誤っているのは|不適切なのは|適切なのは|したがって|よって|以上から|以上より))/g, '。<br>');
-  return t ? '<div class="easy"><div class="easyh">やさしい解説</div><div class="easyb">' + t + '</div></div><div class="vnoteh">詳しい解説（出典つき）</div>' : "";
+  return t ? '<div class="easy"><div class="easyh">やさしい解説</div><div class="easyb">' + mxHtml(t) + '</div></div><div class="vnoteh">詳しい解説（出典つき）</div>' : "";
 }
 function showVerdict(card, btn, hit, focusNext) {
   const q = Q[i];
@@ -670,7 +707,7 @@ function showVerdict(card, btn, hit, focusNext) {
   v.innerHTML =
     '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (inRetry() ? (retryWasSkipped(i) ? (hit ? "選ばなかった問題：正解（記録しました）" : "選ばなかった問題：不正解（記録し、復習に回します）") : hit ? "もう一度：正解（記録はしません）" : "もう一度：不正解（明日の復習で出ます）") : hit ? "正解" : unknown ? "わからない（不正解として記録し、復習に回します）" : "不正解") + '</div>' +
     easyHtml(q) +
-    '<p class="vnote">' + q.n + '</p>' +
+    '<p class="vnote">' + mxHtml(q.n || "") + '</p>' +
     (/^過去問 /.test(q.f || "") && whyOf(q).tier < 2 && !pastRank(q) && !kisoTarget(q) ? "" : whyBox(q, whyOf(q))) +
     (q.v ? '<p class="vsrc' + (q.v === "knowledge" ? " k" : "") + '">' + VLABEL[q.v] + '</p>' : '') +
     '<div class="qnav">' + navHtml(true) + '</div>' +
