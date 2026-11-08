@@ -527,8 +527,10 @@
   .tabs {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; margin: 0; gap: 0;
     display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 0;
-    background: color-mix(in srgb, var(--panel) 92%, transparent);
-    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    /* iOSのホーム画面版で、解説が開いて画面の長さが変わると、すりガラス（backdrop-filter）付きの固定ナビが
+       画面の途中に取り残される（2026-11-08 実機で発生）。不透明の背景にし、独立したレイヤーで描かせる */
+    background: var(--panel);
+    -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0);
     border-top: 1px solid var(--rule); padding: .35rem .3rem calc(.35rem + env(safe-area-inset-bottom));
   }
   .tab {
