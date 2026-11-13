@@ -22,6 +22,7 @@ const answers = [];
 /* 回の最後に、間違えた問題をもう一度出す（記録はしない）。RETRY_FROM はその開始位置。-1 は未追加 */
 let RETRY_FROM = -1;
 let RESULT_SAVED = false;   // この回の点数を過去問の記録に入れたか（結果画面を開き直しても二重に入れない）
+let PARTIAL = false;        // 途中で「ここまでで採点する」を押した回（解いた問題だけで採点し、残りは採点に含めない）
 /* 履歴の「解く」から始めた回は、ホームではなく履歴に戻れるようにする */
 let FROM_HIST = false;
 function goBack() {
@@ -233,9 +234,14 @@ function navHtml(answeredNow) {
     '<div class="navrow two">' +
       '<button class="btn ghost" id="prev"' + (i > 0 ? '' : ' disabled') + '>← 前の問題</button>' +
       '<button class="btn ghost" id="home">' + (FROM_HIST ? "← 履歴に戻る" : "ホーム") + '</button>' +
-    '</div>';
+    '</div>' +
+    // 通しで解く回（模試）以外は、途中でやめても解いた分だけで採点できる。解答は1問ごとに記録済みなので復習にも入っている
+    (!ex && !inRetry() && log.length > 0 && i + 1 < Q.length
+      ? '<div class="navrow one"><button class="btn ghost" id="stop">ここまでで採点する（解いた ' + log.length + ' 問）</button></div>' : '');
 }
 function wireNav(el) {
+  const st = el.querySelector("#stop");
+  if (st) st.addEventListener("click", function () { PARTIAL = true; i = Q.length; saveSession(); render(); });
   el.querySelector("#prev").addEventListener("click", goPrev);
   el.querySelector("#home").addEventListener("click", goBack);
   const nb = el.querySelector("#next");
@@ -505,7 +511,7 @@ function wireRoadmap(card) {
       if (a.limit) list = list.slice(0, a.limit);
       Q.length = 0; RETRY_FROM = -1; list.forEach(function (q) { Q.push(q); });
       CUSTOM_LIST = list.slice(); CURRENT_SET = "custom";
-      i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
+      i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; PARTIAL = false; answers.length = 0;
       applySetButtons("__none__");
       document.getElementById("pickinfo").textContent = "";
       saveSession(); render();
@@ -730,7 +736,8 @@ function renderResult() {
   // 選んで解く科目（専門・基礎）で選ばない問題があった回は、本番と同じく選んだ問題だけを採点する
   const exr = examRun();
   const sel = !!exr && exr.kind !== "適性" && log.length < N;
-  const D = sel ? (exr.kind === "専門" ? 25 : 15) : N;
+  const D = sel ? (exr.kind === "専門" ? 25 : 15) : (PARTIAL ? log.length : N);
+  if (PARTIAL) elCount.textContent = log.length + " / " + N;
   const pct = Math.round(correct / D * 100);
   const byField = {};
   log.forEach(r => {
@@ -784,7 +791,9 @@ function renderResult() {
     })() : '') +
     (skipped.length ? (sel
       ? '<p class="judge">選ばなかった問題 <b>' + skipped.length + '問</b>（本番と同じく採点に含めていません）。</p>'
-      : '<p class="judge">とばして答えていない問題が <b>' + skipped.length + '問</b> あります（未解答は不正解として計算）。</p>') : '') +
+      : (PARTIAL
+        ? '<p class="judge">途中で終えました。解いていない <b>' + skipped.length + '問</b> は採点に含めていません（解いた問題は記録済みで、苦手・おまかせの復習に入っています）。</p>'
+        : '<p class="judge">とばして答えていない問題が <b>' + skipped.length + '問</b> あります（未解答は不正解として計算）。</p>')) : '') +
     '<table><thead><tr><th>分野</th><th>正答</th><th>率</th></tr></thead><tbody>' + rows + '</tbody></table>' +
     missedHtml +
     (function () {
@@ -798,7 +807,7 @@ function renderResult() {
       (LIMIT && baseList().length > N ? '<button class="btn" id="nextBatch">次の ' + LIMIT + '問へ</button>' : '') +
       (sel ? ((missed.length || skipped.length) ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問＋選ばなかった ' + skipped.length + ' 問をもう一度</button>' : '')
         : (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をもう一度（記録しません）</button>' : '') +
-          (skipped.length ? '<button class="btn ghost" id="doSkipped">とばした ' + skipped.length + ' 問を解く</button>' : '')) +
+          (skipped.length ? '<button class="btn ghost" id="doSkipped">' + (PARTIAL ? '残りの ' : 'とばした ') + skipped.length + ' 問を解く</button>' : '')) +
       '<button class="btn ghost" id="home">' + (FROM_HIST ? "← 履歴に戻る" : "ホーム") + '</button>' +
     '</div>';
   stage.replaceChildren(card);
@@ -814,7 +823,7 @@ function renderResult() {
   const ds = card.querySelector("#doSkipped");
   if (ds) ds.addEventListener("click", () => {
     Q.length = 0; RETRY_FROM = -1; skipped.forEach(q => Q.push(q));
-    i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0; saveSession(); render();
+    i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; PARTIAL = false; answers.length = 0; saveSession(); render();
   });
   const nb2 = card.querySelector("#nextBatch");
   if (nb2) nb2.addEventListener("click", function () { rebuild(); });
@@ -983,7 +992,7 @@ function startAuto() {
   if (!list.length) return;
   Q.length = 0; RETRY_FROM = -1; list.forEach(function (q) { Q.push(q); });
   CUSTOM_LIST = list.slice(); CURRENT_SET = "auto";
-  i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
+  i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; PARTIAL = false; answers.length = 0;
   applySetButtons("auto");
   const pi = document.getElementById("pickinfo");
   if (pi) pi.textContent = "";
@@ -1333,7 +1342,7 @@ function rebuild() {
   const picked = pickQuestions(baseList());
   if (!picked.length) return false;
   Q.length = 0; RETRY_FROM = -1; picked.forEach(function (q) { Q.push(q); });
-  i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
+  i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; PARTIAL = false; answers.length = 0;
   const host = document.getElementById("resumeHost");
   if (host) host.innerHTML = "";
   clearSession();
@@ -1395,7 +1404,7 @@ function showResume(n, total) {
   host.innerHTML = '<div class="resume">前回の続き（<b>' + (n + 1) + ' / ' + total +
     '問目</b>）から再開しました<button id="restart">最初から解き直す</button></div>';
   host.querySelector("#restart").addEventListener("click", function () {
-    i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
+    i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; PARTIAL = false; answers.length = 0;
     clearSession(); host.innerHTML = ""; render();
   });
 }
@@ -2146,7 +2155,7 @@ function renderHistory() {
       if (!list || !list.length) return;
       Q.length = 0; RETRY_FROM = -1; list.forEach(function (q) { Q.push(q); });
       CUSTOM_LIST = list.slice(); CURRENT_SET = "custom";
-      i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
+      i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; PARTIAL = false; answers.length = 0;
       document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
       selectTab("quiz");
       FROM_HIST = true;
