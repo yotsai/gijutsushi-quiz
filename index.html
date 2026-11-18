@@ -704,6 +704,10 @@
   .mxb { display: inline-table; border-collapse: collapse; }
   .mxr { display: table-row; }
   .mxc { display: table-cell; padding: .08em .5em; text-align: center; line-height: 1.4; font-variant-numeric: tabular-nums; }
+
+  /* 履歴タブの「日ごとの記録」：分野別の内訳は日付の行の下に小さく */
+  .daily .dparts td { text-align: left; font-size: .74rem; color: var(--ink-3); padding-top: 0; white-space: normal; }
+  .daily td:first-child { text-align: left; }
 </style>
 
 <div class="wrap">
@@ -4172,7 +4176,7 @@ function renderResult() {
   const rh = card.querySelector("#resetHist");
   if (rh) rh.addEventListener("click", function () {
     if (!confirm("これまでの解答履歴をすべて削除します。よろしいですか。")) return;
-    HIST = {}; saveHist(); refreshWeakBtn(); location.reload();
+    HIST = {}; saveHist(); DAILY = {}; saveDaily(); refreshWeakBtn(); location.reload();
   });
   refreshWeakBtn();
   window.scrollTo({ top: 0, behavior: "instant" });
@@ -4203,6 +4207,48 @@ document.addEventListener("keydown", e => {
 /* ---------- 解答履歴（localStorage） ---------- */
 const HKEY = SPFX + "history_v1";
 let HIST = {};
+/* 日ごとの解答記録（2026-11-18から）。{ "2026-11-18": { "基礎 群1": [解答数, 正解数], ... } }。
+   HIST は問題ごとの累計で日付を持たないため、日ごとの集計は別に持つ */
+const DKEY = SPFX + "daily_v1";
+let DAILY = {};
+try { DAILY = JSON.parse(localStorage.getItem(DKEY) || "{}") || {}; } catch (e) { DAILY = {}; }
+const DAY_CATS = ["専門", "基礎 群1", "基礎 群2", "基礎 群3", "基礎 群4", "基礎 群5", "適性"];
+function dayCat(q) {
+  const s = (q && q.q) || "", f = (q && q.f) || "";
+  const m = /^【R\S+ (専門|基礎|適性) (?:Ⅰ-(\d))?/.exec(s);
+  if (m) return m[1] === "基礎" ? "基礎 群" + (m[2] || "5") : m[1];
+  if (/^基礎:/.test(f)) return "基礎 群" + ({ "設計・計画": 1, "情報・論理": 2, "解析": 3, "材料・化学・バイオ": 4 }[f.slice(3)] || 5);
+  if (/^適性/.test(f)) return "適性";
+  return "専門";
+}
+function saveDaily() { try { localStorage.setItem(DKEY, JSON.stringify(DAILY)); } catch (e) {} }
+function recordDaily(q, hit) {
+  const d = ymd(new Date()), c = dayCat(q);
+  DAILY[d] = DAILY[d] || {};
+  const r = DAILY[d][c] || [0, 0];
+  r[0]++; if (hit) r[1]++;
+  DAILY[d][c] = r; saveDaily();
+}
+/* 履歴タブの「日ごとの記録」：直近14日（解いた日だけ） */
+function dailyHtml() {
+  const days = Object.keys(DAILY).sort().reverse().slice(0, 14);
+  if (!days.length) return '<details class="hlist daily" open><summary>日ごとの記録</summary><p class="segnote">11/18から、解いた日ごとに分野別の問題数を記録しています。まだ記録がありません。</p></details>';
+  const WD = "日月火水木金土";
+  let rows = "";
+  days.forEach(function (d) {
+    const r = DAILY[d]; let n = 0, ok = 0; const parts = [];
+    DAY_CATS.concat(Object.keys(r).filter(function (c) { return DAY_CATS.indexOf(c) < 0; })).forEach(function (c) {
+      if (!r[c]) return; n += r[c][0]; ok += r[c][1];
+      parts.push(c + " " + r[c][0] + "問（" + Math.round(r[c][1] / r[c][0] * 100) + "%）");
+    });
+    const t = new Date(d + "T00:00:00");
+    rows += '<tr><td>' + (t.getMonth() + 1) + '/' + t.getDate() + '（' + WD[t.getDay()] + '）</td><td>' + n + '問</td><td>' +
+      Math.round(ok / n * 100) + '%</td></tr><tr class="dparts"><td colspan="3">' + parts.join("・") + '</td></tr>';
+  });
+  return '<details class="hlist daily" open><summary>日ごとの記録（直近14日）</summary>' +
+    '<table class="seg"><thead><tr><th>日付</th><th>解答数</th><th>正答率</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    '<p class="segnote">11/18から記録しています。それより前の日は、問題ごとの累計しか残っていないため表示できません。</p></details>';
+}
 try { HIST = JSON.parse(localStorage.getItem(HKEY) || "{}") || {}; } catch (e) { HIST = {}; }
 /* 問題文を書き直した問題は、古い問題文で保存された記録を新しい問題文へ付け替える */
 const KEY_RENAMES = {
@@ -4228,6 +4274,7 @@ function recordAnswer(q, hit) {
   h.st = hit ? (h.st || 0) + 1 : 0;
   srSchedule(h, Date.now());
   HIST[k] = h; saveHist();
+  recordDaily(q, hit);
   refreshWeakBtn();   // 結果画面まで待たずに「苦手 N問」を更新する
 }
 
@@ -5144,7 +5191,7 @@ function exportStudyData() {
   const nh = Object.keys(HIST).length, nn = Object.keys(NOTES).length;
   if (!nh && !nn) return null;
   const d = { app: "gijutsushi-quiz", kind: "study-data", v: 1,
-              exported: new Date().toISOString(), history: HIST, notes: NOTES, mocks: MOCKS, examDay: ymd(EXAM_DAY) };
+              exported: new Date().toISOString(), history: HIST, notes: NOTES, mocks: MOCKS, daily: DAILY, examDay: ymd(EXAM_DAY) };
   const t = new Date();
   const pad = function (x) { return String(x).padStart(2, "0"); };
   const a = document.createElement("a");
@@ -5196,6 +5243,19 @@ function mergeStudyData(d) {
       cur.sort(function (a, b) { return a.t - b.t; });
     });
     try { localStorage.setItem(MKEY, JSON.stringify(MOCKS)); } catch (e) {}
+  }
+  // 日ごとの記録：同じ日・同じ分野は、解答数の多い方を残す（同じファイルを2回読んでも倍にならない）
+  if (d.daily && typeof d.daily === "object") {
+    Object.keys(d.daily).forEach(function (day) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !d.daily[day] || typeof d.daily[day] !== "object") return;
+      Object.keys(d.daily[day]).forEach(function (c) {
+        const r = d.daily[day][c];
+        if (!Array.isArray(r) || typeof r[0] !== "number" || typeof r[1] !== "number" || r[1] > r[0]) return;
+        DAILY[day] = DAILY[day] || {};
+        if (!DAILY[day][c] || r[0] > DAILY[day][c][0]) DAILY[day][c] = [r[0], r[1]];
+      });
+    });
+    saveDaily();
   }
   saveHist(); saveNotes();
   migrateSR();   // 復習日を持たない古い形式のファイルにも復習日を付ける
@@ -5447,7 +5507,7 @@ function renderHistory() {
       '<div>着手<b>' + answered.length + ' / ' + all.length + '</b></div>' +
       '<div class="warn">苦手<b>' + weak.length + '</b></div>' +
     '</div>' +
-    segTableHtml() +
+    dailyHtml() + segTableHtml() +
     '<details class="hlist"' + (HLIST_OPEN ? " open" : "") + '><summary>問題ごとの一覧を見る（間違えた問題・未回答・ブックマーク）</summary>' +
     '<div class="filters">' +
       '<button class="flt" data-f="miss" aria-pressed="' + (HFILTER === "miss") + '">間違えた問題</button>' +
@@ -5547,7 +5607,7 @@ function renderHistory() {
   const rh2 = p.querySelector("#resetHist2");
   if (rh2) rh2.addEventListener("click", function () {
     if (!confirm("これまでの解答履歴をすべて削除します。よろしいですか。")) return;
-    HIST = {}; saveHist(); refreshWeakBtn(); renderHistory();
+    HIST = {}; saveHist(); DAILY = {}; saveDaily(); refreshWeakBtn(); renderHistory();
   });
 }
 

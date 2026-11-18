@@ -683,3 +683,7 @@
   .mxb { display: inline-table; border-collapse: collapse; }
   .mxr { display: table-row; }
   .mxc { display: table-cell; padding: .08em .5em; text-align: center; line-height: 1.4; font-variant-numeric: tabular-nums; }
+
+  /* 履歴タブの「日ごとの記録」：分野別の内訳は日付の行の下に小さく */
+  .daily .dparts td { text-align: left; font-size: .74rem; color: var(--ink-3); padding-top: 0; white-space: normal; }
+  .daily td:first-child { text-align: left; }
