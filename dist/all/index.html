@@ -3428,7 +3428,7 @@ function render() {
   // 「〜の数はどれか」の選択肢（2個・0個…）は並べ替えずに小さい順に出す（スマホで探しやすく）
   const isCount = q.c.every(function (c) { return /^\s*[0-9０-９]+\s*(個|つ)?\s*$/.test(c); }) &&
     (q.c.some(function (c) { return /(個|つ)\s*$/.test(c); }) || /の数/.test(q.q.split("<br>")[0]));
-  const isPast = /^過去問 /.test(q.f || "");   // 取り込んだ本番の過去問は原本の①〜⑤の順のまま（正答番号と合わせる）
+  const isPast = /^(過去問|○×) /.test(q.f || "");   // 取り込んだ本番の過去問は原本の①〜⑤の順のまま（正答番号と合わせる）
   const order = isPast ? q.c.map(function (_, k) { return k; }) : isCount
     ? q.c.map(function (_, k) { return k; }).sort(function (a, b) { return parseInt(q.c[a].replace(/[０-９]/g, function (d) { return "０１２３４５６７８９".indexOf(d); }), 10) - parseInt(q.c[b].replace(/[０-９]/g, function (d) { return "０１２３４５６７８９".indexOf(d); }), 10); })
     : shuffle(q.c.length, seed);
@@ -4207,7 +4207,7 @@ try { DAILY = JSON.parse(localStorage.getItem(DKEY) || "{}") || {}; } catch (e) 
 const DAY_CATS = ["専門", "基礎 群1", "基礎 群2", "基礎 群3", "基礎 群4", "基礎 群5", "適性"];
 function dayCat(q) {
   const s = (q && q.q) || "", f = (q && q.f) || "";
-  const m = /^【R\S+ (専門|基礎|適性) (?:Ⅰ-(\d))?/.exec(s);
+  const m = /^【(?:○× )?R\S+ (専門|基礎|適性) (?:Ⅰ-(\d))?/.exec(s);
   if (m) return m[1] === "基礎" ? "基礎 群" + (m[2] || "5") : m[1];
   if (/^基礎:/.test(f)) return "基礎 群" + ({ "設計・計画": 1, "情報・論理": 2, "解析": 3, "材料・化学・バイオ": 4 }[f.slice(3)] || 5);
   if (/^適性/.test(f)) return "適性";
@@ -4624,6 +4624,41 @@ function applyImport(d) {
   refreshImportedSet();
   return null;
 }
+/* 過去問の記述を1つずつ○×で判定する問題を作る（2026-11-22）。
+   本番では同じ問題が使い回され、誤りの選択肢だけが別の場所に移ることがある（R8専門 Ⅲ-2・24・26 で去年誤りだった選択肢を選んで失点）。
+   「この問題の答えは〇番」ではなく、記述ごとに正誤を判断できるかを練習する。
+   対象は「適切／不適切なものはどれか」の記述問題だけ（組合せ・数・並べ替え・計算は除く） */
+const CIRC = ["①", "②", "③", "④", "⑤"];
+function oxItems(list) {
+  const out = [];
+  list.forEach(function (q) {
+    const tag = (q.q.match(/^【([^】]*)】/) || [])[1];
+    if (!tag || !Array.isArray(q.c) || q.c.length < 4 || typeof q.a !== "number") return;
+    const stem = q.q.replace(/^【[^】]*】/, "").split("<br>")[0];
+    if (!/(適切|妥当|正しい|誤っている|誤り)(な|の)?もの/.test(stem)) return;
+    if (/組合せ|組み合わせ|の数|順|並べ|値|式|どれだけ|いくら|何/.test(stem)) return;
+    if (!q.c.every(function (c) { return String(c).length >= 15 && !/→|^[○×\s　]+$/.test(c); })) return;
+    const wrongAsked = /不適切|妥当でない|誤っている|誤り/.test(stem);
+    let topic = stem.replace(/(次の|以下の)?(記述|説明)?のうち.*$/, "").replace(/に関する$/, "").trim();
+    if (topic.length > 50) topic = "…" + topic.slice(-45);   // 長い前置き（規格名など）は削り、末尾のテーマを残す
+    const grp = (q.f || "").split(" ")[1] || "";
+    const year = (q.f || "").split(" ")[2] || "";
+    q.c.forEach(function (c, k) {
+      const ok = wrongAsked ? k !== q.a : k === q.a;
+      const item = {
+        f: "○× " + grp + " " + year,
+        q: "【○× " + tag + " " + CIRC[k] + "】" + (topic ? topic + "について" : "") + "<br>" + c + "<br>この記述は正しいか。",
+        c: ["正しい（○）", "誤り（×）"],
+        a: ok ? 0 : 1,
+        n: "<b>この記述は" + (ok ? "正しい（○）" : "誤り（×）") + "</b>。元の問題は【" + tag + "】（" + (wrongAsked ? "不適切" : "適切") + "なものを選ぶ問題・正答は" + CIRC[q.a] + "）。<br>" + (q.n || ""),
+        e: q.e || ""
+      };
+      if (q.img) item.img = q.img;
+      out.push(item);
+    });
+  });
+  return out;
+}
 function refreshImportedSet() {
   const list = importedQuestions();
   SETS.imported = list;
@@ -4634,6 +4669,14 @@ function refreshImportedSet() {
     // 全部入り版では科目ごとの「過去問」ボタンに分ける（f が「過去問 専門 R7」の形）
     btn.hidden = list.length === 0 || (typeof GROUPED !== "undefined" && GROUPED);
   }
+  const ox = oxItems(list);
+  document.querySelectorAll('.set.oxg').forEach(function (b) {
+    const g = b.dataset.set.slice(3);
+    const sub = ox.filter(function (q) { return (q.f || "").split(" ")[1] === g; });
+    SETS[b.dataset.set] = sub;
+    b.textContent = "○× 過去問の記述 " + sub.length + "問";
+    b.hidden = sub.length === 0;
+  });
   document.querySelectorAll('.set.impg').forEach(function (b) {
     const g = b.dataset.set.slice(4);
     const sub = list.filter(function (q) { return (q.f || "").split(" ")[1] === g; });
@@ -4856,6 +4899,8 @@ function showGroup(g) {
     SETS["imp:" + g] = [];
     SET_LABEL["imp:" + g] = g + " 過去問";
     add("set impg", "imp:" + g, "過去問 0問", { hidden: true }, g);
+    SETS["ox:" + g] = []; SET_LABEL["ox:" + g] = g + " 過去問の記述を○×で";
+    add("set oxg", "ox:" + g, "○× 過去問の記述 0問", { hidden: true }, g);
     if (HAS_TOPICS) {
       SETS["imphot:" + g] = []; SET_LABEL["imphot:" + g] = g + " 過去問の頻出";
       add("set imprk", "imphot:" + g, "★ 過去問の頻出 0問", { hidden: true }, g);
