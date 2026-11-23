@@ -20,9 +20,11 @@ for x in d:
     deck = x['deck']; kind = '計画' if deck.startswith('計画') else '用語'
     name = deck.split('：', 1)[-1]
     n = '<b>答え</b>　' + e(x['a'])
-    if x.get('hint'): n += '<br><br><b>使い方</b>　' + e(x['hint'])
+    if x.get('hint'): n += '<br><br><b>答案での使い方</b>　' + e(x['hint'])
     if x.get('src'): n += '<br><br>【出典】' + src_link(x['src'])
-    item = {"f": "二次:" + kind, "q": "【" + e(name) + "】" + e(x['q']),
+    # 役割（課題・解決策・目標など＝答案のどこで使うか）があれば見出しに出す
+    tag = e(name) + ("｜" + e(x['role']) if x.get('role') else "")
+    item = {"f": "二次:" + kind, "q": "【" + tag + "】" + e(x['q']),
             "c": ["思い出せた（○）", "思い出せなかった（×）"], "a": 0, "n": n, "v": "primary", "keep": True}
     (plan if kind == '計画' else term).append(item)
 with open(dst, 'w', encoding='utf-8') as f:
