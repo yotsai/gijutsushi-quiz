@@ -924,8 +924,14 @@ const SPFX = "gq_" + (SUBJECT.storagePrefix || "");   // localStorage キーの�
 /* 一次／二次の切り替え（SUBJECT.modes を持つ版だけ）。二次では「二次」グループのセットだけ、一次ではそれ以外だけを使う。
    回答履歴は問題文がキーなので共通のまま。受験日だけはモードごとに別に保存する */
 const MODES = SUBJECT.modes ? ["一次"].concat(Object.keys(SUBJECT.modes)) : [];
-let MODE = "一次";
-try { if (MODES.indexOf(localStorage.getItem(SPFX + "mode")) >= 0) MODE = localStorage.getItem(SPFX + "mode"); } catch (e) {}
+let MODE = SUBJECT.defaultMode || "一次";
+try {
+  // スイッチを隠している間は、保存した選択を使わず既定のモードで開く（前に一次を選んだ端末が一次に閉じ込められないように）。
+  // URL の ?mode=一次 を付けて開いたときだけ、そのモードで開く
+  const um = new URLSearchParams(location.search).get("mode");
+  if (MODES.indexOf(um) >= 0) MODE = um;
+  else if (!SUBJECT.hideModeSwitch && MODES.indexOf(localStorage.getItem(SPFX + "mode")) >= 0) MODE = localStorage.getItem(SPFX + "mode");
+} catch (e) {}
 if (MODES.length) {
   SUBJECT.sets = SUBJECT.sets.filter(function (d) { return (MODE === "一次") === (!SUBJECT.modes[d.group]); });
   if (MODE !== "一次") Object.assign(SUBJECT, SUBJECT.modes[MODE]);
@@ -3359,6 +3365,7 @@ refreshWeakBtn();
     const tt = document.getElementById("tab-topics");   // 頻出テーマは一次の過去問の分析なので二次では出さない
     if (tt) tt.style.display = "none";
   }
+  if (SUBJECT.hideModeSwitch) return;
   const sw = document.createElement("div");
   sw.className = "modesw";
   sw.setAttribute("role", "tablist");
