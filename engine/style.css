@@ -687,3 +687,8 @@
   /* 履歴タブの「日ごとの記録」：分野別の内訳は日付の行の下に小さく */
   .daily .dparts td { text-align: left; font-size: .74rem; color: var(--ink-3); padding-top: 0; white-space: normal; }
   .daily td:first-child { text-align: left; }
+
+/* 一次／二次の切り替え */
+.modesw { display: inline-flex; gap: 4px; padding: 4px; margin: 0 0 14px; border-radius: 999px; background: rgba(127,127,127,.15); }
+.modesw button { border: 0; background: transparent; color: inherit; font: inherit; font-weight: 700; font-size: 15px; padding: 8px 18px; border-radius: 999px; cursor: pointer; opacity: .7; }
+.modesw button.on { background: #6fc1b0; color: #10302a; opacity: 1; }

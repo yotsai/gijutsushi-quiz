@@ -700,6 +700,11 @@
   /* 履歴タブの「日ごとの記録」：分野別の内訳は日付の行の下に小さく */
   .daily .dparts td { text-align: left; font-size: .74rem; color: var(--ink-3); padding-top: 0; white-space: normal; }
   .daily td:first-child { text-align: left; }
+
+/* 一次／二次の切り替え */
+.modesw { display: inline-flex; gap: 4px; padding: 4px; margin: 0 0 14px; border-radius: 999px; background: rgba(127,127,127,.15); }
+.modesw button { border: 0; background: transparent; color: inherit; font: inherit; font-weight: 700; font-size: 15px; padding: 8px 18px; border-radius: 999px; cursor: pointer; opacity: .7; }
+.modesw button.on { background: #6fc1b0; color: #10302a; opacity: 1; }
 </style>
 
 <div class="wrap">
@@ -1338,6 +1343,19 @@ const SUBJECT_DATA = { KISO1_DATA: KISO1_DATA, KISO2_DATA: KISO2_DATA, KISO3_DAT
 <script>
 /* SUBJECT（科目ごとの設定）と SUBJECT_DATA（問題データの束）は build.js が先に埋め込む */
 const SPFX = "gq_" + (SUBJECT.storagePrefix || "");   // localStorage キーの接頭辞
+/* 一次／二次の切り替え（SUBJECT.modes を持つ版だけ）。二次では「二次」グループのセットだけ、一次ではそれ以外だけを使う。
+   回答履歴は問題文がキーなので共通のまま。受験日だけはモードごとに別に保存する */
+const MODES = SUBJECT.modes ? ["一次"].concat(Object.keys(SUBJECT.modes)) : [];
+let MODE = "一次";
+try { if (MODES.indexOf(localStorage.getItem(SPFX + "mode")) >= 0) MODE = localStorage.getItem(SPFX + "mode"); } catch (e) {}
+if (MODES.length) {
+  SUBJECT.sets = SUBJECT.sets.filter(function (d) { return (MODE === "一次") === (!SUBJECT.modes[d.group]); });
+  if (MODE !== "一次") Object.assign(SUBJECT, SUBJECT.modes[MODE]);
+}
+function setMode(m) {
+  try { localStorage.setItem(SPFX + "mode", m); } catch (e) {}
+  location.reload();
+}
 const HAS_TOPICS = !!SUBJECT.topics;
 const FIELD_WEIGHTS = SUBJECT.fieldWeights || null;
 const DEFAULT_SET = (SUBJECT.sets.filter(function (d) { return d.default; })[0] || SUBJECT.sets[0]).key;
@@ -1722,7 +1740,7 @@ function saveMockScore(log, N) {
 }
 /* ---------- 合格までの道のり（本番日と期日の目安） ---------- */
 /* 受験日はホーム画面から変更でき、この端末に保存する。未設定・壊れた値は既定日にフォールバック */
-const EKEY = SPFX + "exam_day";
+const EKEY = SPFX + (MODE === "一次" ? "" : "mode2_") + "exam_day";
 function pad2(x) { return String(x).padStart(2, "0"); }
 function ymd(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
 function mdLabel(d) { return (d.getMonth() + 1) + "/" + d.getDate(); }
@@ -1791,6 +1809,7 @@ function renderRoadmapTips() {
 function renderRoadmap() {
   const today = todayMid(), p = progressNow(), left = daysLeft();
   if (left < 0) return "";
+  if (MODE !== "一次") return "";   // 道のりの目安は一次（4択・合格13問）向け
   const allDone = p.done >= p.total;
   const st = function (cls, word) { return { c: cls, w: word }; };
   const s1 = allDone ? st("done", "達成") : today > RM_ROUND1 ? st("late", "遅れ") : st("now", "いまここ");
@@ -2662,7 +2681,7 @@ function oxItems(list) {
   return out;
 }
 function refreshImportedSet() {
-  const list = importedQuestions();
+  const list = MODE === "一次" ? importedQuestions() : [];   // 取り込んだ過去問は一次のもの
   SETS.imported = list;
   SETS.all = baseAll().concat(list);
   const btn = document.getElementById("impBtn");
@@ -2987,7 +3006,7 @@ function whyOf(q) {
     const x = TOPIC_BY_CITE[c];
     if (x && (!t || yearsOf(x) > yearsOf(t))) t = x;
   });
-  if (!t && SUBJECT.wasteSet && SETS[SUBJECT.wasteSet].indexOf(q) >= 0 && WASTE_TOPIC[q.f]) t = WASTE_TOPIC[q.f];
+  if (!t && SUBJECT.wasteSet && SETS[SUBJECT.wasteSet] && SETS[SUBJECT.wasteSet].indexOf(q) >= 0 && WASTE_TOPIC[q.f]) t = WASTE_TOPIC[q.f];
   const jm = (q.n || "").match(/〔出題実績:\s*([^〕]*)〕/);
   const jis = jm ? jm[1].split("、").map(function (c) { return c.trim(); }).filter(function (c) { return /^R\d/.test(c); }) : [];
   // 論点単位の記録が薄い分野（適性など）は、分野としての出題年数で頻出を判定する（4年以上＝毎年の過半）
@@ -3748,6 +3767,35 @@ refreshWeakBtn();
     Q.length = 0; RETRY_FROM = -1;   // 初期値のまま「続きから」が出ないように
     goHome();       // 解きかけの回がないときは、道のりと出題範囲を選ぶ画面から始める
   }
+})();
+
+/* ---------- 一次／二次の切り替えスイッチ（ヘッダーの一番上） ---------- */
+(function () {
+  if (!MODES.length) return;
+  const hd = document.querySelector("header");
+  if (!hd) return;
+  if (MODE !== "一次") {
+    document.title = SUBJECT.title;
+    const set = function (sel, v, isHtml) { const el = hd.querySelector(sel); if (el && v) el[isHtml ? "innerHTML" : "textContent"] = v; };
+    set(".eyebrow", SUBJECT.eyebrow); set("h1", SUBJECT.h1); set(".intro", SUBJECT.intro, true);
+    const tt = document.getElementById("tab-topics");   // 頻出テーマは一次の過去問の分析なので二次では出さない
+    if (tt) tt.style.display = "none";
+  }
+  const sw = document.createElement("div");
+  sw.className = "modesw";
+  sw.setAttribute("role", "tablist");
+  sw.setAttribute("aria-label", "試験の切り替え");
+  MODES.forEach(function (m) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = m + "試験";
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", m === MODE ? "true" : "false");
+    if (m === MODE) b.className = "on";
+    b.addEventListener("click", function () { if (m !== MODE) setMode(m); });
+    sw.appendChild(b);
+  });
+  hd.insertBefore(sw, hd.firstChild);
 })();
 </script>
 
