@@ -692,3 +692,5 @@
 .modesw { display: inline-flex; gap: 4px; padding: 4px; margin: 0 0 14px; border-radius: 999px; background: rgba(127,127,127,.15); }
 .modesw button { border: 0; background: transparent; color: inherit; font: inherit; font-weight: 700; font-size: 15px; padding: 8px 18px; border-radius: 999px; cursor: pointer; opacity: .7; }
 .modesw button.on { background: #6fc1b0; color: #10302a; opacity: 1; }
+/* 解説の中の出典リンク（タップしやすい大きさに） */
+.vnote a { color: #6fc1b0; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; display: inline-block; padding: 6px 0; word-break: break-all; }
