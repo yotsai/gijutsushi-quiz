@@ -716,3 +716,4 @@
 .rl.l1 { margin-left: 1.2em; } .rl.l2 { margin-left: 2.4em; } .rl.l3 { margin-left: 3.6em; }
 .rdmark { margin: 6px 0 16px; padding: 10px 16px; border-radius: 999px; border: 1px solid #6fc1b0; background: transparent; color: inherit; font: inherit; font-weight: 700; }
 .city .rdb { font-size: 14px; }
+.rdsec { font-size: 16px; margin: 18px 0 4px; }
