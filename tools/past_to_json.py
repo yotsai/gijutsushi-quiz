@@ -23,7 +23,16 @@ for y in years:
         sec = lambda name: (re.search(r'^## ' + name + r'\s*\n(.*?)(?=^## |\Z)', a, re.S | re.M) or [None, ""])[1].strip() if re.search(r'^## ' + name, a, re.M) else ""
         memo = re.sub(r'^- 事実の出典.*?(?=^- |\Z)', '', sec('欄外メモ'), flags=re.S | re.M).strip()
         ans = sec("答案") or ("## 調べる一次資料\n" + sec("調べる一次資料") if sec("調べる一次資料") else "")
-        items.append({"id": y + " " + k, "kind": KIND(k), "title": title, "q": md2html(q), "sk": md2html(sec('骨子')),
+        qh = md2html(q)
+        # 問題用紙の図を切り出した画像があれば、［図：…］の説明の段落を画像に置き換える（説明は画像の代替テキストに）
+        fig = os.path.join(src, "past", "fig", "%s_%s.png" % (y, k))
+        if os.path.exists(fig):
+            import base64, html as _h
+            uri = "data:image/png;base64," + base64.b64encode(open(fig, "rb").read()).decode()
+            m = re.search(r'<p>(［図：.*?］)</p>', qh, re.S)
+            tag = '<img class="rdfig" src="' + uri + '" alt="' + (_h.escape(re.sub(r'<[^>]+>', '', m.group(1))) if m else "図") + '">'
+            qh = qh.replace(m.group(0), tag) if m else qh + tag
+        items.append({"id": y + " " + k, "kind": KIND(k), "title": title, "q": qh, "sk": md2html(sec('骨子')),
                       "ans": md2html(ans), "memo": md2html(memo)})
 order = {"必須Ⅰ": 0, "選択Ⅱ-2": 1, "選択Ⅲ": 2, "選択Ⅱ-1": 3}
 items.sort(key=lambda x: (-int(x["id"][1:].split()[0]), order[x["kind"]], x["id"]))
