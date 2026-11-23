@@ -3,7 +3,7 @@
 const SUBJECT = {
   id: "all",
   base: "senmon-kankyo",
-  combine: ["senmon-kankyo", "kiso", "tekisei"],
+  combine: ["senmon-kankyo", "kiso", "tekisei", "nijishi"],
   storagePrefix: "",
   title: "技術士一次試験 環境部門クイズ｜基礎・適性・専門",
   description: "技術士第一次試験（環境部門）の基礎科目・適性科目・専門科目をまとめて学べる4択クイズ。令和元年度〜7年度の過去問の出題論点と、白書・環境省統計の数値から作成。",

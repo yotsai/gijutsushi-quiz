@@ -114,6 +114,10 @@
   .why.t3 { background: var(--accent); color: var(--paper); }
   .why.same { background: var(--accent-soft); }
   .why.t1 { border-style: dashed; border-color: var(--rule-strong); color: var(--ink-3); font-weight: 600; }
+  .why.prA { background: var(--accent); color: var(--paper); }
+  .why.prC { border-color: var(--rule-strong); color: var(--ink-2); }
+  .why.prN { border-style: dashed; border-color: var(--rule-strong); color: var(--ink-3); font-weight: 600; }
+  .why.prD { border-color: var(--rule-strong); color: var(--ink-3); background: transparent; font-weight: 600; }
   .whybox {
     margin: .7rem 0 0; padding: .55rem .7rem; background: var(--accent-soft);
     border-left: 3px solid var(--accent); font-size: .82rem; line-height: 1.7; color: var(--ink-2);
@@ -536,8 +540,10 @@
   .tabs {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; margin: 0; gap: 0;
     display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 0;
-    background: color-mix(in srgb, var(--panel) 92%, transparent);
-    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    /* iOSのホーム画面版で、解説が開いて画面の長さが変わると、すりガラス（backdrop-filter）付きの固定ナビが
+       画面の途中に取り残される（2026-11-08 実機で発生）。不透明の背景にし、独立したレイヤーで描かせる */
+    background: var(--panel);
+    -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0);
     border-top: 1px solid var(--rule); padding: .35rem .3rem calc(.35rem + env(safe-area-inset-bottom));
   }
   .tab {
@@ -633,6 +639,9 @@
   .agrps { display: flex; gap: .35rem; margin: .1rem 0 .5rem; flex-wrap: wrap; }
   .agrp { font: inherit; font-size: .8rem; padding: .3rem .8rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.45); background: transparent; color: inherit; cursor: pointer; }
   .agrp[aria-pressed="true"] { background: #fff; color: #0E5049; border-color: #fff; font-weight: 700; }
+  .asrcs { margin-top: -.15rem; }
+  .asrc { font: inherit; font-size: .75rem; padding: .2rem .7rem; border-radius: 6px; border: 1px solid rgba(255,255,255,.35); background: transparent; color: inherit; cursor: pointer; }
+  .asrc[aria-pressed="true"] { background: rgba(255,255,255,.22); border-color: #fff; font-weight: 700; }
   .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; margin-top: .8rem; }
   .tile {
     font: inherit; text-align: left; border: 1px solid var(--rule); border-radius: 14px; background: var(--paper);
@@ -672,6 +681,25 @@
   /* 問題が1問もない科目（準備中）：出題操作を隠して案内だけを出す */
   .empty-note { margin: 1.4rem 0; padding: 1.2rem; border: 1px dashed var(--rule-strong); border-radius: 12px; color: var(--ink-2); text-align: center; font-size: .92rem; }
   body.empty-mode #setsHead, body.empty-mode .sets, body.empty-mode .limits, body.empty-mode .unvwrap, body.empty-mode .unvnote { display: none; }
+
+  /* 行列（問題用紙と同じく、丸かっこで囲んだ縦並び）。app.js の setMxText / mxHtml が組み立てる */
+  .mx {
+    position: relative; display: inline-block; vertical-align: middle;
+    margin: .2em .25em; padding: 0 .5em; white-space: nowrap; font-weight: 400;
+  }
+  .mx::before, .mx::after {
+    content: ""; position: absolute; top: .05em; bottom: .05em; width: .45em;
+    border: 1.5px solid currentColor;
+  }
+  .mx::before { left: 0; border-right: 0; border-radius: .6em 0 0 .6em / 50% 0 0 50%; }
+  .mx::after { right: 0; border-left: 0; border-radius: 0 .6em .6em 0 / 0 50% 50% 0; }
+  .mxb { display: inline-table; border-collapse: collapse; }
+  .mxr { display: table-row; }
+  .mxc { display: table-cell; padding: .08em .5em; text-align: center; line-height: 1.4; font-variant-numeric: tabular-nums; }
+
+  /* 履歴タブの「日ごとの記録」：分野別の内訳は日付の行の下に小さく */
+  .daily .dparts td { text-align: left; font-size: .74rem; color: var(--ink-3); padding-top: 0; white-space: normal; }
+  .daily td:first-child { text-align: left; }
 </style>
 
 <div class="wrap">
@@ -2551,12 +2579,15 @@ const VLABEL = {
   textbook:  "△ 教科書の基本事項（独立した解き直しで正解を確認。規格・一次資料の本文は未確認）",
   knowledge: "△ 教科書的知識にもとづく記述（一次資料は未確認。テキストでの確認を推奨）"
 };
+// 科目ごとに根拠の表示文を差し替えられる（SCR は白書・法令ではなく国際機関・基準設定主体の公開文書）
+if (SUBJECT.vlabel) Object.assign(VLABEL, SUBJECT.vlabel);
 let i = 0, correct = 0, answered = false;
 const log = [];
 const answers = [];
 /* 回の最後に、間違えた問題をもう一度出す（記録はしない）。RETRY_FROM はその開始位置。-1 は未追加 */
 let RETRY_FROM = -1;
 let RESULT_SAVED = false;   // この回の点数を過去問の記録に入れたか（結果画面を開き直しても二重に入れない）
+let PARTIAL = false;        // 途中で「ここまでで採点する」を押した回（解いた問題だけで採点し、残りは採点に含めない）
 /* 履歴の「解く」から始めた回は、ホームではなく履歴に戻れるようにする */
 let FROM_HIST = false;
 function goBack() {
@@ -2572,9 +2603,22 @@ function wrongOriginals() {
   for (let k = 0; k < origCount(); k++) if (answers[k] && !answers[k].hit) out.push(Q[k]);
   return out;
 }
+/* 本番の過去問を通しで解いた回（専門・基礎）では、選ばなかった問題も「もう一度」に入れる。問題番号の順 */
+function retryOriginals() {
+  const ex = examRun(), sk = !!ex && ex.kind !== "適性";
+  const out = [];
+  for (let k = 0; k < origCount(); k++) if (answers[k] ? !answers[k].hit : sk) out.push(Q[k]);
+  return out;
+}
+/* 「もう一度」の k 問目が、最初の回で選ばなかった（答えていない）問題か */
+function retryWasSkipped(k) {
+  if (RETRY_FROM < 0 || k < RETRY_FROM) return false;
+  for (let j = 0; j < RETRY_FROM; j++) if (Q[j] === Q[k]) return !answers[j];
+  return false;
+}
 function appendRetries() {
   if (RETRY_FROM >= 0) return;
-  const w = wrongOriginals();
+  const w = retryOriginals();
   if (!w.length) return;
   RETRY_FROM = Q.length;
   w.forEach(function (q) { Q.push(q); });
@@ -2612,7 +2656,7 @@ function render() {
   // 「〜の数はどれか」の選択肢（2個・0個…）は並べ替えずに小さい順に出す（スマホで探しやすく）
   const isCount = q.c.every(function (c) { return /^\s*[0-9０-９]+\s*(個|つ)?\s*$/.test(c); }) &&
     (q.c.some(function (c) { return /(個|つ)\s*$/.test(c); }) || /の数/.test(q.q.split("<br>")[0]));
-  const isPast = /^過去問 /.test(q.f || "");   // 取り込んだ本番の過去問は原本の①〜⑤の順のまま（正答番号と合わせる）
+  const isPast = /^(過去問|○×) /.test(q.f || "") || q.keep === true;   // 暗記カードの「思い出せた／思い出せなかった」も順番固定   // 取り込んだ本番の過去問は原本の①〜⑤の順のまま（正答番号と合わせる）
   const order = isPast ? q.c.map(function (_, k) { return k; }) : isCount
     ? q.c.map(function (_, k) { return k; }).sort(function (a, b) { return parseInt(q.c[a].replace(/[０-９]/g, function (d) { return "０１２３４５６７８９".indexOf(d); }), 10) - parseInt(q.c[b].replace(/[０-９]/g, function (d) { return "０１２３４５６７８９".indexOf(d); }), 10); })
     : shuffle(q.c.length, seed);
@@ -2640,7 +2684,7 @@ function render() {
         '<button type="button" class="qtool" id="bmTog" aria-pressed="' + bm + '">' + bmLabel(bm) + '</button>' +
         '<button type="button" class="qtool" id="memoTog" aria-expanded="false" aria-controls="memoBox"></button>' +
       '</span></div>' +
-    whyChips(whyOf(q)) +
+    whyChips(whyOf(q), q) +
     '<p class="qt"></p><div class="qimg" hidden></div><p class="qh"></p><div class="choices"></div>' +
     '<div class="memo" id="memoBox" hidden>' +
       '<label for="memoTa">メモ（この端末に自動で保存されます）</label>' +
@@ -2667,7 +2711,7 @@ function render() {
     b.className = "ch";
     b.type = "button";
     b.innerHTML = '<span class="key">' + LETTERS[pos] + '</span><span></span>';
-    b.lastChild.textContent = q.c[origIdx];
+    setMxText(b.lastChild, q.c[origIdx]);
     b.dataset.orig = origIdx;
     b.addEventListener("click", () => choose(card, b, origIdx));
     box.appendChild(b);
@@ -2701,8 +2745,8 @@ function renderStatements(card, q) {
     return /^\s*[（(][ア-コ][）)]/.test(l) ? l.split(/[\s　]+(?=[（(][ア-コ][）)])/) : [l];
   }));
   const isSt = parts.map(function (l) { return /^\s*[（(][ア-コ][）)]/.test(l); });
-  if (isSt.filter(Boolean).length < 2) { qt.textContent = q.q.replace(/<br>/g, "\n"); return; }
-  qt.textContent = parts.filter(function (_, k) { return !isSt[k]; }).join("\n");
+  if (isSt.filter(Boolean).length < 2) { setMxText(qt, q.q.replace(/<br>/g, "\n")); return; }
+  setMxText(qt, parts.filter(function (_, k) { return !isSt[k]; }).join("\n"));
   const box = document.createElement("div");
   box.className = "stl";
   const tally = document.createElement("div");
@@ -2746,6 +2790,7 @@ function navHtml(answeredNow) {
   let label = i + 1 < Q.length ? "次の問題 →" : "結果を見る";
   const ex = examRun();
   if (!answeredNow && ex && ex.kind !== "適性" && !inRetry() && i + 1 < Q.length) label = "この問題は選ばない →";
+  if (selFull()) label = "結果を見る";
   return selCountHtml() + '<div class="navrow one">' +
       (answeredNow
         ? '<button class="btn" id="next">' + label + '</button>'
@@ -2754,9 +2799,14 @@ function navHtml(answeredNow) {
     '<div class="navrow two">' +
       '<button class="btn ghost" id="prev"' + (i > 0 ? '' : ' disabled') + '>← 前の問題</button>' +
       '<button class="btn ghost" id="home">' + (FROM_HIST ? "← 履歴に戻る" : "ホーム") + '</button>' +
-    '</div>';
+    '</div>' +
+    // 通しで解く回（模試）以外は、途中でやめても解いた分だけで採点できる。解答は1問ごとに記録済みなので復習にも入っている
+    (!ex && !inRetry() && log.length > 0 && i + 1 < Q.length
+      ? '<div class="navrow one"><button class="btn ghost" id="stop">ここまでで採点する（解いた ' + log.length + ' 問）</button></div>' : '');
 }
 function wireNav(el) {
+  const st = el.querySelector("#stop");
+  if (st) st.addEventListener("click", function () { PARTIAL = true; i = Q.length; saveSession(); render(); });
   el.querySelector("#prev").addEventListener("click", goPrev);
   el.querySelector("#home").addEventListener("click", goBack);
   const nb = el.querySelector("#next");
@@ -2775,7 +2825,17 @@ function renderNav(card) {
   wireNav(nav);
 }
 function goPrev() { if (i > 0) { i--; saveSession(); render(); } }
-function goNext() { i++; saveSession(); render(); }
+/* 本番の過去問を通しで解く回で、選ぶ数（専門25問・基礎は各群3問）を満たしたか。満たしたら次へで結果画面に進む */
+function selFull() {
+  const ex = examRun();
+  if (!ex || ex.kind === "適性" || inRetry()) return false;
+  const n = origCount();
+  if (ex.kind === "専門") { let c = 0; for (let k = 0; k < n; k++) if (answers[k]) c++; return c >= 25; }
+  const g = {};
+  for (let k = 0; k < n; k++) if (answers[k]) { const x = kisoGroup(Q[k]); g[x] = (g[x] || 0) + 1; }
+  return ["1", "2", "3", "4", "5"].every(x => (g[x] || 0) >= 3);
+}
+function goNext() { if (selFull()) i = Q.length; else i++; saveSession(); render(); }
 /* 科目が resultJudge を持たないときの結果コメント（正答率の下限ごと） */
 const DEFAULT_JUDGE = [
   { min: 90, text: "仕上がっています。間違えた問題だけ見直して、定着させてください。" },
@@ -2882,7 +2942,9 @@ function saveMockScore(log, N) {
   const key = Q[0].f;
   if (r.over) (MOCKS[key] = MOCKS[key] || []).push({ t: Date.now(), over: true, n: log.length, ok: log.filter(function (x) { return x.hit; }).length });
   else (MOCKS[key] = MOCKS[key] || []).push({ t: Date.now(), got: r.got, of: r.of, pass: r.got >= r.need, n: log.length, all: r.all,
-    wrong: log.filter(function (x) { return !x.hit; }).map(function (x) { return (x.q.match(/^【[^】]*】/) || [""])[0]; }) });
+    wrong: log.filter(function (x) { return !x.hit; }).map(function (x) { return (x.q.match(/^【[^】]*】/) || [""])[0]; }),
+    // 選ばなかった（答えていない）問題も、あとで復習できるように番号を残す
+    skip: Q.slice(0, N).filter(function (q, k) { return !answers[k]; }).map(function (q) { return (q.q.match(/^【[^】]*】/) || [""])[0]; }) });
   try { localStorage.setItem(MKEY, JSON.stringify(MOCKS)); } catch (e) {}
 }
 /* ---------- 合格までの道のり（本番日と期日の目安） ---------- */
@@ -3014,7 +3076,7 @@ function wireRoadmap(card) {
       if (a.limit) list = list.slice(0, a.limit);
       Q.length = 0; RETRY_FROM = -1; list.forEach(function (q) { Q.push(q); });
       CUSTOM_LIST = list.slice(); CURRENT_SET = "custom";
-      i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
+      i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; PARTIAL = false; answers.length = 0;
       applySetButtons("__none__");
       document.getElementById("pickinfo").textContent = "";
       saveSession(); render();
@@ -3139,10 +3201,47 @@ function choose(card, btn, origIdx) {
     if (hit) correct++;
     recordAnswer(q, hit);
     log.push({ f: q.f, hit: hit, q: q.q, a: q.c[q.a] });
-  }
+  } else if (retryWasSkipped(i)) recordAnswer(q, hit);   // 選ばなかった問題は初めて解くので記録する（点数は変えない）
   answers[i] = { pick: origIdx, hit: hit };
   saveSession();
   showVerdict(card, btn, hit, true);
+}
+
+/* 行列の表記 [[1,0,0],[a,1,0],[b,c,1]] を、本番の問題用紙と同じ「丸かっこで囲んだ縦並び」で表示する（2026-11-08）。
+   過去問の基礎（Ⅰ-3-1 の逆行列・ヤコビ行列など）だけに出てくる。2行以上の [[…],[…]] だけを行列とみなす */
+function mxRe() { return /\[(\[[^\[\]]*\](?:\s*,\s*\[[^\[\]]*\])+)\]/g; }
+function mxRows(inner) {
+  return inner.match(/\[[^\[\]]*\]/g).map(function (r) { return r.slice(1, -1).split(",").map(function (s) { return s.trim().replace(/-/g, "−"); }); });
+}
+/* セルの「-」は問題用紙と同じ「−」（マイナス記号）にする。
+   文字として表示する場所（問題文・選択肢）用。セルも textContent で入れる */
+function setMxText(el, text) {
+  text = String(text == null ? "" : text);
+  if (!mxRe().test(text)) { el.textContent = text; return; }
+  el.textContent = "";
+  let last = 0;
+  text.replace(mxRe(), function (m, inner, off) {
+    if (off > last) el.appendChild(document.createTextNode(text.slice(last, off)));
+    const wrap = document.createElement("span"); wrap.className = "mx";
+    const body = document.createElement("span"); body.className = "mxb";
+    mxRows(inner).forEach(function (r) {
+      const row = document.createElement("span"); row.className = "mxr";
+      r.forEach(function (c) { const cell = document.createElement("span"); cell.className = "mxc"; cell.textContent = c; row.appendChild(cell); });
+      body.appendChild(row);
+    });
+    wrap.appendChild(body); el.appendChild(wrap);
+    last = off + m.length;
+    return m;
+  });
+  if (last < text.length) el.appendChild(document.createTextNode(text.slice(last)));
+}
+/* HTMLとして組み立てる場所（解説）用 */
+function mxHtml(html) {
+  return String(html).replace(mxRe(), function (m, inner) {
+    return '<span class="mx"><span class="mxb">' + mxRows(inner).map(function (r) {
+      return '<span class="mxr">' + r.map(function (c) { return '<span class="mxc">' + c + '</span>'; }).join("") + '</span>';
+    }).join("") + '</span></span>';
+  });
 }
 
 /* 専門外の人向けの「やさしい解説」。問題文をキーに別ファイル（easy.js の EASY_NOTES）から引く */
@@ -3152,8 +3251,11 @@ function easyHtml(q) {
     .replace(/<b>今の状況<\/b>\s*/g, '<span class="ezh now">今の状況（過去問の当時から変わったか）</span>')
     // 文中に続けて書かれた手順（②③…）と選択肢ごとの理由（・2番：…）は、文の切れ目で改行して読みやすくする
     .replace(/([。）)])\s*(?=[②-⑳])/g, '$1<br>')
-    .replace(/。\s*(?=・[1-5①-⑤]番)/g, '。<br>');
-  return t ? '<div class="easy"><div class="easyh">やさしい解説</div><div class="easyb">' + t + '</div></div><div class="vnoteh">詳しい解説（出典つき）</div>' : "";
+    .replace(/。\s*(?=・[1-5①-⑤]番)/g, '。<br>')
+    // (ア)〜(オ)の記述ごとの判定と、最後のまとめ（「正しいのは…」など）も文の切れ目で改行する
+    .replace(/。\s*(?=[（(][ア-オ][)）])/g, '。<br>')
+    .replace(/。\s*(?=(正しいのは|誤っているのは|不適切なのは|適切なのは|したがって|よって|以上から|以上より))/g, '。<br>');
+  return t ? '<div class="easy"><div class="easyh">やさしい解説</div><div class="easyb">' + mxHtml(t) + '</div></div><div class="vnoteh">詳しい解説（出典つき）</div>' : "";
 }
 function showVerdict(card, btn, hit, focusNext) {
   const q = Q[i];
@@ -3174,10 +3276,10 @@ function showVerdict(card, btn, hit, focusNext) {
   const v = document.createElement("div");
   v.className = "verdict";
   v.innerHTML =
-    '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (inRetry() ? (hit ? "もう一度：正解（記録はしません）" : "もう一度：不正解（明日の復習で出ます）") : hit ? "正解" : unknown ? "わからない（不正解として記録し、復習に回します）" : "不正解") + '</div>' +
+    '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (inRetry() ? (retryWasSkipped(i) ? (hit ? "選ばなかった問題：正解（記録しました）" : "選ばなかった問題：不正解（記録し、復習に回します）") : hit ? "もう一度：正解（記録はしません）" : "もう一度：不正解（明日の復習で出ます）") : hit ? (q.keep ? "思い出せた" : "正解") : unknown ? "わからない（不正解として記録し、復習に回します）" : q.keep ? "思い出せなかった（明日また出ます）" : "不正解") + '</div>' +
     easyHtml(q) +
-    '<p class="vnote">' + q.n + '</p>' +
-    (/^過去問 /.test(q.f || "") && whyOf(q).tier < 2 ? "" : whyBox(q, whyOf(q))) +
+    '<p class="vnote">' + mxHtml(q.n || "") + '</p>' +
+    (q.keep || /^過去問 /.test(q.f || "") && whyOf(q).tier < 2 && !pastRank(q) && !kisoTarget(q) ? "" : whyBox(q, whyOf(q))) +
     (q.v ? '<p class="vsrc' + (q.v === "knowledge" ? " k" : "") + '">' + VLABEL[q.v] + '</p>' : '') +
     '<div class="qnav">' + navHtml(true) + '</div>' +
     '<p class="hintkey">← → キーでも移動できます</p>';
@@ -3199,7 +3301,8 @@ function renderResult() {
   // 選んで解く科目（専門・基礎）で選ばない問題があった回は、本番と同じく選んだ問題だけを採点する
   const exr = examRun();
   const sel = !!exr && exr.kind !== "適性" && log.length < N;
-  const D = sel ? (exr.kind === "専門" ? 25 : 15) : N;
+  const D = sel ? (exr.kind === "専門" ? 25 : 15) : (PARTIAL ? log.length : N);
+  if (PARTIAL) elCount.textContent = log.length + " / " + N;
   const pct = Math.round(correct / D * 100);
   const byField = {};
   log.forEach(r => {
@@ -3230,6 +3333,11 @@ function renderResult() {
     missed.forEach(r => { missedHtml += '<li>' + r.q + ' → <b>' + r.a + '</b></li>'; });
     missedHtml += '</ol></div>';
   }
+  if (sel && skipped.length) {
+    missedHtml += '<div class="missed"><h3>選ばなかった ' + skipped.length + ' 問</h3><ol>';
+    skipped.forEach(q => { missedHtml += '<li>' + String(q.q).split("<br>")[0] + '</li>'; });
+    missedHtml += '</ol><p class="segnote">下の「もう一度」で間違えた問題と一緒に解き直せます（選ばなかった問題の解答は記録します。点数は変わりません）。あとからなら履歴の「通しで解いた記録」からも解けます。</p></div>';
+  }
 
   const card = document.createElement("div");
   card.className = "card result";
@@ -3240,11 +3348,17 @@ function renderResult() {
     (RETRY_FROM >= 0 && Q.length > RETRY_FROM ? (function () {
       let ok = 0, done = 0;
       for (let k = RETRY_FROM; k < Q.length; k++) if (answers[k]) { done++; if (answers[k].hit) ok++; }
-      return done ? '<p class="judge">もう一度：<b>' + ok + ' / ' + done + '</b> 問正解（記録はしていません。採点は最初の解答のままです）。</p>' : '';
+      let sk = 0;
+      for (let k = RETRY_FROM; k < Q.length; k++) if (answers[k] && retryWasSkipped(k)) sk++;
+      return done ? '<p class="judge">もう一度：<b>' + ok + ' / ' + done + '</b> 問正解（' +
+        (sk ? '選ばなかった ' + sk + ' 問の解答は記録しました。間違えた問題の解き直しは記録していません。' : '記録はしていません。') +
+        '採点は最初の解答のままです）。</p>' : '';
     })() : '') +
     (skipped.length ? (sel
       ? '<p class="judge">選ばなかった問題 <b>' + skipped.length + '問</b>（本番と同じく採点に含めていません）。</p>'
-      : '<p class="judge">とばして答えていない問題が <b>' + skipped.length + '問</b> あります（未解答は不正解として計算）。</p>') : '') +
+      : (PARTIAL
+        ? '<p class="judge">途中で終えました。解いていない <b>' + skipped.length + '問</b> は採点に含めていません（解いた問題は記録済みで、苦手・おまかせの復習に入っています）。</p>'
+        : '<p class="judge">とばして答えていない問題が <b>' + skipped.length + '問</b> あります（未解答は不正解として計算）。</p>')) : '') +
     '<table><thead><tr><th>分野</th><th>正答</th><th>率</th></tr></thead><tbody>' + rows + '</tbody></table>' +
     missedHtml +
     (function () {
@@ -3256,8 +3370,9 @@ function renderResult() {
     })() +
     '<div class="actions">' +
       (LIMIT && baseList().length > N ? '<button class="btn" id="nextBatch">次の ' + LIMIT + '問へ</button>' : '') +
-      (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をもう一度（記録しません）</button>' : '') +
-      (skipped.length ? '<button class="btn ghost" id="doSkipped">とばした ' + skipped.length + ' 問を解く</button>' : '') +
+      (sel ? ((missed.length || skipped.length) ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問＋選ばなかった ' + skipped.length + ' 問をもう一度</button>' : '')
+        : (missed.length ? '<button class="btn' + (LIMIT ? ' ghost' : '') + '" id="again">間違えた ' + missed.length + ' 問をもう一度（記録しません）</button>' : '') +
+          (skipped.length ? '<button class="btn ghost" id="doSkipped">' + (PARTIAL ? '残りの ' : 'とばした ') + skipped.length + ' 問を解く</button>' : '')) +
       '<button class="btn ghost" id="home">' + (FROM_HIST ? "← 履歴に戻る" : "ホーム") + '</button>' +
     '</div>';
   stage.replaceChildren(card);
@@ -3273,7 +3388,7 @@ function renderResult() {
   const ds = card.querySelector("#doSkipped");
   if (ds) ds.addEventListener("click", () => {
     Q.length = 0; RETRY_FROM = -1; skipped.forEach(q => Q.push(q));
-    i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0; saveSession(); render();
+    i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; PARTIAL = false; answers.length = 0; saveSession(); render();
   });
   const nb2 = card.querySelector("#nextBatch");
   if (nb2) nb2.addEventListener("click", function () { rebuild(); });
@@ -3281,7 +3396,7 @@ function renderResult() {
   const rh = card.querySelector("#resetHist");
   if (rh) rh.addEventListener("click", function () {
     if (!confirm("これまでの解答履歴をすべて削除します。よろしいですか。")) return;
-    HIST = {}; saveHist(); refreshWeakBtn(); location.reload();
+    HIST = {}; saveHist(); DAILY = {}; saveDaily(); refreshWeakBtn(); location.reload();
   });
   refreshWeakBtn();
   window.scrollTo({ top: 0, behavior: "instant" });
@@ -3312,6 +3427,49 @@ document.addEventListener("keydown", e => {
 /* ---------- 解答履歴（localStorage） ---------- */
 const HKEY = SPFX + "history_v1";
 let HIST = {};
+/* 日ごとの解答記録（2026-11-18から）。{ "2026-11-18": { "基礎 群1": [解答数, 正解数], ... } }。
+   HIST は問題ごとの累計で日付を持たないため、日ごとの集計は別に持つ */
+const DKEY = SPFX + "daily_v1";
+let DAILY = {};
+try { DAILY = JSON.parse(localStorage.getItem(DKEY) || "{}") || {}; } catch (e) { DAILY = {}; }
+const DAY_CATS = ["専門", "基礎 群1", "基礎 群2", "基礎 群3", "基礎 群4", "基礎 群5", "適性", "二次"];
+function dayCat(q) {
+  const s = (q && q.q) || "", f = (q && q.f) || "";
+  const m = /^【(?:○× )?R\S+ (専門|基礎|適性) (?:Ⅰ-(\d))?/.exec(s);
+  if (m) return m[1] === "基礎" ? "基礎 群" + (m[2] || "5") : m[1];
+  if (/^基礎:/.test(f)) return "基礎 群" + ({ "設計・計画": 1, "情報・論理": 2, "解析": 3, "材料・化学・バイオ": 4 }[f.slice(3)] || 5);
+  if (/^適性/.test(f)) return "適性";
+  if (/^二次/.test(f)) return "二次";
+  return "専門";
+}
+function saveDaily() { try { localStorage.setItem(DKEY, JSON.stringify(DAILY)); } catch (e) {} }
+function recordDaily(q, hit) {
+  const d = ymd(new Date()), c = dayCat(q);
+  DAILY[d] = DAILY[d] || {};
+  const r = DAILY[d][c] || [0, 0];
+  r[0]++; if (hit) r[1]++;
+  DAILY[d][c] = r; saveDaily();
+}
+/* 履歴タブの「日ごとの記録」：直近14日（解いた日だけ） */
+function dailyHtml() {
+  const days = Object.keys(DAILY).sort().reverse().slice(0, 14);
+  if (!days.length) return '<details class="hlist daily" open><summary>日ごとの記録</summary><p class="segnote">11/18から、解いた日ごとに分野別の問題数を記録しています。まだ記録がありません。</p></details>';
+  const WD = "日月火水木金土";
+  let rows = "";
+  days.forEach(function (d) {
+    const r = DAILY[d]; let n = 0, ok = 0; const parts = [];
+    DAY_CATS.concat(Object.keys(r).filter(function (c) { return DAY_CATS.indexOf(c) < 0; })).forEach(function (c) {
+      if (!r[c]) return; n += r[c][0]; ok += r[c][1];
+      parts.push(c + " " + r[c][0] + "問（" + Math.round(r[c][1] / r[c][0] * 100) + "%）");
+    });
+    const t = new Date(d + "T00:00:00");
+    rows += '<tr><td>' + (t.getMonth() + 1) + '/' + t.getDate() + '（' + WD[t.getDay()] + '）</td><td>' + n + '問</td><td>' +
+      Math.round(ok / n * 100) + '%</td></tr><tr class="dparts"><td colspan="3">' + parts.join("・") + '</td></tr>';
+  });
+  return '<details class="hlist daily" open><summary>日ごとの記録（直近14日）</summary>' +
+    '<table class="seg"><thead><tr><th>日付</th><th>解答数</th><th>正答率</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    '<p class="segnote">11/18から記録しています。それより前の日は、問題ごとの累計しか残っていないため表示できません。</p></details>';
+}
 try { HIST = JSON.parse(localStorage.getItem(HKEY) || "{}") || {}; } catch (e) { HIST = {}; }
 /* 問題文を書き直した問題は、古い問題文で保存された記録を新しい問題文へ付け替える */
 const KEY_RENAMES = {
@@ -3337,6 +3495,7 @@ function recordAnswer(q, hit) {
   h.st = hit ? (h.st || 0) + 1 : 0;
   srSchedule(h, Date.now());
   HIST[k] = h; saveHist();
+  recordDaily(q, hit);
   refreshWeakBtn();   // 結果画面まで待たずに「苦手 N問」を更新する
 }
 
@@ -3384,7 +3543,16 @@ function mastery(q) {
 /* おまかせの対象科目（全部入り版のみ）。"" はすべて */
 let AUTO_G = "";
 try { AUTO_G = localStorage.getItem(SPFX + "auto_g") || ""; } catch (e) {}
+/* おまかせの出題元。"" は自作問題と過去問、"past" は取り込んだ過去問のうち解いたことがある問題だけ（過去問の復習用） */
+let AUTO_SRC = "";
+try { AUTO_SRC = localStorage.getItem(SPFX + "auto_src") || ""; } catch (e) {}
+function autoPastOnly() { return AUTO_SRC === "past" && (SETS.imported || []).length > 0; }
 function autoBase() {
+  if (autoPastOnly()) {
+    return verifiedOnly((SETS.imported || []).filter(function (q) {
+      return histOf(q) && (!AUTO_G || typeof GROUPED === "undefined" || !GROUPED || (q.f || "").split(" ")[1] === AUTO_G);
+    }));
+  }
   if (!AUTO_G || typeof GROUPED === "undefined" || !GROUPED || GROUPS.indexOf(AUTO_G) < 0) return verifiedOnly(SETS.all);
   // 取り込んだ本番の過去問（f が「過去問 専門 R7」の形）も、選んだ科目の分は復習・出題の対象に入れる
   const imp = (SETS.imported || []).filter(function (q) { return (q.f || "").split(" ")[1] === AUTO_G; });
@@ -3396,7 +3564,13 @@ function autoDueCount() {
 }
 function autoDueHtml() {
   const due = autoDueCount();
-  return due ? '今日の復習 <b>' + due + '</b>問' : '今日の復習はありません。<br>まだ解いていない頻出論点から出します';
+  if (autoPastOnly()) {
+    const n = autoBase().length;
+    if (!n) return '解いた過去問がまだありません。';
+    return (due ? '過去問の今日の復習 <b>' + due + '</b>問' : '過去問の今日の復習はありません。<br>次の復習日が近い順に出します') +
+      '<br><small>解いた過去問 ' + n + '問から出します</small>';
+  }
+  return due ? '今日の復習 <b>' + due + '</b>問' : '今日の復習はありません。<br>' + (SUBJECT.autoNote || 'まだ解いていない頻出論点から出します');
 }
 /* 出題の順：①復習日を過ぎた問題（古い順・習熟度の低い順） ②まだ解いていない問題（頻出論点から） ③期限前でも習熟度の低い問題 */
 function autoPick(n) {
@@ -3427,7 +3601,7 @@ function startAuto() {
   if (!list.length) return;
   Q.length = 0; RETRY_FROM = -1; list.forEach(function (q) { Q.push(q); });
   CUSTOM_LIST = list.slice(); CURRENT_SET = "auto";
-  i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
+  i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; PARTIAL = false; answers.length = 0;
   applySetButtons("auto");
   const pi = document.getElementById("pickinfo");
   if (pi) pi.textContent = "";
@@ -3450,7 +3624,12 @@ function renderAutoBlock() {
         return '<button type="button" class="agrp" data-g="' + g + '" aria-pressed="' + (AUTO_G === g) + '">' + (g || "すべて") + '</button>';
       }).join("") + '</div>'
     : "";
-  return '<div class="auto hero"><h3>おまかせ出題</h3>' + grpChips +
+  const srcChips = (SETS.imported || []).length
+    ? '<div class="agrps asrcs" role="group" aria-label="おまかせの出題元">' + [["", "自作も含める"], ["past", "解いた過去問だけ"]].map(function (o) {
+        return '<button type="button" class="asrc" data-src="' + o[0] + '" aria-pressed="' + (AUTO_SRC === o[0]) + '">' + o[1] + '</button>';
+      }).join("") + '</div>'
+    : "";
+  return '<div class="auto hero"><h3>おまかせ出題</h3>' + grpChips + srcChips +
     '<p class="due">' + autoDueHtml() + '</p>' +
     '<div class="auto-n"><label for="autoN">出題数</label><output id="autoNv">' + AUTO_N + '問</output></div>' +
     '<input type="range" id="autoN" min="5" max="100" step="5" value="' + AUTO_N + '">' +
@@ -3459,7 +3638,8 @@ function renderAutoBlock() {
     '<details><summary>おまかせ出題とは</summary>' +
       '<p>忘れかけたころに復習が回ってくるよう、問題ごとに次の復習日を決めて出題します。' +
       'まちがえた問題は翌日、続けて正解するほど間隔を空けます（2日→4日→7日→14日→30日）。' +
-      '復習日の問題が足りないときは、まだ解いていない頻出論点から出します。</p>' +
+      '復習日の問題が足りないときは、まだ解いていない頻出論点から出します。' +
+      '「解いた過去問だけ」にすると、取り込んだ本番の過去問のうち一度でも解いた問題だけから、復習日の来た順に出します（まだ解いていない過去問は出しません）。</p>' +
       '<div class="mastery">' + MASTERY.map(function (l, k) { return '<span class="m' + k + '">' + l + ' <b>' + m[k] + '</b></span>'; }).join("") + '</div>' +
     '</details>' +
   '</div>';
@@ -3487,6 +3667,16 @@ function wireAutoBlock(card) {
       AUTO_G = b.dataset.g;
       try { localStorage.setItem(SPFX + "auto_g", AUTO_G); } catch (e) {}
       card.querySelectorAll(".agrp").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
+      const d = card.querySelector(".due");
+      if (d) d.innerHTML = autoDueHtml();
+      refreshAutoBtn();
+    });
+  });
+  card.querySelectorAll(".asrc").forEach(function (b) {
+    b.addEventListener("click", function () {
+      AUTO_SRC = b.dataset.src;
+      try { localStorage.setItem(SPFX + "auto_src", AUTO_SRC); } catch (e) {}
+      card.querySelectorAll(".asrc").forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
       const d = card.querySelector(".due");
       if (d) d.innerHTML = autoDueHtml();
       refreshAutoBtn();
@@ -3663,6 +3853,41 @@ function applyImport(d) {
   refreshImportedSet();
   return null;
 }
+/* 過去問の記述を1つずつ○×で判定する問題を作る（2026-11-22）。
+   本番では同じ問題が使い回され、誤りの選択肢だけが別の場所に移ることがある（R8専門 Ⅲ-2・24・26 で去年誤りだった選択肢を選んで失点）。
+   「この問題の答えは〇番」ではなく、記述ごとに正誤を判断できるかを練習する。
+   対象は「適切／不適切なものはどれか」の記述問題だけ（組合せ・数・並べ替え・計算は除く） */
+const CIRC = ["①", "②", "③", "④", "⑤"];
+function oxItems(list) {
+  const out = [];
+  list.forEach(function (q) {
+    const tag = (q.q.match(/^【([^】]*)】/) || [])[1];
+    if (!tag || !Array.isArray(q.c) || q.c.length < 4 || typeof q.a !== "number") return;
+    const stem = q.q.replace(/^【[^】]*】/, "").split("<br>")[0];
+    if (!/(適切|妥当|正しい|誤っている|誤り)(な|の)?もの/.test(stem)) return;
+    if (/組合せ|組み合わせ|の数|順|並べ|値|式|どれだけ|いくら|何/.test(stem)) return;
+    if (!q.c.every(function (c) { return String(c).length >= 15 && !/→|^[○×\s　]+$/.test(c); })) return;
+    const wrongAsked = /不適切|妥当でない|誤っている|誤り/.test(stem);
+    let topic = stem.replace(/(次の|以下の)?(記述|説明)?のうち.*$/, "").replace(/に関する$/, "").trim();
+    if (topic.length > 50) topic = "…" + topic.slice(-45);   // 長い前置き（規格名など）は削り、末尾のテーマを残す
+    const grp = (q.f || "").split(" ")[1] || "";
+    const year = (q.f || "").split(" ")[2] || "";
+    q.c.forEach(function (c, k) {
+      const ok = wrongAsked ? k !== q.a : k === q.a;
+      const item = {
+        f: "○× " + grp + " " + year,
+        q: "【○× " + tag + " " + CIRC[k] + "】" + (topic ? topic + "について" : "") + "<br>" + c + "<br>この記述は正しいか。",
+        c: ["正しい（○）", "誤り（×）"],
+        a: ok ? 0 : 1,
+        n: "<b>この記述は" + (ok ? "正しい（○）" : "誤り（×）") + "</b>。元の問題は【" + tag + "】（" + (wrongAsked ? "不適切" : "適切") + "なものを選ぶ問題・正答は" + CIRC[q.a] + "）。<br>" + (q.n || ""),
+        e: q.e || ""
+      };
+      if (q.img) item.img = q.img;
+      out.push(item);
+    });
+  });
+  return out;
+}
 function refreshImportedSet() {
   const list = importedQuestions();
   SETS.imported = list;
@@ -3673,11 +3898,35 @@ function refreshImportedSet() {
     // 全部入り版では科目ごとの「過去問」ボタンに分ける（f が「過去問 専門 R7」の形）
     btn.hidden = list.length === 0 || (typeof GROUPED !== "undefined" && GROUPED);
   }
+  const ox = oxItems(list);
+  document.querySelectorAll('.set.oxg').forEach(function (b) {
+    const g = b.dataset.set.slice(3);
+    const sub = ox.filter(function (q) { return (q.f || "").split(" ")[1] === g; });
+    SETS[b.dataset.set] = sub;
+    b.textContent = "○× 過去問の記述 " + sub.length + "問";
+    b.hidden = sub.length === 0;
+  });
   document.querySelectorAll('.set.impg').forEach(function (b) {
     const g = b.dataset.set.slice(4);
     const sub = list.filter(function (q) { return (q.f || "").split(" ")[1] === g; });
     SETS[b.dataset.set] = sub;
     b.textContent = "過去問 " + sub.length + "問";
+    b.hidden = sub.length === 0;
+  });
+  // 重要度で分けた過去問（専門のみ）：頻出＝最頻出＋頻出（3年以上出た論点）、捨て候補＝R1〜R5の単発
+  document.querySelectorAll('.set.imprk').forEach(function (b) {
+    const hot = b.dataset.set.indexOf("imphot:") === 0;
+    const g = b.dataset.set.slice(hot ? 7 : 8);
+    const sub = list.filter(function (q) {
+      if ((q.f || "").split(" ")[1] !== g) return false;
+      if (kisoTarget(q)) return hot;
+      const r = pastRank(q);
+      return r && (hot ? (r.k === "A" || r.k === "B") : r.k === "D");
+    });
+    SETS[b.dataset.set] = sub;
+    const kiso = sub.length && kisoTarget(sub[0]);
+    if (kiso) SET_LABEL[b.dataset.set] = g + " 過去問の狙い目";
+    b.textContent = (hot ? (kiso ? "★ 過去問の狙い目 " : "★ 過去問の頻出 ") : "過去問の捨て候補 ") + sub.length + "問";
     b.hidden = sub.length === 0;
   });
   refreshWeakBtn();
@@ -3745,7 +3994,7 @@ function rebuild() {
   const picked = pickQuestions(baseList());
   if (!picked.length) return false;
   Q.length = 0; RETRY_FROM = -1; picked.forEach(function (q) { Q.push(q); });
-  i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
+  i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; PARTIAL = false; answers.length = 0;
   const host = document.getElementById("resumeHost");
   if (host) host.innerHTML = "";
   clearSession();
@@ -3807,7 +4056,7 @@ function showResume(n, total) {
   host.innerHTML = '<div class="resume">前回の続き（<b>' + (n + 1) + ' / ' + total +
     '問目</b>）から再開しました<button id="restart">最初から解き直す</button></div>';
   host.querySelector("#restart").addEventListener("click", function () {
-    i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
+    i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; PARTIAL = false; answers.length = 0;
     clearSession(); host.innerHTML = ""; render();
   });
 }
@@ -3879,6 +4128,14 @@ function showGroup(g) {
     SETS["imp:" + g] = [];
     SET_LABEL["imp:" + g] = g + " 過去問";
     add("set impg", "imp:" + g, "過去問 0問", { hidden: true }, g);
+    SETS["ox:" + g] = []; SET_LABEL["ox:" + g] = g + " 過去問の記述を○×で";
+    add("set oxg", "ox:" + g, "○× 過去問の記述 0問", { hidden: true }, g);
+    if (HAS_TOPICS) {
+      SETS["imphot:" + g] = []; SET_LABEL["imphot:" + g] = g + " 過去問の頻出";
+      add("set imprk", "imphot:" + g, "★ 過去問の頻出 0問", { hidden: true }, g);
+      SETS["impdrop:" + g] = []; SET_LABEL["impdrop:" + g] = g + " 過去問の捨て候補";
+      add("set imprk", "impdrop:" + g, "過去問の捨て候補 0問", { hidden: true }, g);
+    }
   });
   else {
     if (multi) add("set", "all", (SUBJECT.allSetLabel || "まとめて") + " 全問");
@@ -3998,7 +4255,84 @@ function whyOf(q) {
     b.hidden = !list.length;
   });
 })();
-function whyChips(w) {
+/* 取り込んだ専門の過去問の「重要度」。同じ論点が過去7年で何年出たか（topics.js）で4段階に分ける。
+   本番の専門は35問から25問を選んで解くので、10問は捨ててよい。1回しか出ていない論点が「捨て候補」。
+   ただし R6・R7 の単発は、繰り返すかを確かめる年数がまだ無いので「新しい論点」として分ける */
+const PAST_RANKS = {
+  A: { label: "最頻出", note: "同じ論点が過去7年で5回以上出ています。毎年のように出るので、必ず取る問題です。" },
+  B: { label: "頻出", note: "同じ論点が過去7年で3〜4回出ています。2年に1回は出るので、覚えておく価値が高い問題です。" },
+  C: { label: "ときどき", note: "同じ論点が過去7年で2回出ています。頻出を固めたあとに押さえる問題です。" },
+  N: { label: "新しい論点", note: "最近の年度（R6・R7）に初めて出た論点です。繰り返し出るかはまだ分かりません。頻出を固めたあと、余力で押さえる問題です。" },
+  D: { label: "捨て候補", note: "過去7年で1回しか出ていない論点です（出たあと2年以上、同じ論点は出ていません）。覚える優先度はいちばん低い問題です。本番の専門は35問から25問を選ぶので、10問は飛ばせます。飛ばすのはこの種の単発の問題からにします。ただし最近は単発の問題が年に15問前後あり、全部は飛ばせません。単発の問題でも、消去法で絞れるものは解きます。" }
+};
+function pastRank(q) {
+  if (!HAS_TOPICS || !/^過去問 専門 R\d/.test(q.f || "")) return null;
+  const w = whyOf(q);
+  const y = w.tier >= 2 ? w.years : 1;
+  const k = y >= 5 ? "A" : y >= 3 ? "B" : y === 2 ? "C" : /R[67]$/.test(q.f) ? "N" : "D";
+  return { k: k, years: y, label: PAST_RANKS[k].label, note: PAST_RANKS[k].note };
+}
+/* 基礎の各群で、毎年同じ型が繰り返し出ている「狙い目」の過去問（第5群の科学史は年号の暗記が要るので入れない）。
+   各群6問から3問を選ぶので、苦手な群でもこの型だけ取りにいけばよい。キーは問題番号（本文は持たない） */
+const KISO_TYPES = {
+  ud: { label: "ユニバーサルデザイン", note: "7原則（誰でも公平に使える・使い方の自由度が高い・簡単で直感的・必要な情報がすぐ分かる・うっかりミスが危険につながらない・体への負担が少ない・使いやすい大きさと空間）を押さえれば解ける型です。特定の人だけに向けた記述が誤りになりやすい問題です。" },
+  rel: { label: "信頼度・稼働率の計算", note: "直列は信頼度のかけ算（0.9×0.8）、並列は 1−（壊れる確率のかけ算）（1−0.1×0.2）。稼働率＝MTBF÷（MTBF＋MTTR）。2/3多数決は「3個とも正常」と「ちょうど2個が正常」の確率を足します。故障の木（FTA）は故障の確率で計算し、ANDゲートは確率のかけ算（0.1×0.1）、ORゲートは 1−（起きない確率のかけ算）（1−0.9×0.9）です。" },
+  lp: { label: "利益最大の生産計画", note: "原料などの制約を式にして、条件を満たす範囲の角（直線どうしの交点や軸との交点）で利益を計算し、最大のものを選ぶ型です。" },
+  safe: { label: "安全率と期待損失", note: "期待損失＝損傷が起きる確率×損失額。安全率を上げると製造費は増え、損傷の確率は減ります。その合計が最小になる安全率を求める型で、R1とR4はほぼ同じ問題です。選択肢の値を式に入れて比べても解けます。" },
+  pdca: { label: "PDCA・PERT", note: "PDCAは Plan→Do→Check→Act の順に回します。PERTは作業の前後関係を矢印でつなぎ、いちばん時間のかかる経路（クリティカルパス）が全体の工期を決めます。" },
+  draw: { label: "製図法", note: "JISの製図の知識の型です。日本の機械製図は第三角法が基本、かくれ線は破線、中心線は細い一点鎖線、を押さえます。" },
+  env: { label: "環境（気候変動・プラ・生物多様性・廃棄物・大気）", note: "第5群の前半2問は毎年、環境の問題です。専門科目の勉強がそのまま使えるので、第5群はまずここから取ります。" },
+  risk: { label: "科学技術とリスク", note: "リスク評価（リスクの大きさを科学的に見積もる）とリスク管理（どう対処するかを決める）は別のもの、リスクコミュニケーションは関係者どうしの双方向の意見交換、を押さえれば常識で解ける型です。" },
+  sec: { label: "情報セキュリティ", note: "毎年1〜2問出る型です。技術より常識で解ける問題が多く、「〜だけで十分」「〜すれば必ず安全」と言い切る選択肢を疑います。" },
+  calc: { label: "伝送時間・容量の計算", note: "計算式が問題文に書いてあり、数字を入れるだけの型です。注意するのは単位の換算だけです（1バイト＝8ビット、k＝1000）。" },
+  set: { label: "集合の要素数", note: "ベン図を描いて数える型です。A∪Bの要素数＝Aの数＋Bの数−A∩Bの数。直積の要素数は各集合の要素数のかけ算です。" },
+  num: { label: "数値解析の精度・誤差", note: "知識の型で、毎年ほぼ同じ考え方が問われます。刻み（メッシュや時間刻み）を細かくする、高次の要素や公式を使う、は精度が上がる側です。" },
+  grad: { label: "最急勾配・逆行列", note: "公式1つで解ける型です。最急勾配の大きさは √((∂f/∂x)²＋(∂f/∂y)²) に点の座標を入れます。逆行列は、元の行列と掛けて単位行列になる選択肢を選びます（選択肢を掛けて確かめれば解けます）。" },
+  bar: { label: "棒の伸び・応力", note: "フックの法則の型です。応力＝力÷断面積、ひずみ＝応力÷縦弾性係数、伸び＝ひずみ×長さ。mm²とm²、kNとNの換算で間違えやすい問題です。" },
+  spring: { label: "ばね・合成抵抗", note: "直列と並列の型です。ばねは並列で k1＋k2、直列で 1÷(1/k1＋1/k2)。抵抗は逆で、直列で R1＋R2、並列で 1÷(1/R1＋1/R2)。固有振動数は √(k/m) に比例します。合成抵抗はR5〜R7で、直列・並列だけでは解けない対称な回路が続きました。左右（上下）対称な回路では、同じ電位になる2点を結ぶ線に電流が流れないので、その線を消すと直列・並列に分けられます。通り道が多く短いほど抵抗は小さくなります。" },
+  sho: { label: "ばねの伸びとエネルギー", note: "つり下げたばねは、質点が静止した時点ですでに mg/k だけ伸びています（重さ mg とばねの力 kx がつり合うため）。振動の最下点の伸びは「mg/k ＋ 振幅a」、ばねに蓄えられるエネルギーは (1/2)×k×（伸び）²。振幅aだけを伸びと考えるのがひっかけです。" },
+  ox: { label: "酸化数・酸化還元", note: "酸化数の型です。化合物全体で0、酸素は−2、水素は＋1として、残りの原子の値を計算します。" },
+  bio: { label: "DNA・アミノ酸・タンパク質", note: "第4群の後半2問は毎年バイオです。DNAは A と T、G と C が対になる、塩基3つで1つのアミノ酸を指定する、PCRは熱変性→アニーリング→伸長の繰り返し、を押さえれば解ける問題が多い型です。" }
+};
+const KISO_TARGET = {};
+(function () {
+  const m = {
+    ud: ["R2 Ⅰ-1-1", "R3 Ⅰ-1-1", "R6 Ⅰ-1-1"],
+    rel: ["R1 Ⅰ-1-3", "R3 Ⅰ-1-2", "R3 Ⅰ-1-4", "R2 Ⅰ-1-6", "R5 Ⅰ-1-4"],
+    lp: ["R2 Ⅰ-1-4", "R6 Ⅰ-1-5"],
+    safe: ["R1 Ⅰ-1-5", "R4 Ⅰ-1-4"],
+    pdca: ["R1 Ⅰ-1-4", "R3 Ⅰ-1-3", "R7 Ⅰ-1-2"],
+    draw: ["R2 Ⅰ-1-5", "R3 Ⅰ-1-6"],
+    env: [].concat.apply([], ["R1", "R2", "R3", "R4", "R5", "R6", "R7"].map(function (y) { return [y + " Ⅰ-5-1", y + " Ⅰ-5-2"]; })),
+    risk: ["R1 Ⅰ-5-6", "R4 Ⅰ-5-5"],
+    sec: ["R1 Ⅰ-2-1", "R3 Ⅰ-2-1", "R4 Ⅰ-2-1", "R5 Ⅰ-2-1", "R2 Ⅰ-2-3", "R7 Ⅰ-2-4", "R6 Ⅰ-2-6"],
+    calc: ["R1 Ⅰ-2-3", "R3 Ⅰ-2-3", "R7 Ⅰ-2-5"],
+    set: ["R1 Ⅰ-2-6", "R4 Ⅰ-2-2", "R5 Ⅰ-2-6", "R7 Ⅰ-2-1"],
+    num: ["R1 Ⅰ-3-3", "R2 Ⅰ-3-3", "R4 Ⅰ-3-3", "R5 Ⅰ-3-3"],
+    grad: ["R2 Ⅰ-3-2", "R7 Ⅰ-3-2", "R5 Ⅰ-3-1", "R7 Ⅰ-3-1"],
+    bar: ["R3 Ⅰ-3-4", "R5 Ⅰ-3-4", "R7 Ⅰ-3-4"],
+    spring: ["R2 Ⅰ-3-5", "R6 Ⅰ-3-5", "R7 Ⅰ-3-5", "R5 Ⅰ-3-6", "R6 Ⅰ-3-6"],
+    sho: ["R3 Ⅰ-3-5"],
+    ox: ["R3 Ⅰ-4-2", "R4 Ⅰ-4-2", "R7 Ⅰ-4-1"],
+    bio: [].concat.apply([], ["R1", "R2", "R3", "R4", "R5", "R6", "R7"].map(function (y) { return [y + " Ⅰ-4-5", y + " Ⅰ-4-6"]; }))
+  };
+  Object.keys(m).forEach(function (k) { m[k].forEach(function (id) { KISO_TARGET[id.replace(" ", " 基礎 ")] = k; }); });
+})();
+function kisoTarget(q) {
+  if (!/^過去問 基礎 /.test(q.f || "")) return null;
+  const id = ((q.q || "").match(/^【(R\d 基礎 Ⅰ-\d-\d)】/) || [])[1];
+  const k = id && KISO_TARGET[id];
+  return k ? KISO_TYPES[k] : null;
+}
+function whyChips(w, q) {
+  const kt = q && kisoTarget(q);
+  if (kt) return '<div class="whys"><span class="why prA">★ 狙い目：' + kt.label + '</span></div>';
+  const r = q && pastRank(q);
+  if (r) {
+    return '<div class="whys"><span class="why pr' + r.k + '">' + (r.k === "D" ? "" : r.k === "N" ? "" : "★ ") + r.label +
+      (r.k === "N" ? "（R6・R7で初出）" : "・7年で" + r.years + "回") + '</span>' +
+      (w.same ? '<span class="why same">選択肢まで同じ再出題</span>' : '') + '</div>';
+  }
   let s = "";
   if (w.tier >= 2) s += '<span class="why t' + w.tier + '">★ ' + w.label + '</span>';
   if (w.same) s += '<span class="why same">選択肢まで同じ再出題</span>';
@@ -4006,6 +4340,14 @@ function whyChips(w) {
   return s ? '<div class="whys">' + s + '</div>' : "";
 }
 function whyBox(q, w) {
+  if (SUBJECT.noWhyBox) return "";   // 過去問の出題実績を持たない科目（SCR など）は「位置づけ」を出さない
+  const kt = kisoTarget(q);
+  if (kt) return '<div class="whybox prA"><span class="wh">狙い目：' + kt.label + '</span>' + kt.note + '</div>';
+  const pr = pastRank(q);
+  if (pr) {
+    return '<div class="whybox pr' + pr.k + '"><span class="wh">重要度：' + pr.label + '</span>' + pr.note +
+      (w.tier >= 2 ? '（' + w.topic.cites.join("・") + '）' : '') + '</div>';
+  }
   let body;
   if (w.tier >= 2) {
     body = '過去7年で<b>' + w.years + '回</b>出題（' + w.topic.cites.join("・") + '）。' +
@@ -4117,7 +4459,7 @@ function exportStudyData() {
   const nh = Object.keys(HIST).length, nn = Object.keys(NOTES).length;
   if (!nh && !nn) return null;
   const d = { app: "gijutsushi-quiz", kind: "study-data", v: 1,
-              exported: new Date().toISOString(), history: HIST, notes: NOTES, mocks: MOCKS, examDay: ymd(EXAM_DAY) };
+              exported: new Date().toISOString(), history: HIST, notes: NOTES, mocks: MOCKS, daily: DAILY, examDay: ymd(EXAM_DAY) };
   const t = new Date();
   const pad = function (x) { return String(x).padStart(2, "0"); };
   const a = document.createElement("a");
@@ -4164,11 +4506,24 @@ function mergeStudyData(d) {
       d.mocks[k].forEach(function (r) {
         if (!r || typeof r.t !== "number" || typeof r.got !== "number" || typeof r.of !== "number") return;
         if (cur.some(function (x) { return x.t === r.t; })) return;
-        cur.push({ t: r.t, got: r.got, of: r.of, pass: !!r.pass, n: r.n, all: !!r.all, wrong: Array.isArray(r.wrong) ? r.wrong.filter(function (x) { return typeof x === "string"; }) : undefined, restored: !!r.restored });
+        cur.push({ t: r.t, got: r.got, of: r.of, pass: !!r.pass, n: r.n, all: !!r.all, wrong: Array.isArray(r.wrong) ? r.wrong.filter(function (x) { return typeof x === "string"; }) : undefined, skip: Array.isArray(r.skip) ? r.skip.filter(function (x) { return typeof x === "string"; }) : undefined, restored: !!r.restored });
       });
       cur.sort(function (a, b) { return a.t - b.t; });
     });
     try { localStorage.setItem(MKEY, JSON.stringify(MOCKS)); } catch (e) {}
+  }
+  // 日ごとの記録：同じ日・同じ分野は、解答数の多い方を残す（同じファイルを2回読んでも倍にならない）
+  if (d.daily && typeof d.daily === "object") {
+    Object.keys(d.daily).forEach(function (day) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !d.daily[day] || typeof d.daily[day] !== "object") return;
+      Object.keys(d.daily[day]).forEach(function (c) {
+        const r = d.daily[day][c];
+        if (!Array.isArray(r) || typeof r[0] !== "number" || typeof r[1] !== "number" || r[1] > r[0]) return;
+        DAILY[day] = DAILY[day] || {};
+        if (!DAILY[day][c] || r[0] > DAILY[day][c][0]) DAILY[day][c] = [r[0], r[1]];
+      });
+    });
+    saveDaily();
   }
   saveHist(); saveNotes();
   migrateSR();   // 復習日を持たない古い形式のファイルにも復習日を付ける
@@ -4354,9 +4709,12 @@ function segTableHtml() {
       allRec.map(function (r) {
         const d = new Date(r.x.t);
         // その回に間違えた問題だけを、あとから解き直せるボタン（記録を始めた後の回だけ）
-        const ws = new Set(r.x.wrong || []);
+        // 選ばなかった問題（r.x.skip）も一緒に解き直す。問題番号の順に並べる
+        const ws = new Set((r.x.wrong || []).concat(r.x.skip || []));
+        const nw = (r.x.wrong || []).length, ns = (r.x.skip || []).length;
         const wl = (sortedBy[r.k] || []).filter(function (q) { return ws.has((q.q.match(/^【[^】]*】/) || [""])[0]); });
-        const wbtn = wl.length ? '<button class="segrun mock" data-mock="' + (SEG_MOCK.push(wl) - 1) + '">間違えた' + wl.length + '問</button>' : '';
+        const wbtn = wl.length ? '<button class="segrun mock" data-mock="' + (SEG_MOCK.push(wl) - 1) + '">' +
+          (ns ? '間違い' + nw + '・選ばず' + ns : '間違えた' + wl.length + '問') + '</button>' : '';
         return '<tr><td>' + (d.getMonth() + 1) + '/' + d.getDate() + '</td><td>' + r.k.replace(/^過去問 /, "") + '</td><td>' + (r.x.over ? '規定数超過<span class="mocksel">（' + r.x.n + '問解答・' + r.x.ok + '問正解）</span>' : r.x.got + '/' + r.x.of + (r.x.restored ? '<span class="mocksel">（復元）</span>' : r.x.all ? "" : '<span class="mocksel">（' + r.x.n + '問選択）</span>')) + '</td><td class="rate ' + (r.x.pass ? "good" : "bad") + '">' + (r.x.over ? "超過" : r.x.pass ? "合格" : "不合格") + '</td><td>' + wbtn + '</td></tr>';
       }).join("") + '</tbody></table></details>' : "";
     mock = '<h3 class="segh">本番の過去問（取り込んだ分）</h3>' +
@@ -4417,7 +4775,7 @@ function renderHistory() {
       '<div>着手<b>' + answered.length + ' / ' + all.length + '</b></div>' +
       '<div class="warn">苦手<b>' + weak.length + '</b></div>' +
     '</div>' +
-    segTableHtml() +
+    dailyHtml() + segTableHtml() +
     '<details class="hlist"' + (HLIST_OPEN ? " open" : "") + '><summary>問題ごとの一覧を見る（間違えた問題・未回答・ブックマーク）</summary>' +
     '<div class="filters">' +
       '<button class="flt" data-f="miss" aria-pressed="' + (HFILTER === "miss") + '">間違えた問題</button>' +
@@ -4466,7 +4824,7 @@ function renderHistory() {
       if (!list || !list.length) return;
       Q.length = 0; RETRY_FROM = -1; list.forEach(function (q) { Q.push(q); });
       CUSTOM_LIST = list.slice(); CURRENT_SET = "custom";
-      i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; answers.length = 0;
+      i = 0; correct = 0; log.length = 0; RESULT_SAVED = false; PARTIAL = false; answers.length = 0;
       document.querySelectorAll(".set").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
       selectTab("quiz");
       FROM_HIST = true;
@@ -4517,7 +4875,7 @@ function renderHistory() {
   const rh2 = p.querySelector("#resetHist2");
   if (rh2) rh2.addEventListener("click", function () {
     if (!confirm("これまでの解答履歴をすべて削除します。よろしいですか。")) return;
-    HIST = {}; saveHist(); refreshWeakBtn(); renderHistory();
+    HIST = {}; saveHist(); DAILY = {}; saveDaily(); refreshWeakBtn(); renderHistory();
   });
 }
 

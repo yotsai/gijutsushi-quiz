@@ -91,7 +91,7 @@ function render() {
   // 「〜の数はどれか」の選択肢（2個・0個…）は並べ替えずに小さい順に出す（スマホで探しやすく）
   const isCount = q.c.every(function (c) { return /^\s*[0-9０-９]+\s*(個|つ)?\s*$/.test(c); }) &&
     (q.c.some(function (c) { return /(個|つ)\s*$/.test(c); }) || /の数/.test(q.q.split("<br>")[0]));
-  const isPast = /^(過去問|○×) /.test(q.f || "");   // 取り込んだ本番の過去問は原本の①〜⑤の順のまま（正答番号と合わせる）
+  const isPast = /^(過去問|○×) /.test(q.f || "") || q.keep === true;   // 暗記カードの「思い出せた／思い出せなかった」も順番固定   // 取り込んだ本番の過去問は原本の①〜⑤の順のまま（正答番号と合わせる）
   const order = isPast ? q.c.map(function (_, k) { return k; }) : isCount
     ? q.c.map(function (_, k) { return k; }).sort(function (a, b) { return parseInt(q.c[a].replace(/[０-９]/g, function (d) { return "０１２３４５６７８９".indexOf(d); }), 10) - parseInt(q.c[b].replace(/[０-９]/g, function (d) { return "０１２３４５６７８９".indexOf(d); }), 10); })
     : shuffle(q.c.length, seed);
@@ -711,10 +711,10 @@ function showVerdict(card, btn, hit, focusNext) {
   const v = document.createElement("div");
   v.className = "verdict";
   v.innerHTML =
-    '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (inRetry() ? (retryWasSkipped(i) ? (hit ? "選ばなかった問題：正解（記録しました）" : "選ばなかった問題：不正解（記録し、復習に回します）") : hit ? "もう一度：正解（記録はしません）" : "もう一度：不正解（明日の復習で出ます）") : hit ? "正解" : unknown ? "わからない（不正解として記録し、復習に回します）" : "不正解") + '</div>' +
+    '<div class="vtag ' + (hit ? "ok" : "ng") + '">' + (inRetry() ? (retryWasSkipped(i) ? (hit ? "選ばなかった問題：正解（記録しました）" : "選ばなかった問題：不正解（記録し、復習に回します）") : hit ? "もう一度：正解（記録はしません）" : "もう一度：不正解（明日の復習で出ます）") : hit ? (q.keep ? "思い出せた" : "正解") : unknown ? "わからない（不正解として記録し、復習に回します）" : q.keep ? "思い出せなかった（明日また出ます）" : "不正解") + '</div>' +
     easyHtml(q) +
     '<p class="vnote">' + mxHtml(q.n || "") + '</p>' +
-    (/^過去問 /.test(q.f || "") && whyOf(q).tier < 2 && !pastRank(q) && !kisoTarget(q) ? "" : whyBox(q, whyOf(q))) +
+    (q.keep || /^過去問 /.test(q.f || "") && whyOf(q).tier < 2 && !pastRank(q) && !kisoTarget(q) ? "" : whyBox(q, whyOf(q))) +
     (q.v ? '<p class="vsrc' + (q.v === "knowledge" ? " k" : "") + '">' + VLABEL[q.v] + '</p>' : '') +
     '<div class="qnav">' + navHtml(true) + '</div>' +
     '<p class="hintkey">← → キーでも移動できます</p>';
@@ -867,13 +867,14 @@ let HIST = {};
 const DKEY = SPFX + "daily_v1";
 let DAILY = {};
 try { DAILY = JSON.parse(localStorage.getItem(DKEY) || "{}") || {}; } catch (e) { DAILY = {}; }
-const DAY_CATS = ["専門", "基礎 群1", "基礎 群2", "基礎 群3", "基礎 群4", "基礎 群5", "適性"];
+const DAY_CATS = ["専門", "基礎 群1", "基礎 群2", "基礎 群3", "基礎 群4", "基礎 群5", "適性", "二次"];
 function dayCat(q) {
   const s = (q && q.q) || "", f = (q && q.f) || "";
   const m = /^【(?:○× )?R\S+ (専門|基礎|適性) (?:Ⅰ-(\d))?/.exec(s);
   if (m) return m[1] === "基礎" ? "基礎 群" + (m[2] || "5") : m[1];
   if (/^基礎:/.test(f)) return "基礎 群" + ({ "設計・計画": 1, "情報・論理": 2, "解析": 3, "材料・化学・バイオ": 4 }[f.slice(3)] || 5);
   if (/^適性/.test(f)) return "適性";
+  if (/^二次/.test(f)) return "二次";
   return "専門";
 }
 function saveDaily() { try { localStorage.setItem(DKEY, JSON.stringify(DAILY)); } catch (e) {} }
