@@ -36,6 +36,12 @@ for y in years:
                       "ans": md2html(ans), "memo": md2html(memo)})
 order = {"必須Ⅰ": 0, "選択Ⅱ-2": 1, "選択Ⅲ": 2, "選択Ⅱ-1": 3}
 items.sort(key=lambda x: (-int(x["id"][1:].split()[0]), order[x["kind"]], x["id"]))
-json.dump({"type": "reading", "id": "past_" + "_".join(years), "label": "過去問 " + "・".join(years) + "（問題文は日本技術士会）",
+guides = []
+for fn, t in (('本番の進め方.md', '本番の進め方・答案のルール・気をつけること'), ('書き方ガイド_環境保全計画.md', '書き方ガイド（答案の型）')):
+    gp = os.path.join(src, '..', fn)
+    if os.path.exists(gp):
+        body = open(gp, encoding='utf-8').read().split('\n## ', 1)
+        guides.append({"title": t, "html": md2html('## ' + body[1]) if len(body) > 1 else md2html(body[0])})
+json.dump({"type": "reading", "guides": guides, "id": "past_" + "_".join(years), "label": "過去問 " + "・".join(years) + "（問題文は日本技術士会）",
            "items": items}, open(dst, "w", encoding="utf-8"), ensure_ascii=False)
 print(len(items), "items ->", dst)

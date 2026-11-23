@@ -61,5 +61,6 @@ order = ['Ⅱ-2-A', 'Ⅰ-D', 'Ⅲ-A']   # 仕事に近い順に先頭へ
 items.sort(key=lambda x: (order.index(x['id']) if x['id'] in order else 9, x['id']))
 with open(dst, 'w', encoding='utf-8') as f:
     f.write('/* 自動生成（tools/practice_to_js.py）。元＝career-master/research/gijutsushi-cards/practice/。Claude作成の想定問題・骨子・解答例 */\n')
+    # 本番の進め方・書き方ガイドは市販書籍から学んだ内容を含むので公開版には入れない（past_to_json.py の非公開ファイルに入れる）
     f.write('const NJ_READ = ' + json.dumps({"city": md2html(city), "items": items}, ensure_ascii=False) + ';\n')
 print(len(items), [i['id'] for i in items])
