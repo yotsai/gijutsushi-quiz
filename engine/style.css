@@ -694,3 +694,25 @@
 .modesw button.on { background: #6fc1b0; color: #10302a; opacity: 1; }
 /* 解説の中の出典リンク（タップしやすい大きさに） */
 .vnote a { color: #6fc1b0; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; display: inline-block; padding: 6px 0; word-break: break-all; }
+
+/* 答案を読む（二次） */
+.rdh { font-size: 18px; margin: 4px 0 10px; }
+.rdlede { font-size: 14px; line-height: 1.7; padding: 12px 14px; border-radius: 12px; background: rgba(111,193,176,.12); margin-bottom: 12px; }
+.rdlede small { opacity: .7; }
+.rd { border: 1px solid rgba(127,127,127,.3); border-radius: 12px; margin: 10px 0; padding: 0 14px; }
+.rd > summary { cursor: pointer; padding: 14px 0; font-weight: 700; line-height: 1.5; }
+.rdk { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: rgba(111,193,176,.25); margin-right: 4px; }
+.rdok { color: #6fc1b0; font-size: 13px; }
+.rdq { font-size: 15px; line-height: 1.8; }
+.rdstep { font-size: 14px; font-weight: 700; color: #e0a040; margin: 10px 0; }
+.rdf { border-top: 1px dashed rgba(127,127,127,.35); }
+.rdf > summary { cursor: pointer; padding: 12px 0; font-weight: 700; color: #6fc1b0; }
+.rdb { font-size: 15px; line-height: 1.85; padding-bottom: 12px; }
+.rdb p { margin: 0 0 10px; }
+.rdb h4, .rdb h5, .rdb h6 { margin: 14px 0 6px; font-size: 15px; }
+.rdb pre { white-space: pre-wrap; font-size: 13px; background: rgba(127,127,127,.12); padding: 10px; border-radius: 8px; }
+.rl { padding-left: 1em; text-indent: -1em; margin: 3px 0; }
+.rl::before { content: "・"; }
+.rl.l1 { margin-left: 1.2em; } .rl.l2 { margin-left: 2.4em; } .rl.l3 { margin-left: 3.6em; }
+.rdmark { margin: 6px 0 16px; padding: 10px 16px; border-radius: 999px; border: 1px solid #6fc1b0; background: transparent; color: inherit; font: inherit; font-weight: 700; }
+.city .rdb { font-size: 14px; }

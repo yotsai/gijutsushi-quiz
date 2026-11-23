@@ -2373,6 +2373,48 @@ function renderTopics() {
   p.dataset.done = "1";
 }
 
+/* ---------- 答案を読む（二次：想定問題・Claudeの骨子・解答例） ---------- */
+/* 読む順番：問題文 → 自分で観点を3つ考える → 骨子と比べる → 解答例 → 欄外メモ。答えを先に見ないよう、骨子から下は折りたたむ */
+const READ = typeof NJ_READ !== "undefined" ? NJ_READ : null;
+const RKEY = SPFX + "read_v1";
+function readLog() { try { return JSON.parse(localStorage.getItem(RKEY)) || {}; } catch (e) { return {}; } }
+function renderReading() {
+  const p = document.getElementById("pane-topics");
+  const log = readLog();
+  const done = READ.items.filter(function (it) { return log[it.id]; }).length;
+  const fold = function (cls, label, body, open) {
+    return '<details class="rdf ' + cls + '"' + (open ? " open" : "") + '><summary>' + label + '</summary><div class="rdb">' + body + '</div></details>';
+  };
+  p.innerHTML =
+    '<h2 class="rdh">想定問題と解答例（' + READ.items.length + '問・読んだ ' + done + '問）</h2>' +
+    '<div class="rdlede"><b>読み方（1問15分）</b><br>' +
+      '① 問題文だけ読み、自分なら課題をどの観点3つで切るか考える<br>' +
+      '② 「骨子」を開いて自分の観点と比べる<br>' +
+      '③ 「解答例」を読む。設問の言葉をそのまま見出しにしているところ・観点の明記・最重要の理由に注目<br>' +
+      '④ 「欄外メモ」で、自分の業務に置き換えられる箇所を1つ決める<br>' +
+      '<small>Claudeが作った予想問題と手本です。実際の出題ではなく、A評価の保証もありません。</small></div>' +
+    fold("city", "答案で使い回す架空の市（A市）", READ.city, false) +
+    READ.items.map(function (it) {
+      const d = log[it.id];
+      return '<details class="rd" data-id="' + it.id + '"><summary><span class="rdk">' + it.kind + '</span> ' + it.id + '　' + it.title +
+        (d ? ' <span class="rdok">✓ ' + d.slice(5).replace("-", "/") + '</span>' : '') + '</summary>' +
+        '<div class="rdq">' + it.q + '</div>' +
+        '<p class="rdstep">ここで一度止まって、自分なら課題をどの観点3つで切るかを考える。</p>' +
+        fold("sk", "Claudeの骨子", it.sk) + fold("ans", "解答例（全文）", it.ans) + fold("memo", "欄外メモ（設定・書き方のポイント・差し替え候補）", it.memo) +
+        '<button type="button" class="rdmark">' + (d ? "読んだ印を外す" : "読んだ印をつける") + '</button></details>';
+    }).join("");
+  p.querySelectorAll(".rdmark").forEach(function (b) {
+    b.addEventListener("click", function () {
+      const id = b.closest(".rd").dataset.id, l = readLog();
+      if (l[id]) delete l[id]; else l[id] = ymd(new Date());
+      try { localStorage.setItem(RKEY, JSON.stringify(l)); } catch (e) {}
+      renderReading();
+      const again = p.querySelector('.rd[data-id="' + id + '"]');
+      if (again) again.open = true;
+    });
+  });
+}
+
 /* ---------- タブ ---------- */
 const PANES = { quiz: "pane-quiz", topics: "pane-topics", hist: "pane-hist" };
 const TABS  = { quiz: "tab-quiz",  topics: "tab-topics",  hist: "tab-hist"  };
@@ -2386,7 +2428,7 @@ function selectTab(which) {
     document.getElementById(PANES[k]).hidden = (k !== which);
     document.getElementById(TABS[k]).setAttribute("aria-selected", String(k === which));
   });
-  if (which === "topics") renderTopics();
+  if (which === "topics") { if (MODE !== "一次" && READ) renderReading(); else renderTopics(); }
   if (which === "hist") renderHistory();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -2441,8 +2483,10 @@ refreshWeakBtn();
     document.title = SUBJECT.title;
     const set = function (sel, v, isHtml) { const el = hd.querySelector(sel); if (el && v) el[isHtml ? "innerHTML" : "textContent"] = v; };
     set(".eyebrow", SUBJECT.eyebrow); set("h1", SUBJECT.h1); set(".intro", SUBJECT.intro, true);
-    const tt = document.getElementById("tab-topics");   // 頻出テーマは一次の過去問の分析なので二次では出さない
-    if (tt) tt.style.display = "none";
+    // 頻出テーマは一次の過去問の分析なので、二次では同じ場所を「答案を読む」（想定問題・骨子・解答例）に使う。データがなければタブごと隠す
+    const tt = document.getElementById("tab-topics");
+    if (tt && READ) tt.querySelector("span").textContent = "答案を読む";
+    else if (tt) tt.style.display = "none";
   }
   if (SUBJECT.hideModeSwitch) return;
   const sw = document.createElement("div");

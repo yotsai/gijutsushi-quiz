@@ -18,5 +18,5 @@ const SUBJECT = {
   allSetLabel: "まとめて",
   examDayDefault: "2027-07-18",
   emptyMessage: "暗記カードは準備中です。",
-  files: ["nijishi.js"]
+  files: ["nijishi.js", "reading.js"]
 };
