@@ -811,7 +811,7 @@ try {
   else if (!SUBJECT.hideModeSwitch && MODES.indexOf(localStorage.getItem(SPFX + "mode")) >= 0) MODE = localStorage.getItem(SPFX + "mode");
 } catch (e) {}
 if (MODES.length) {
-  SUBJECT.sets = SUBJECT.sets.filter(function (d) { return (MODE === "一次") === (!SUBJECT.modes[d.group]); });
+  SUBJECT.sets = SUBJECT.sets.filter(function (d) { return MODE === "一次" ? !SUBJECT.modes[d.group] : d.group === MODE; });
   if (MODE !== "一次") Object.assign(SUBJECT, SUBJECT.modes[MODE]);
 }
 function setMode(m) {
@@ -2045,6 +2045,7 @@ function saveImported() {
 function importedQuestions() {
   const out = [];
   Object.keys(IMPORTED).sort().forEach(function (k) {
+    if ((IMPORTED[k].mode || "一次") !== MODE) return;   // 一次の過去問・SCRの公式テキスト由来の問題などを、モードごとに分ける
     (IMPORTED[k].questions || []).forEach(function (q) { out.push(q); });
   });
   return out;
@@ -2102,7 +2103,7 @@ function applyImport(d) {
   d.questions.forEach(function (q) {
     if (q.img) { puts.push(IMGDB.put(imgKey(q), q.img).catch(function () {})); delete q.img; q.hasImg = 1; }
   });
-  IMPORTED[d.id] = { label: d.label, count: d.questions.length, questions: d.questions };
+  IMPORTED[d.id] = { label: d.label, count: d.questions.length, questions: d.questions, mode: MODES.indexOf(d.mode) >= 0 ? d.mode : "一次" };
   if (!saveImported()) return "端末の保存領域が足りません";
   refreshImportedSet();
   return null;
@@ -2143,7 +2144,7 @@ function oxItems(list) {
   return out;
 }
 function refreshImportedSet() {
-  const list = MODE === "一次" ? importedQuestions() : [];   // 取り込んだ過去問は一次のもの
+  const list = importedQuestions();   // 取り込んだデータは mode（既定は一次）が今のモードと同じものだけ
   SETS.imported = list;
   SETS.all = baseAll().concat(list);
   const btn = document.getElementById("impBtn");
@@ -3289,7 +3290,7 @@ function selectTab(which) {
     document.getElementById(PANES[k]).hidden = (k !== which);
     document.getElementById(TABS[k]).setAttribute("aria-selected", String(k === which));
   });
-  if (which === "topics") { if (MODE !== "一次" && READ) renderReading(); else renderTopics(); }
+  if (which === "topics") { if (MODE === "二次" && READ) renderReading(); else renderTopics(); }
   if (which === "hist") renderHistory();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -3346,7 +3347,7 @@ refreshWeakBtn();
     set(".eyebrow", SUBJECT.eyebrow); set("h1", SUBJECT.h1); set(".intro", SUBJECT.intro, true);
     // 頻出テーマは一次の過去問の分析なので、二次では同じ場所を「答案を読む」（想定問題・骨子・解答例）に使う。データがなければタブごと隠す
     const tt = document.getElementById("tab-topics");
-    if (tt && READ) tt.querySelector("span").textContent = "答案を読む";
+    if (tt && READ && MODE === "二次") tt.querySelector("span").textContent = "答案を読む";
     else if (tt) tt.style.display = "none";
   }
   if (SUBJECT.hideModeSwitch) return;
@@ -3354,10 +3355,10 @@ refreshWeakBtn();
   sw.className = "modesw";
   sw.setAttribute("role", "tablist");
   sw.setAttribute("aria-label", "試験の切り替え");
-  MODES.forEach(function (m) {
+  (SUBJECT.visibleModes || MODES).forEach(function (m) {
     const b = document.createElement("button");
     b.type = "button";
-    b.textContent = m + "試験";
+    b.textContent = /^[一二]次$/.test(m) ? m + "試験" : m;
     b.setAttribute("role", "tab");
     b.setAttribute("aria-selected", m === MODE ? "true" : "false");
     if (m === MODE) b.className = "on";

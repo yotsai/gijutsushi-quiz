@@ -3,7 +3,7 @@
 const SUBJECT = {
   id: "all",
   base: "senmon-kankyo",
-  combine: ["senmon-kankyo", "kiso", "tekisei", "nijishi"],
+  combine: ["senmon-kankyo", "kiso", "tekisei", "nijishi", "scr"],
   storagePrefix: "",
   title: "技術士一次試験 環境部門クイズ｜基礎・適性・専門",
   description: "技術士第一次試験（環境部門）の基礎科目・適性科目・専門科目をまとめて学べる4択クイズ。令和元年度〜7年度の過去問の出題論点と、白書・環境省統計の数値から作成。",
@@ -13,7 +13,8 @@ const SUBJECT = {
   passLine: "3科目とも50%以上（専門は25問を選んで13問、基礎・適性は各15問中8問）",
   /* 一次は受験済み（2026-11-22）なので、二次だけを見せる。一次に戻すときは URL に ?mode=一次 を付けて開くか、下の2行を消す */
   defaultMode: "二次",
-  hideModeSwitch: true,
+  hideModeSwitch: false,
+  visibleModes: ["二次", "SCR"],   // 一次は受験済みなので切り替えに出さない（?mode=一次 で開ける）
   /* 一次／二次の切り替え。二次に切り替えると「二次」グループのセットだけを使い、下の文言と受験日に差し替える */
   modes: {
     "二次": {
@@ -23,6 +24,17 @@ const SUBJECT = {
       intro: "必須Ⅰで使う国の計画と、選択Ⅱ-1で使う用語の一問一答です。問いを見て答えを思い出し、「思い出せた／思い出せなかった」を押すと答えが出ます。思い出せなかったカードは翌日にまた出ます。",
       passLine: "筆記は必須科目・選択科目それぞれ60%以上。そのあと口頭試験",
       examDayDefault: "2027-07-11"
+    },
+    "SCR": {
+      title: "GARP SCR 練習問題｜気候・サステナビリティ金融",
+      eyebrow: "GARP SCR（Sustainability and Climate Risk）",
+      h1: "SCR 練習問題",
+      intro: "SCR の学習目標に沿った英語の4択です（すべて自作。根拠は IPCC・NGFS・ISSB などの公開文書）。解説は日本語で、日本の制度との対応も書いています。公式テキストの内容は、手元のファイルを読み込むとこの端末だけに追加されます。",
+      examDayDefault: "2027-04-18",
+      passLine: "公式の合格基準は非公表（80問・4時間・合格率は約5割）",
+      noWhyBox: true,
+      autoNote: "まだ解いていない問題から出します",
+      vlabel: { primary: "◎ IPCC・NGFS・ISSB・TCFD・PCAF・ICMA など発行元の公開文書で確認" }
     }
   }
 };
