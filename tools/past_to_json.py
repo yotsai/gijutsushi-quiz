@@ -37,7 +37,7 @@ for y in years:
 order = {"必須Ⅰ": 0, "選択Ⅱ-2": 1, "選択Ⅲ": 2, "選択Ⅱ-1": 3}
 items.sort(key=lambda x: (-int(x["id"][1:].split()[0]), order[x["kind"]], x["id"]))
 guides = []
-for fn, t in (('本番の進め方.md', '本番の進め方・答案のルール・気をつけること'), ('書き方ガイド_環境保全計画.md', '書き方ガイド（答案の型）')):
+for fn, t in (('本番の進め方.md', '本番の進め方・答案のルール・気をつけること'), ('書き方ガイド_環境保全計画.md', '書き方ガイド（答案の型）'), ('面接の要点.md', '面接（口頭試験）の要点')):
     gp = os.path.join(src, '..', fn)
     if os.path.exists(gp):
         body = open(gp, encoding='utf-8').read().split('\n## ', 1)
