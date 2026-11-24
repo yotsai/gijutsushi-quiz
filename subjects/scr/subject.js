@@ -13,7 +13,8 @@ const SUBJECT = {
   storagePrefix: "scr_",
   sets: [
     { key: "scr1", label: "1〜5章（気候・サステナビリティ・リスク・政策・グリーンファイナンス）", short: "SCR 1〜5章", data: "SCR_A_DATA", default: true },
-    { key: "scr2", label: "6〜10章（計測・シナリオ・ネットゼロ・自然・移行計画）", short: "SCR 6〜10章", data: "SCR_B_DATA" }
+    { key: "scr2", label: "6〜10章（計測・シナリオ・ネットゼロ・自然・移行計画）", short: "SCR 6〜10章", data: "SCR_B_DATA" },
+    { key: "scrlo13", label: "学習目標別 1〜3章（気候科学・サステナビリティ・気候リスク）", short: "SCR 学習目標 1〜3章", data: "SCR_LO13_DATA" }
   ],
   allSetLabel: "まとめて",
   examDayDefault: "2027-04-18",
@@ -22,5 +23,5 @@ const SUBJECT = {
   noWhyBox: true,
   autoNote: "まだ解いていない問題から出します",
   vlabel: { primary: "◎ IPCC・NGFS・ISSB・TCFD・PCAF・ICMA など発行元の公開文書で確認" },
-  files: ["terms_a.js", "terms_b.js"]
+  files: ["terms_a.js", "terms_b.js", "lo_ch1_3.js"]
 };
