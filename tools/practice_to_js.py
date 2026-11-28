@@ -62,5 +62,11 @@ items.sort(key=lambda x: (order.index(x['id']) if x['id'] in order else 9, x['id
 with open(dst, 'w', encoding='utf-8') as f:
     f.write('/* 自動生成（tools/practice_to_js.py）。元＝career-master/research/gijutsushi-cards/practice/。Claude作成の想定問題・骨子・解答例 */\n')
     # 本番の進め方・書き方ガイドは市販書籍から学んだ内容を含むので公開版には入れない（past_to_json.py の非公開ファイルに入れる）
-    f.write('const NJ_READ = ' + json.dumps({"city": md2html(city), "items": items}, ensure_ascii=False) + ';\n')
+    # 出題傾向と対策（公開の過去問を自分で分析したもの）。個人の業務に触れる最後の節は公開版に入れない
+    tp = os.path.join(src, '..', '出題傾向と対策.md')
+    trend = ''
+    if os.path.exists(tp):
+        body = open(tp, encoding='utf-8').read().split('\n## あなたにとって')[0].split('\n## ', 1)
+        trend = md2html('## ' + body[1]) if len(body) > 1 else ''
+    f.write('const NJ_READ = ' + json.dumps({"city": md2html(city), "items": items, "trend": trend}, ensure_ascii=False) + ';\n')
 print(len(items), [i['id'] for i in items])

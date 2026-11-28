@@ -3406,6 +3406,7 @@ function renderReading() {
       '③ 「解答例」を読む。設問の言葉をそのまま見出しにしているところ・観点の明記・最重要の理由に注目<br>' +
       '④ 「欄外メモ」で、自分の業務に置き換えられる箇所を1つ決める<br>' +
       '<small>Claudeが作った予想問題と手本です。実際の出題ではなく、A評価の保証もありません。</small></div>' +
+    (READ.trend ? fold("guide", "出題傾向と対策（令和元〜8年度の分析）", READ.trend, false) : "") +
     Object.keys(READ_IMP).sort().map(function (k) { return (READ_IMP[k].guides || []).map(function (g) { return fold("guide", g.title, g.html, false); }).join(""); }).join("") +
     fold("city", "答案で使い回す架空の市（A市）", READ.city, false) +
     (imp.length ? '<h3 class="rdsec">過去問（この端末に読み込んだもの）</h3>' : '') +
