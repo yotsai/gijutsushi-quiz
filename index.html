@@ -739,6 +739,11 @@
 .city .rdb { font-size: 14px; }
 .rdsec { font-size: 16px; margin: 18px 0 4px; }
 .rdfig { display: block; width: 100%; height: auto; margin: 10px 0; background: #fff; border-radius: 6px; }
+/* 読み上げ */
+.rdtts { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+.rdtts button, .rdttsrate button { border: 1px solid #6fc1b0; background: transparent; color: inherit; font: inherit; font-size: 14px; padding: 7px 12px; border-radius: 999px; }
+.rdttsrate { font-size: 14px; margin: 0 0 12px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.rdttsrate button.on { background: #6fc1b0; color: #10302a; }
 </style>
 
 <div class="wrap">
@@ -6322,11 +6327,39 @@ function renderReading() {
       return '<details class="rd" data-id="' + it.id + '"><summary><span class="rdk">' + it.kind + '</span> ' + it.id + '　' + it.title +
         (d ? ' <span class="rdok">✓ ' + d.slice(5).replace("-", "/") + '</span>' : '') + '</summary>' +
         '<div class="rdq">' + it.q + '</div>' +
+        (TTS_OK ? '<div class="rdtts"><button type="button" data-say="q">🔊 問題</button><button type="button" data-say="sk">🔊 骨子</button><button type="button" data-say="ans">🔊 解答例</button><button type="button" data-say="all">🔊 全部続けて</button><button type="button" data-say="stop">■ 止める</button></div>' : '') +
         '<p class="rdstep">ここで一度止まって、自分なら課題をどの観点3つで切るかを考える。</p>' +
         fold("sk", "Claudeの骨子", it.sk) + fold("ans", "解答例（全文）", it.ans) + fold("memo", "欄外メモ（設定・書き方のポイント・差し替え候補）", it.memo) +
         '<button type="button" class="rdmark">' + (d ? "読んだ印を外す" : "読んだ印をつける") + '</button></details>';
   }
   wireReadImport(p);
+  if (TTS_OK) {
+    const rate = ttsRate();
+    p.querySelector(".rdh").insertAdjacentHTML("afterend", '<div class="rdttsrate">読み上げの速さ ' +
+      [1, 1.3, 1.6, 2].map(function (r) { return '<button type="button" data-rate="' + r + '"' + (r === rate ? ' class="on"' : '') + '>' + r + '倍</button>'; }).join("") + '</div>');
+    p.querySelectorAll("[data-rate]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        try { localStorage.setItem(SPFX + "tts_rate", b.dataset.rate); } catch (e) {}
+        p.querySelectorAll("[data-rate]").forEach(function (x) { x.classList.toggle("on", x === b); });
+      });
+    });
+    p.querySelectorAll("[data-say]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        const rd = b.closest(".rd"), k = b.dataset.say;
+        if (k === "stop") { speechSynthesis.cancel(); return; }
+        // 見出しや改行で区切りが消えないよう、改行・段落の終わりを句点に置き換えてから文字だけにする
+        const part = function (sel) {
+          const el = rd.querySelector(sel); if (!el) return "";
+          const t = document.createElement("textarea");
+          t.innerHTML = el.innerHTML.replace(/<(br|\/p|\/div|\/h\d|\/li)[^>]*>/gi, "。").replace(/<[^>]+>/g, "");
+          return t.value.replace(/([。．])\s*。+/g, "$1").replace(/^。+/, "");
+        };
+        const txt = k === "q" ? part(".rdq") : k === "sk" ? part(".rdf.sk .rdb") : k === "ans" ? part(".rdf.ans .rdb")
+          : "問題。" + part(".rdq") + "。骨子。" + part(".rdf.sk .rdb") + "。解答例。" + part(".rdf.ans .rdb");
+        speak(txt);
+      });
+    });
+  }
   p.querySelectorAll(".rdmark").forEach(function (b) {
     b.addEventListener("click", function () {
       const id = b.closest(".rd").dataset.id, l = readLog();
@@ -6339,6 +6372,29 @@ function renderReading() {
   });
 }
 
+/* 答案の読み上げ（端末の音声合成。通信不要）。長い文はiPhoneで途中で切れることがあるので、句点ごとに分けて順に読む */
+const TTS_OK = typeof window !== "undefined" && "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
+function ttsRate() { const r = parseFloat((function () { try { return localStorage.getItem(SPFX + "tts_rate"); } catch (e) { return null; } })()); return r > 0 ? r : 1.3; }
+function speak(text) {
+  speechSynthesis.cancel();
+  const clean = text
+    .replace(/【出典】[\s\S]*$/, "")             // 出典のURLは読まない
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/[→⇒]/g, "、").replace(/[／/]/g, "、").replace(/[・]/g, "、")
+    .replace(/\s+/g, " ").trim();
+  const parts = clean.split(/(?<=[。．！？])/).reduce(function (acc, t) {
+    t = t.trim(); if (!t) return acc;
+    if (acc.length && (acc[acc.length - 1] + t).length < 120) acc[acc.length - 1] += t; else acc.push(t);
+    return acc;
+  }, []);
+  const voice = speechSynthesis.getVoices().filter(function (v) { return /^ja/.test(v.lang); })[0];
+  const rate = ttsRate();
+  parts.forEach(function (t) {
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = "ja-JP"; u.rate = rate; if (voice) u.voice = voice;
+    speechSynthesis.speak(u);
+  });
+}
 function readImportHtml() {
   const rows = Object.keys(READ_IMP).sort().map(function (k) {
     return '<div class="impitem"><span>' + READ_IMP[k].label + '</span><span class="n2">' + READ_IMP[k].items.length + '問</span><button data-rdel="' + k + '">削除</button></div>';

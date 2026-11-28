@@ -718,3 +718,8 @@
 .city .rdb { font-size: 14px; }
 .rdsec { font-size: 16px; margin: 18px 0 4px; }
 .rdfig { display: block; width: 100%; height: auto; margin: 10px 0; background: #fff; border-radius: 6px; }
+/* 読み上げ */
+.rdtts { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+.rdtts button, .rdttsrate button { border: 1px solid #6fc1b0; background: transparent; color: inherit; font: inherit; font-size: 14px; padding: 7px 12px; border-radius: 999px; }
+.rdttsrate { font-size: 14px; margin: 0 0 12px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.rdttsrate button.on { background: #6fc1b0; color: #10302a; }
