@@ -5073,7 +5073,9 @@ function renderReading() {
 const TTS_OK = typeof window !== "undefined" && "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
 function ttsRate() { const r = parseFloat((function () { try { return localStorage.getItem(SPFX + "tts_rate"); } catch (e) { return null; } })()); return r > 0 ? r : 1.3; }
 function speak(text) {
-  speechSynthesis.cancel();
+  // iPhoneでは、読んでいないのに cancel() した直後の speak() が無音になることがあるので、読み上げ中のときだけ止める
+  if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
+  speechSynthesis.resume();
   const clean = text
     .replace(/【出典】[\s\S]*$/, "")             // 出典のURLは読まない
     .replace(/https?:\/\/\S+/g, "")
