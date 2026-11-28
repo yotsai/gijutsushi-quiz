@@ -20,6 +20,15 @@ for x in d:
     deck = x['deck']; kind = '計画' if deck.startswith('計画') else '用語'
     name = deck.split('：', 1)[-1]
     n = '<b>答え</b>　' + e(x['a'])
+    if x.get('x'):
+        # 解説は「背景／答案例：…／関連：…」を「／」で区切って持つ。見出しをつけて段落に分ける
+        segs = [t.strip() for t in x['x'].split('／') if t.strip()]
+        out = []
+        for t in segs:
+            if t.startswith('答案例：'): out.append('<b>答案に書くなら</b>　' + e(t[4:]))
+            elif t.startswith('関連：'): out.append('<b>関連</b>　' + e(t[3:]))
+            else: out.append('<b>解説</b>　' + e(t[3:] if t.startswith('背景：') else t))
+        n += '<br><br>' + '<br><br>'.join(out)
     if x.get('hint'): n += '<br><br><b>答案での使い方</b>　' + e(x['hint'])
     if x.get('src'): n += '<br><br>【出典】' + src_link(x['src'])
     # 役割（課題・解決策・目標など＝答案のどこで使うか）があれば見出しに出す
