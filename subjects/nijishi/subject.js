@@ -12,7 +12,10 @@ const SUBJECT = {
   intro: "問いを見て答えを思い出し、「思い出せた／思い出せなかった」を押すと答えが出ます。思い出せなかったカードは翌日にまた出ます。",
   storagePrefix: "nijishi_",
   sets: [
-    { key: "njplan", label: "国の計画（必須Ⅰ）", short: "二次 国の計画", data: "NJ_PLAN_DATA", default: true },
+    { key: "njpA", label: "優先A（必須Ⅰの計画＋得意分野・予測上位）", short: "二次 優先A", data: "NJ_PRI_A_DATA", default: true },
+    { key: "njpB", label: "優先B（書ける幅を広げる）", short: "二次 優先B", data: "NJ_PRI_B_DATA" },
+    { key: "njpC", label: "優先C（専門外の保険）", short: "二次 優先C", data: "NJ_PRI_C_DATA" },
+    { key: "njplan", label: "国の計画（必須Ⅰ）", short: "二次 国の計画", data: "NJ_PLAN_DATA" },
     { key: "njterm", label: "用語（選択Ⅱ-1）", short: "二次 用語", data: "NJ_TERM_DATA" }
   ],
   allSetLabel: "まとめて",

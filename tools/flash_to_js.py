@@ -4,6 +4,19 @@ import json, html, sys
 src, dst = sys.argv[1], sys.argv[2]
 d = json.load(open(src, encoding='utf-8'))
 plan, term = [], []
+pri = {"A": [], "B": [], "C": []}
+# 優先度（2026-11-28）：A＝必須Ⅰの国の計画と、得意分野（気候・エネルギー・金融開示）・Ⅱ-1予測の上位、B＝循環・自然など書ける幅を広げるもの、C＝専門外の保険（4問から1問なので深追いしない）
+TIER_C = ("クマ", "外来生物", "PFOS", "INC", "マイクロプラスチック", "底層溶存酸素")
+TIER_B = ("CCS", "再資源化事業等高度化法", "プラスチック資源循環促進法", "食品ロス", "地域生物多様性増進法", "ネイチャーポジティブ", "廃棄物処理法", "COP17")
+TIER_NOTE = {"A": "必須Ⅰの国の計画、または得意分野・Ⅱ-1予測の上位。中身まで答案に書けるように",
+             "B": "書ける問題の幅を広げる分野。要点と数字を1つ",
+             "C": "専門外の保険。何の話かと一番大事な数字だけでよい"}
+def tier_of(deck):
+    if deck.startswith("計画"): return "A"
+    if any(k in deck for k in TIER_C): return "C"
+    if any(k in deck for k in TIER_B): return "B"
+    return "A"
+
 e = lambda s: html.escape(s or '', quote=False)
 # 出典はタップで開けるリンクにする。表示は発行元の名前（長いURLをそのまま見せない）
 ORG = [("wbgt.env.go.jp", "環境省 熱中症予防情報サイト"), ("plastic-circulation.env.go.jp", "環境省 プラスチック資源循環"), ("env.go.jp", "環境省"),
@@ -19,7 +32,8 @@ def src_link(u):
 for x in d:
     deck = x['deck']; kind = '計画' if deck.startswith('計画') else '用語'
     name = deck.split('：', 1)[-1]
-    n = '<b>答え</b>　' + e(x['a'])
+    tier = tier_of(deck)
+    n = '<span class="pri pri' + tier + '">優先度 ' + tier + '</span> <small>' + TIER_NOTE[tier] + '</small><br><br><b>答え</b>　' + e(x['a'])
     if x.get('x'):
         # 解説は「背景／答案例：…／関連：…」を「／」で区切って持つ。見出しをつけて段落に分ける
         segs = [t.strip() for t in x['x'].split('／') if t.strip()]
@@ -36,8 +50,11 @@ for x in d:
     item = {"f": "二次:" + kind, "q": "【" + tag + "】" + e(x['q']),
             "c": ["思い出せた（○）", "思い出せなかった（×）"], "a": 0, "n": n, "v": "primary", "keep": True}
     (plan if kind == '計画' else term).append(item)
+    pri[tier].append(item)
 with open(dst, 'w', encoding='utf-8') as f:
     f.write('/* 自動生成（tools/flash_to_js.py）。元＝career-master/research/gijutsushi-cards/flash/flash.json */\n')
     f.write('const NJ_PLAN_DATA = ' + json.dumps(plan, ensure_ascii=False) + ';\n')
     f.write('const NJ_TERM_DATA = ' + json.dumps(term, ensure_ascii=False) + ';\n')
-print(len(plan), len(term))
+    for k in "ABC":
+        f.write('const NJ_PRI_' + k + '_DATA = ' + json.dumps(pri[k], ensure_ascii=False) + ';\n')
+print(len(plan), len(term), {k: len(v) for k, v in pri.items()})

@@ -723,3 +723,8 @@
 .rdtts button, .rdttsrate button { border: 1px solid #6fc1b0; background: transparent; color: inherit; font: inherit; font-size: 14px; padding: 7px 12px; border-radius: 999px; }
 .rdttsrate { font-size: 14px; margin: 0 0 12px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .rdttsrate button.on { background: #6fc1b0; color: #10302a; }
+/* 二次カードの優先度 */
+.pri { display: inline-block; font-weight: 700; font-size: 13px; padding: 2px 10px; border-radius: 999px; }
+.priA { background: #6fc1b0; color: #10302a; }
+.priB { background: rgba(111,193,176,.25); }
+.priC { background: rgba(127,127,127,.25); }

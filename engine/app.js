@@ -1011,7 +1011,7 @@ function autoBase() {
   if (!AUTO_G || typeof GROUPED === "undefined" || !GROUPED || GROUPS.indexOf(AUTO_G) < 0) return verifiedOnly(SETS.all);
   // 取り込んだ本番の過去問（f が「過去問 専門 R7」の形）も、選んだ科目の分は復習・出題の対象に入れる
   const imp = (SETS.imported || []).filter(function (q) { return (q.f || "").split(" ")[1] === AUTO_G; });
-  return verifiedOnly([].concat.apply([], SUBJECT.sets.filter(function (d) { return d.group === AUTO_G; }).map(function (d) { return SETS[d.key]; })).concat(imp));
+  return verifiedOnly(uniqQ([].concat.apply([], SUBJECT.sets.filter(function (d) { return d.group === AUTO_G; }).map(function (d) { return SETS[d.key]; })).concat(imp)));
 }
 function autoDueCount() {
   const t = dayStart(Date.now());
@@ -1522,8 +1522,10 @@ function showResume(n, total) {
 const SETS = {};
 SUBJECT.sets.forEach(function (d) { SETS[d.key] = SUBJECT_DATA[d.data]; });
 SETS.imported = [];
+// 同じ問題が複数のセットに入る（二次の「優先A」と「国の計画」など）ので、問題文で重複を除く
+function uniqQ(list) { const seen = {}; return list.filter(function (q) { if (seen[q.q]) return false; seen[q.q] = 1; return true; }); }
 function baseAll() {
-  return [].concat.apply([], SUBJECT.sets.map(function (d) { return SETS[d.key]; }));
+  return uniqQ([].concat.apply([], SUBJECT.sets.map(function (d) { return SETS[d.key]; })));
 }
 SETS.all = baseAll();
 /* 全部入りでは専門・基礎・適性の大項目で絞ってからセットを選ぶ */
@@ -1534,7 +1536,7 @@ const GROUP_KEY = "gq_" + (SUBJECT.storagePrefix || "") + "homeGroup";
 if (GROUPED) GROUPS.forEach(function (g) {
   const ds = SUBJECT.sets.filter(function (d) { return d.group === g; });
   if (ds.length < 2) return;
-  SETS["grp:" + g] = [].concat.apply([], ds.map(function (d) { return SETS[d.key]; }));
+  SETS["grp:" + g] = uniqQ([].concat.apply([], ds.map(function (d) { return SETS[d.key]; })));
   SET_LABEL["grp:" + g] = g + " まとめて";
 });
 function showGroup(g) {
